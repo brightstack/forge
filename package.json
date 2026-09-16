@@ -11,8 +11,7 @@
     "build": "bun run build:cli",
     "build:cli": "bun build --compile --minify ./src/cli.ts --outfile ./dist/forge",
     "check": "bun x tsc --noEmit",
-    "test": "bun test ./tests",
-    "deploy": "bun scripts/deploy.ts"
+    "test": "bun test ./tests"
   },
   "dependencies": { "commander": "15.0.0", "yaml": "2.9.0" },
   "devDependencies": { "@types/bun": "1.4.0", "typescript": "7.0.2" }
