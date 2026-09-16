@@ -1,0 +1,42 @@
+{
+  "docs/knowledge/service.md": {
+    "id": "dcfb696f-5758-526e-9dd1-c1c066c1b796",
+    "code": "SERVICE-MAP",
+    "type": "okf-concept"
+  },
+  "docs/knowledge/health.md": {
+    "id": "7b5fff4b-07a8-5269-920d-d8fc4aaac7c4",
+    "code": "HEALTH",
+    "type": "okf-concept"
+  },
+  "docs/knowledge/decisions/D1-ownership.md": {
+    "id": "336564a8-ca7e-5d43-aaa8-ee4c7e0fb6fe",
+    "code": "D1",
+    "type": "okf-concept"
+  },
+  "docs/specs/service/SPEC.md": {
+    "id": "15e1282a-1a9e-5878-b913-0d99f9d6c2a9",
+    "code": "SERVICE",
+    "type": "standing-spec"
+  },
+  ".forge/loops/archive-browsing/spec/change.md": {
+    "id": "59c60d19-38df-5f84-a406-262e6c098355",
+    "code": "ARCHIVE-CHANGE",
+    "type": "spec-change"
+  },
+  "docs/knowledge/index.md": {
+    "id": "5c7ef998-3bac-54dd-a8a7-dffc348875f6",
+    "code": "KB-INDEX",
+    "type": "kb-index"
+  },
+  "docs/knowledge/decisions/index.md": {
+    "id": "5d894f6a-649c-5104-8589-9367eb40ce01",
+    "code": "DECISIONS-INDEX",
+    "type": "kb-index"
+  },
+  ".forge/loops/archive-browsing/spec/issue.md": {
+    "id": "07e5864a-e4b3-5aea-a6cb-2c5824c6667b",
+    "code": "ARCHIVE-ISSUE",
+    "type": "issue"
+  }
+}

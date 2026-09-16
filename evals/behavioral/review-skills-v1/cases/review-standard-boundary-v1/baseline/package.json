@@ -1,0 +1,7 @@
+{
+  "type": "module",
+  "scripts": {
+    "test": "bun test tests",
+    "standards": "bun scripts/check-boundary.js"
+  }
+}

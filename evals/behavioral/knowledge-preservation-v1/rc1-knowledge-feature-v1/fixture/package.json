@@ -1,0 +1,8 @@
+{
+  "name": "rc1-knowledge-feature-v1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "bun test tests"
+  }
+}

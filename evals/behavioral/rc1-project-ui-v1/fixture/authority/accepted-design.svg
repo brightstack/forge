@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800" role="img" aria-labelledby="title desc">
+  <title id="title">Accepted Simple Todo design revision v1</title>
+  <desc id="desc">A centered white task card on a pale green background with Today heading, composer, and three task rows.</desc>
+  <rect width="1280" height="800" fill="#eef2ea"/>
+  <rect x="300" y="72" width="680" height="656" rx="22" fill="#ffffff"/>
+  <text x="350" y="126" font-family="Arial, sans-serif" font-size="14" font-weight="700" letter-spacing="2" fill="#3f6b4b">SIMPLE TODO</text>
+  <text x="350" y="198" font-family="Arial, sans-serif" font-size="58" font-weight="700" fill="#172019">Today</text>
+  <text x="350" y="247" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#172019">What needs doing?</text>
+  <rect x="350" y="265" width="430" height="50" rx="8" fill="#fff" stroke="#8a978d" stroke-width="2"/>
+  <rect x="792" y="265" width="138" height="50" rx="8" fill="#315d3d"/>
+  <text x="825" y="296" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#fff">Add task</text>
+  <line x1="350" y1="365" x2="930" y2="365" stroke="#dce4dc"/>
+  <circle cx="370" cy="399" r="10" fill="#fff" stroke="#526159" stroke-width="2"/>
+  <text x="398" y="405" font-family="Arial, sans-serif" font-size="18" fill="#172019">Review launch notes</text>
+  <text x="864" y="405" font-family="Arial, sans-serif" font-size="14" fill="#4c5a51">Delete</text>
+  <line x1="350" y1="437" x2="930" y2="437" stroke="#dce4dc"/>
+  <circle cx="370" cy="471" r="10" fill="#3f6b4b"/>
+  <path d="M365 471l4 4 7-9" fill="none" stroke="#fff" stroke-width="2"/>
+  <text x="398" y="477" font-family="Arial, sans-serif" font-size="18" fill="#617066" text-decoration="line-through">Send design feedback</text>
+  <text x="864" y="477" font-family="Arial, sans-serif" font-size="14" fill="#4c5a51">Delete</text>
+</svg>

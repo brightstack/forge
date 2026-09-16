@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Today · Simple Todo</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header><p class="eyebrow">Simple Todo</p><h1>Today</h1></header>
+      <form data-todo-form>
+        <label for="todo-description">What needs doing?</label>
+        <div class="composer">
+          <input id="todo-description" name="description" autocomplete="off" />
+          <button type="submit">Add task</button>
+        </div>
+      </form>
+      <p id="empty-state">No tasks yet. Add the first one above.</p>
+      <ul id="todo-list" aria-label="Todo list"></ul>
+    </main>
+    <script type="module" src="src/app.js"></script>
+  </body>
+</html>

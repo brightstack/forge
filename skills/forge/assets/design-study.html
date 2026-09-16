@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Design study starter</title>
+  <style>
+    /* Board chrome only. Product styles belong inside the isolated frames. */
+    :root { font-family: system-ui, sans-serif; color: #252628; background: #f2f3f4; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    a { color: #28529b; text-underline-offset: 3px; }
+    a:hover { text-decoration-thickness: 2px; }
+    a:focus-visible, summary:focus-visible, [tabindex]:focus-visible {
+      outline: 3px solid #28529b; outline-offset: 4px;
+    }
+    .study-header { padding: 24px 32px; background: #fff; border-bottom: 1px solid #d5d8dc; }
+    .study-meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 24px; color: #545a63; font-size: 13px; }
+    .study-header h1 { margin: 14px 0 8px; font-size: clamp(24px, 3vw, 36px); font-weight: 650; letter-spacing: -0.025em; }
+    .study-header p { max-width: 76ch; margin: 0; line-height: 1.6; }
+    .study-nav { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-top: 20px; }
+    .study-nav a { padding-block: 8px; }
+    main { padding: 32px; }
+    section { margin-bottom: 48px; scroll-margin-top: 20px; }
+    h2 { margin: 0 0 12px; font-size: 20px; }
+    h3 { margin: 0; font-size: 15px; }
+    p { line-height: 1.6; }
+    .study-description { color: #545a63; max-width: 76ch; margin: 0 0 24px; }
+    .study-frames { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px; }
+    figure { min-width: 0; margin: 0; }
+    .study-frame-label { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .study-frame-label span { color: #545a63; font-size: 13px; }
+    .study-viewport { width: max-content; overflow: auto; max-width: 100%; border: 1px solid #bfc5cd; background: #e5e7ea; }
+    iframe { display: block; border: 0; background: #fff; }
+    figcaption { margin-top: 12px; max-width: 70ch; color: #444b55; font-size: 14px; line-height: 1.6; }
+    .study-notes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+    .study-notes p { margin: 8px 0 0; max-width: 70ch; }
+    details { border-top: 1px solid #c9cdd3; padding: 16px 0; }
+    summary { cursor: pointer; padding: 8px 0; font-weight: 600; }
+    dl { display: grid; grid-template-columns: 160px minmax(0, 1fr); gap: 12px 24px; line-height: 1.6; }
+    dt { font-weight: 600; }
+    dd { margin: 0; overflow-wrap: anywhere; }
+    code { font-size: 0.9em; }
+    footer { padding: 24px 32px; border-top: 1px solid #c9cdd3; color: #545a63; font-size: 13px; }
+    @media (max-width: 760px) {
+      .study-header, main, footer { padding: 20px 16px; }
+      .study-frames, .study-notes { grid-template-columns: minmax(0, 1fr); }
+      dl { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+      dd { margin-bottom: 12px; }
+    }
+    @media print {
+      :root { background: #fff; }
+      .study-nav { display: none; }
+      .study-frames { grid-template-columns: minmax(0, 1fr); }
+      figure { break-inside: avoid; }
+      .study-viewport { overflow: visible; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Replace every TODO and placeholder frame. Remove unearned sections.
+       Keep this chrome; make the product screens belong to the user's codebase.
+       Default location: spec/studies/<slug>/r1/index.html. Adjust companion link.
+       srcdoc content must be HTML-attribute escaped. Local frame files are also
+       valid; keep them alongside the page. Fixed iframe widths are true CSS
+       viewports, even when the board stacks on a phone. Do not call that stacking
+       product mobile proof. For local simulations use sandbox="allow-scripts";
+       do not grant same-origin access or wire live writes into mock controls. -->
+  <header class="study-header">
+    <div class="study-meta">
+      <strong>Design study</strong>
+      <span>r1 · Proposed · Not accepted</span>
+      <a href="../../../visual.md">Visual record and authority</a>
+    </div>
+    <h1>TODO: The change in the user's language</h1>
+    <p>TODO: What the user will be able to understand or do, and the decision this study resolves.</p>
+    <nav class="study-nav" aria-label="Study sections">
+      <a href="#comparison">Compare</a>
+      <a href="#states">Material states</a>
+      <a href="#direction">Direction</a>
+      <a href="#sources">Codebase anchors</a>
+    </nav>
+  </header>
+  <main>
+    <section id="comparison" aria-labelledby="comparison-title">
+      <h2 id="comparison-title">Current and proposed</h2>
+      <p class="study-description">TODO: Same content, state, viewport, and scale. Name the scope of the change. Frames scroll locally at full size.</p>
+      <div class="study-frames">
+        <figure id="current-desktop">
+          <div class="study-frame-label"><h3>Current</h3><span>960 × 640 · TODO: evidence type</span></div>
+          <div class="study-viewport" tabindex="0" role="region" aria-label="Current desktop frame, scroll to inspect">
+            <iframe title="Current product at 960 by 640" width="960" height="640" sandbox
+              srcdoc="<!doctype html><html lang='en'><meta charset='utf-8'><title>Current placeholder</title><body><p>TODO: Insert captured baseline or labelled source reconstruction.</p></body></html>"></iframe>
+          </div>
+          <figcaption>TODO: Observed behavior and relevant source. Label reconstruction and fixture content honestly.</figcaption>
+        </figure>
+        <figure id="proposed-desktop">
+          <div class="study-frame-label"><h3>Proposed</h3><span>960 × 640 · Local prototype</span></div>
+          <div class="study-viewport" tabindex="0" role="region" aria-label="Proposed desktop frame, scroll to inspect">
+            <iframe title="Proposed product at 960 by 640" width="960" height="640" sandbox
+              srcdoc="<!doctype html><html lang='en'><meta charset='utf-8'><title>Proposed placeholder</title><body><p>TODO: Insert project-native screen content and material local interactions.</p></body></html>"></iframe>
+          </div>
+          <figcaption>TODO: What changes and why. Keep facts and preserved product behavior consistent with Current.</figcaption>
+        </figure>
+      </div>
+    </section>
+    <section id="states" aria-labelledby="states-title">
+      <h2 id="states-title">Material states</h2>
+      <p class="study-description">TODO: Choose the state or viewport the decision earns; duplicate this frame only when necessary.</p>
+      <figure id="proposed-narrow">
+        <div class="study-frame-label"><h3>Proposed · narrow</h3><span>360 × 640 · Local prototype</span></div>
+        <div class="study-viewport" tabindex="0" role="region" aria-label="Proposed narrow frame, scroll to inspect">
+          <iframe title="Proposed product at 360 by 640" width="360" height="640" sandbox
+            srcdoc="<!doctype html><html lang='en'><meta charset='utf-8'><title>Narrow placeholder</title><body><p>TODO: Render the actual narrow layout, not a scaled desktop image.</p></body></html>"></iframe>
+        </div>
+        <figcaption>TODO: Observable responsive behavior and any missing state or interaction proof.</figcaption>
+      </figure>
+    </section>
+    <section id="direction" aria-labelledby="direction-title">
+      <h2 id="direction-title">Recommended direction</h2>
+      <div class="study-notes">
+        <div><h3>Carry forward</h3><p>TODO: Recommendation and user-visible consequence. A recommendation is not approval.</p></div>
+        <div><h3>Tradeoff and open decision</h3><p>TODO: What this costs or leaves unresolved. No invented alternative is required.</p></div>
+        <div><h3>Preserve</h3><p>TODO: Existing product behavior and design choices this proposal retains.</p></div>
+        <div><h3>Implementation latitude</h3><p>TODO: Flexible details and disposable study shortcuts; production code follows its own architecture.</p></div>
+      </div>
+    </section>
+    <section id="sources" aria-labelledby="sources-title">
+      <h2 id="sources-title">Codebase anchors</h2>
+      <details open>
+        <summary>Source map and inspection evidence</summary>
+        <dl>
+          <dt>Source revision</dt><dd>TODO: Repository revision and relevant dirty changes.</dd>
+          <dt>Surface and shell</dt><dd><code>TODO: path + symbol</code> · TODO: observed layout and proposed delta.</dd>
+          <dt>Tokens and assets</dt><dd><code>TODO: path + token/component</code> · TODO: what was reused.</dd>
+          <dt>Content and states</dt><dd><code>TODO: path + state contract</code> · TODO: fixture provenance and simulated behavior.</dd>
+          <dt>Rendered inspection</dt><dd>TODO: Exact study revision, inspected viewports/interactions, final image links, and gaps. Pending until run.</dd>
+        </dl>
+      </details>
+    </section>
+  </main>
+  <footer>Disposable design study. Proposal only; acceptance belongs to the linked visual record and its human source.</footer>
+</body>
+</html>

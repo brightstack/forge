@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "application": "spec",
+  "operation_id": "SPEC-REMINDER-PAUSE-01",
+  "authorization_file": ".forge/prepared/authorization.json",
+  "proof": {
+    "status": "document-only",
+    "source": [
+      ".forge/loops/reminder-pause/spec/change.md",
+      "authority/approved.md"
+    ],
+    "evidence": [],
+    "acceptance": []
+  },
+  "retained_inputs": [
+    {
+      "role": "accepted-baseline",
+      "source": ".forge/prepared/reminders-baseline.md",
+      "sha256": "e218fe9a7530ed194b587573b280d86f284a9217031d689992f92226247ce171"
+    },
+    {
+      "role": "approved-change",
+      "source": ".forge/loops/reminder-pause/spec/change.md",
+      "sha256": "71b2ddcd10ca4627ac717efceddae6c30f9594f8434b37a12196e48ae26f96f2"
+    },
+    {
+      "role": "context",
+      "source": ".forge/loops/reminder-pause/spec/issue.md",
+      "sha256": "b8c68b42568f68f5ea0ddade8e87e5cd96110fe618864500a682e71fd555997f"
+    }
+  ],
+  "changes": [
+    {
+      "path": "docs/specs/reminders/SPEC.md",
+      "kind": "standing-spec",
+      "action": "update",
+      "base_sha256": "e218fe9a7530ed194b587573b280d86f284a9217031d689992f92226247ce171",
+      "proposed_file": ".forge/prepared/reminders-target.md",
+      "proposed_sha256": "3c313b30dc73b9df81309578437ed03e896343b8a841d87b8d8ca9bf9ad1c042",
+      "metadata_changes": ["updatedAt"]
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f4f1ea" />
+    <title>Simple Todo</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script type="module" src="/src/app.js"></script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="todo-panel" aria-labelledby="page-title">
+        <header class="page-header">
+          <div class="brand-mark" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </div>
+          <p class="eyebrow">Simple Todo</p>
+          <h1 id="page-title">Make room for what’s next.</h1>
+          <p class="intro">Capture a task, check it off, and keep moving.</p>
+        </header>
+
+        <form class="add-form" id="add-form">
+          <label for="task-description">What needs doing?</label>
+          <div class="input-row">
+            <input
+              id="task-description"
+              name="description"
+              type="text"
+              placeholder="Add a task…"
+              autocomplete="off"
+              required
+              autofocus
+            />
+            <button type="submit">Add task</button>
+          </div>
+        </form>
+
+        <div class="list-heading">
+          <h2>Your list</h2>
+          <p id="task-count" aria-live="polite">No tasks</p>
+        </div>
+
+        <div class="empty-state" id="empty-state">
+          <div class="empty-icon" aria-hidden="true">
+            <span></span>
+          </div>
+          <h3>A clear slate.</h3>
+          <p>Add your first task above.</p>
+        </div>
+
+        <ul class="task-list" id="task-list" aria-label="Todo tasks"></ul>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "name": "forge-todo-eval-v4",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --hot server.js",
+    "start": "bun server.js",
+    "test": "bun test",
+    "build": "bun build src/app.js --outdir dist --target browser"
+  }
+}

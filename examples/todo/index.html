@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f4f2ec" />
+    <title>Today — Todo list</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="page-header">
+        <p class="eyebrow">Your day, clearly</p>
+        <h1>What needs doing?</h1>
+        <p class="intro">Keep a short list. Finish what matters.</p>
+      </header>
+
+      <section class="todo-card" aria-labelledby="list-heading">
+        <h2 id="list-heading" class="visually-hidden">Todo list</h2>
+
+        <form class="todo-form">
+          <label for="todo-input">Add a task</label>
+          <div class="composer">
+            <input
+              id="todo-input"
+              name="todo"
+              type="text"
+              autocomplete="off"
+              maxlength="200"
+              placeholder="e.g. Send the project update"
+            />
+            <button type="submit">Add task</button>
+          </div>
+        </form>
+
+        <p id="persistence-warning" class="warning" role="status" hidden>
+          Changes may not be retained after you close or refresh this page.
+        </p>
+
+        <div class="list-header" aria-hidden="true">
+          <span>Today</span>
+          <span>One thing at a time</span>
+        </div>
+
+        <p id="empty-state" class="empty-state">
+          Nothing on your list yet. Add a task above to get started.
+        </p>
+        <ul id="todo-list" class="todo-list" hidden></ul>
+
+        <p id="action-status" class="visually-hidden" aria-live="polite"></p>
+      </section>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

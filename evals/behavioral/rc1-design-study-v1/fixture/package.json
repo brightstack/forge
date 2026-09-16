@@ -1,0 +1,5 @@
+{
+  "name": "harbor-study-fixture",
+  "private": true,
+  "description": "Static HTML/CSS fixture; no dependencies or build step"
+}

@@ -1,0 +1,8 @@
+{
+  "name": "forge-spec-apply-feature-v2-fixture",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "bun test ./tests"
+  }
+}

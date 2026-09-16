@@ -1,0 +1,27 @@
+{
+  "docs/specs/reminders/SPEC.md": {
+    "id": "9f748f73-8085-4ddb-b599-727404129bd2",
+    "code": "REMINDERS",
+    "type": "standing-spec"
+  },
+  ".forge/loops/reminder-pause/spec/issue.md": {
+    "id": "ee73cd1b-206a-46a5-86fd-858418845e19",
+    "code": "REMINDER-PAUSE",
+    "type": "issue"
+  },
+  ".forge/loops/reminder-pause/spec/change.md": {
+    "id": "657ed255-fd53-4579-9855-b7f1d800e75c",
+    "code": "REMINDER-PAUSE-CHANGE",
+    "type": "spec-change"
+  },
+  "docs/knowledge/index.md": {
+    "id": "6154f186-6c45-416a-83be-6ed1d70e1648",
+    "code": "KB-INDEX",
+    "type": "kb-index"
+  },
+  "docs/knowledge/reminders.md": {
+    "id": "80f9d42b-f788-4870-bfe6-01ac23cfb8af",
+    "code": "REMINDER-RUNTIME",
+    "type": "okf-concept"
+  }
+}

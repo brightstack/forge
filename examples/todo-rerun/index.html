@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Todo list</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="todo-shell">
+      <header>
+        <p class="eyebrow">TODAY</p>
+        <h1>What needs doing?</h1>
+        <p class="intro">Keep the list small. Finish what matters.</p>
+      </header>
+
+      <form id="todo-form" class="todo-form">
+        <label for="todo-input">New task</label>
+        <div class="todo-form__row">
+          <input
+            id="todo-input"
+            name="todo"
+            type="text"
+            placeholder="Write down a task"
+            autocomplete="off"
+            required
+          />
+          <button type="submit">Add task</button>
+        </div>
+      </form>
+
+      <section aria-labelledby="list-heading">
+        <div class="list-heading">
+          <h2 id="list-heading">Your list</h2>
+          <span id="task-count" aria-live="polite">0 tasks</span>
+        </div>
+        <p id="empty-state" class="empty-state">No tasks yet.</p>
+        <ul id="todo-list" class="todo-list"></ul>
+      </section>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

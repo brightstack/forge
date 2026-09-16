@@ -1,0 +1,11 @@
+{
+  "name": "todo-eval-v3",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch server.ts",
+    "start": "bun server.ts",
+    "test": "bun test",
+    "build": "bun build src/app.js --target=browser --outdir=.build"
+  }
+}

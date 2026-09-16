@@ -1,0 +1,19 @@
+{
+  "name": "forge",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "description": "Composable delivery skills and a compiled local mechanics CLI",
+  "bin": { "forge": "./dist/forge" },
+  "files": ["dist", "skills", "agents", "LICENSE", "README.md", "OKF.md", "THIRD_PARTY_NOTICES.md"],
+  "scripts": {
+    "build": "bun run build:cli",
+    "build:cli": "bun build --compile --minify ./src/cli.ts --outfile ./dist/forge",
+    "check": "bun x tsc --noEmit",
+    "test": "bun test ./tests",
+    "deploy": "bun scripts/deploy.ts"
+  },
+  "dependencies": { "commander": "15.0.0", "yaml": "2.9.0" },
+  "devDependencies": { "@types/bun": "1.4.0", "typescript": "7.0.2" }
+}

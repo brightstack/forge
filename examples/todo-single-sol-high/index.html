@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="A focused Todo list for adding, completing, reopening, and deleting tasks."
+    />
+    <title>Todo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Newsreader:opsz,wght@6..72,600&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main>
+      <section class="todo-card" aria-labelledby="todo-heading">
+        <header class="todo-header">
+          <p class="eyebrow">Make space for what matters</p>
+          <h1 id="todo-heading">Today</h1>
+          <p class="intro">A short list. A clear mind. One thing at a time.</p>
+        </header>
+
+        <form id="task-form" class="task-form">
+          <label for="task-description">What needs doing?</label>
+          <div class="task-entry">
+            <input
+              id="task-description"
+              name="description"
+              type="text"
+              placeholder="Add a task…"
+              autocomplete="off"
+              required
+            />
+            <button type="submit">Add task</button>
+          </div>
+        </form>
+
+        <div class="list-heading">
+          <h2>Your list</h2>
+          <p id="task-count" aria-live="polite">0 tasks</p>
+        </div>
+
+        <p id="empty-state" class="empty-state">
+          Nothing on your list yet.<br />Start with one small thing.
+        </p>
+        <ul id="task-list" class="task-list" aria-label="Todo tasks"></ul>
+      </section>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

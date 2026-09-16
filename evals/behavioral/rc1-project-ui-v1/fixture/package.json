@@ -1,0 +1,8 @@
+{
+  "name": "forge-rc1-project-ui-fixture",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "bun test tests"
+  }
+}
