@@ -5,7 +5,7 @@
 [![Beta](https://img.shields.io/badge/status-beta-yellow)](https://github.com/brightstack/forge)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-From [Bright](https://www.brightstack.ai).
+Website: [forge.brightstack.ai](https://forge.brightstack.ai). From [Bright](https://www.brightstack.ai).
 
 > **Beta.** Forge is early and we improve it daily. Skills, records, and CLI
 > behavior can still change. Follow [the GitHub repo](https://github.com/brightstack/forge)
