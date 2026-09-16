@@ -1,8 +1,0 @@
-{
-  "name": "todo-eval-v2",
-  "private": true,
-  "scripts": {
-    "dev": "bun --hot server.js",
-    "test": "bun test"
-  }
-}

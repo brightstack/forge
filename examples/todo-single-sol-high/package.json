@@ -1,9 +1,0 @@
-{
-  "name": "todo-single-sol-high",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "dev": "bun --hot --port 4173 index.html",
-    "test": "bun test"
-  }
-}

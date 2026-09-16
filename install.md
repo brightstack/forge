@@ -17,7 +17,7 @@ curl -fsSL https://get.brightstack.ai/forge/install.sh | sh
 Claude Code:
 
 ```bash
-FORGE_TOOLS=claude curl -fsSL https://get.brightstack.ai/forge/install.sh | sh
+curl -fsSL https://get.brightstack.ai/forge/install.sh | FORGE_TOOLS=claude sh
 ```
 
 The installer:
@@ -122,7 +122,7 @@ Install Forge in this project.
 Install Forge in this project.
 
 1. If `forge` is missing, run:
-   FORGE_TOOLS=claude curl -fsSL https://get.brightstack.ai/forge/install.sh | sh
+   curl -fsSL https://get.brightstack.ai/forge/install.sh | FORGE_TOOLS=claude sh
    If the installer says ~/.local/bin is not on PATH, tell the human how to add
    it. Do not edit shell rc files.
 2. If `forge` is already installed, run `forge setup --tools claude` from this

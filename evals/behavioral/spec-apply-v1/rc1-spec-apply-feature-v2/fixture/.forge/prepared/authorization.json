@@ -1,7 +1,0 @@
-{
-  "actor": "human",
-  "source": "authority/approved.md",
-  "quote": "I approve pause and resume for reminders while retaining the selected cadence and all existing invalid-cadence behavior.",
-  "scope": "Apply the approved reminder pause/resume target during Spec.",
-  "date": "2026-09-10"
-}

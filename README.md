@@ -34,7 +34,7 @@ curl -fsSL https://get.brightstack.ai/forge/install.sh | sh
 Claude Code:
 
 ```bash
-FORGE_TOOLS=claude curl -fsSL https://get.brightstack.ai/forge/install.sh | sh
+curl -fsSL https://get.brightstack.ai/forge/install.sh | FORGE_TOOLS=claude sh
 ```
 
 That writes `~/.local/bin/forge` and runs `forge setup` in the current directory.
@@ -72,7 +72,7 @@ Install Forge in this project.
 Install Forge in this project.
 
 1. If `forge` is missing, run:
-   FORGE_TOOLS=claude curl -fsSL https://get.brightstack.ai/forge/install.sh | sh
+   curl -fsSL https://get.brightstack.ai/forge/install.sh | FORGE_TOOLS=claude sh
    If the installer says ~/.local/bin is not on PATH, tell the human how to add
    it. Do not edit shell rc files.
 2. If `forge` is already installed, run `forge setup --tools claude` from this
@@ -90,7 +90,7 @@ Humans can paste one of these:
 
 **Claude Code**
 
-> Install Forge in this repo with `FORGE_TOOLS=claude curl -fsSL https://get.brightstack.ai/forge/install.sh | sh`, then read `.claude/skills/forge/SKILL.md` and use Forge for this request. Stop after Plan unless I ask you to build.
+> Install Forge in this repo with `curl -fsSL https://get.brightstack.ai/forge/install.sh | FORGE_TOOLS=claude sh`, then read `.claude/skills/forge/SKILL.md` and use Forge for this request. Stop after Plan unless I ask you to build.
 
 The lowercase `forge` executable handles managed records, validation, candidate
 snapshots, and memory writes. It does not select phases, so there is no
