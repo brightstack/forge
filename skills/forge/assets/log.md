@@ -4,7 +4,7 @@
 
 ## TODO — Event
 
-- Actor: TODO
+- Actor: TODO - role name only
 - Artifact or candidate: TODO
 - Observed: TODO
 - Evidence: TODO

@@ -18,8 +18,8 @@ Manager owns product scope and observable outcome criteria when those need
 authoring; technical tasks stay with Engineer. Use the host's mapped professional
 teammates when available, with Forge's judgment guidance for their assignment.
 A precise engineering Plan over a ready Issue needs no new PM pass. For an Issue
-request without a ready Issue or issue-like object, PM prepares and assesses it
-with Engineer input under the shared workflow rules, at either depth. Product
+request without a ready Issue or issue-like object, PM prepares the Issue, then
+Engineer assesses it under the shared workflow rules, at either depth. Product
 authorship does not add another Product approval gate.
 
 For a small Issue, record the proposed route, existing machinery to reuse, proof,
@@ -31,18 +31,18 @@ obligations to scenario IDs; never use “implement component X” as acceptance
 
 ## Save the Plan at the requested depth
 
-A concise Plan still uses managed identity and validation. Reuse an existing
-identified Issue's implementation notes when that is the best home; otherwise
-create `spec/plan.md` in the current loop, even when its body is one paragraph.
-A plain Markdown file or a hand-written `.forge` path does not satisfy this
-contract. Resume an existing loop when it fits. Otherwise initialize its records
-with the installed CLI. Keep its current state accurate without inventing
-completed phases. Read [protocol](protocol.md) for additional authority or handoff
-details when needed, not to populate every possible lifecycle record.
+A direct Plan deliverable or a Plan that needs an independent handoff uses managed
+identity and validation. For Quick Build, brief Plan notes may instead live in the
+accepted Issue, loop index, or Build log. Do not create a separate Plan merely to
+account for the phase. Resume an existing loop when it fits; initialize a new one
+only when the work actually needs a managed record. Keep current state accurate
+without inventing completed phases. Read [protocol](protocol.md) for additional
+authority or handoff details when needed, not to populate every possible lifecycle
+record.
 
-Use the installed CLI to scaffold the record, then edit its body with normal file
-tools, preserving the generated frontmatter and a descriptive `#` title. For a
-new loop and Plan, the commands are:
+When a separate managed Plan is needed, use the installed CLI to scaffold it, then
+edit its body with normal file tools, preserving the generated frontmatter and a
+descriptive `#` title. For a new loop and Plan, the commands are:
 
 ```text
 forge init <loop> --repo <repo> --title <title>
@@ -92,12 +92,12 @@ test expectation changes, and authority edits. Expand from paths when exported
 contracts or actual semantics reach more consumers. The Builder proposes this
 scope; it is not a path-only pass or a full-product replay.
 
-Avoid speculative architecture, fixed agent counts, file-by-file instructions,
-and duplicated Spec prose. Builders own reversible tactics. If implementation
+Avoid speculative architecture, unrequested feature flags, configuration,
+fixed agent counts, file-by-file instructions, and duplicated Spec prose. Builders own reversible tactics. If implementation
 would require a semantic change, return the decision before dependent work.
 
-In Guided, present a newly consequential Plan and obtain human approval before
-its boundary review. Auto uses the explicit grant without an ordinary pause and
+In Guided, brief a newly consequential Plan in the conversation, link the
+exact Plan, and obtain human approval before its boundary review. Auto uses the explicit grant without an ordinary pause and
 records delegated authority, never human approval of unseen text. Existing
 approval can be reused when it covers the same strategy. Independent Plan review
 checks faithful coverage, technical soundness, proportionality, and usable

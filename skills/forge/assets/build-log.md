@@ -8,7 +8,7 @@
 
 - Selected outcomes: TODO
 - Accepted authority: TODO
-- Builder: TODO
+- Builder: TODO - role name only
 - Delegated work and owned boundaries: TODO or none
 - Comparison base: TODO
 - Candidate identity: TODO
@@ -34,7 +34,7 @@
 
 ### Independent Review
 
-- Reviewer: TODO
+- Reviewer: TODO - role name only
 - Reviewed actual candidate, retained baseline, approved delta, and canonical result: TODO or `None.`
 - Lenses and evidence: TODO
 - Findings and dispositions: TODO or none

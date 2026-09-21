@@ -25,10 +25,11 @@ boundary cases, and affected integration behavior.
 
 - Effort and complexity: TODO - assessment and material uncertainty; reuse an adequate estimate
 - Depth: TODO - Quick or Full; record the user's selection and changed assessment
-- Agents: TODO - assigned role names and specialist needs
+- Agents: TODO - assigned role names only; never first names
 
-TODO: PM records the assessment with Engineer input when preparing a missing or
-unready Issue. Explain required design/contracts and proof; no separate estimator.
+TODO: PM records the Issue first. Engineer records the assessment after that
+draft exists. Explain required design then contracts and proof; no separate
+estimator. Do not spawn those specialists together.
 
 ## Implementation Notes
 

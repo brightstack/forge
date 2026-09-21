@@ -22,7 +22,7 @@ and checks need not be duplicated. Staffing never waives coverage or Acceptance.
 | Design | UI behavior, rendered surfaces, or UI design artifacts change | Design rubric below: accepted visual fidelity, interaction states, accessibility, UI conventions |
 | Quality | A knowledge-work deliverable is the reviewed outcome | Quality rubric below: accuracy, completeness, reasoning, usefulness, writing/artifact standards |
 | Spec | Every candidate | Spec rubric below: approved end state, constraints, omissions, invented requirements, preservation |
-| Craft | Every candidate | Craft rubric below: proportionality, overbuilding, underbuilding, justified mechanisms and remedies |
+| Craft | Every candidate | Craft rubric below: proportionality, overbuilding, underbuilding, current evidence of necessity, justified mechanisms and remedies |
 
 UI markup and stylesheet changes, including CSS-only changes, activate both Code
 Review and Design: Code Review inspects source correctness and engineering
@@ -139,12 +139,20 @@ necessary change to accepted intent goes to the human; it is not a workaround.
 ## Craft rubric
 
 Judge the mechanism against the accepted problem and present operating conditions.
-Challenge unnecessary abstractions, state, configuration, protocols, indirection,
-and dependencies; also challenge inadequate robustness at real trust, data-loss,
-accessibility, and recovery boundaries. Follow the target's reuse/simplicity
-standards and distinguish an equally valid tactic from a material violation.
+Challenge both unnecessary machinery and inadequate robustness at real trust,
+data-loss, accessibility, and recovery boundaries. Follow the target's reuse
+and simplicity standards; an equally valid tactic is not a violation.
 
-Require a current maintenance or operational consequence, not hypothetical scale
-or personal architectural taste. A remedy must solve the evidenced problem at
-proportionate cost. A real defect needing a larger correction stays real and may
-warrant RETHINK; disproportionate advice cannot become mandatory work.
+A new named type, layer, Spec section, config knob, protocol, or dependency
+needs current evidence. It is earned when removing it would break the asked
+outcome or a present boundary, collapse distinct current meanings or invariants,
+prevent independent work from sharing a contract it already needs, or when
+concrete recurrence shows duplication now costs more than the abstraction.
+Future flexibility, hypothetical scale, template completeness, and taste are
+not evidence.
+
+Apply this test only to the proposed machinery. Do not invent architecture to
+justify a concept, and do not erase an earned distinction merely to reduce
+concept count. Require a current consequence and a proportionate remedy. A
+real defect needing a larger correction stays real and may warrant RETHINK;
+disproportionate advice cannot become mandatory work.

@@ -8,11 +8,15 @@ import { validate_document_content } from "../src/records.ts";
 const behavioral = resolve(import.meta.dir, "../evals/behavioral");
 const setup = join(behavioral, "setup_case.py");
 const oracle = join(behavioral, "oracle.py");
+// `evals/` stays in the Bright monorepo and is not copied into the published
+// package (see PUBLISH.md), while `tests/` is. A public clone therefore has no
+// fixtures to stage, so these cases skip there instead of failing the suite.
+const fixtures = test.skipIf(!existsSync(behavioral));
 function stage(...args: string[]) {
   return spawnSync("python3", [setup, ...args], { encoding: "utf8" });
 }
 
-test("RC1 fixture inventory includes the approval-gated lifecycle", () => {
+fixtures("RC1 fixture inventory includes the approval-gated lifecycle", () => {
   expect(readdirSync(behavioral).filter(name => /^rc1-.*-v1$/.test(name)).sort()).toEqual([
     "rc1-bounded-work-v1", "rc1-bug-hypothesis-v1", "rc1-design-study-v1", "rc1-lifecycle-approval-v1",
     "rc1-memory-reconcile-v1", "rc1-project-ui-v1", "rc1-review-repair-v1", "rc1-small-issue-v1",
@@ -20,7 +24,7 @@ test("RC1 fixture inventory includes the approval-gated lifecycle", () => {
   ]);
 });
 
-test("staging excludes evaluator and future response, and reveals resume once", () => {
+fixtures("staging excludes evaluator and future response, and reveals resume once", () => {
   const root = mkdtempSync(join(tmpdir(), "forge-fixture-")), workspace = join(root, "trial");
   try {
     const staged = stage("rc1-memory-reconcile-v1", workspace, "--no-git");
@@ -34,13 +38,13 @@ test("staging excludes evaluator and future response, and reveals resume once", 
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
 
-test("staging refuses an existing workspace", () => {
+fixtures("staging refuses an existing workspace", () => {
   const root = mkdtempSync(join(tmpdir(), "forge-fixture-"));
   try { expect(stage("rc1-bounded-work-v1", root, "--no-git").status).not.toBe(0); }
   finally { rmSync(root, { recursive: true, force: true }); }
 });
 
-test("approval-gate oracle rejects untracked implementation files", () => {
+fixtures("approval-gate oracle rejects untracked implementation files", () => {
   const root = mkdtempSync(join(tmpdir(), "forge-fixture-")), workspace = join(root, "trial");
   try {
     expect(stage("rc1-lifecycle-approval-v1", workspace).status).toBe(0);
@@ -51,7 +55,7 @@ test("approval-gate oracle rejects untracked implementation files", () => {
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
 
-test("managed fixture documents validate under the current metadata contract", () => {
+fixtures("managed fixture documents validate under the current metadata contract", () => {
   for (const relative of [
     "rc1-project-ui-v1/fixture/authority/design.md",
     "rc1-review-repair-v1/fixture/authority/spec.md",

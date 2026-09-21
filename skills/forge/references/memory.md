@@ -16,7 +16,7 @@ Use [knowledge and proportional preservation](knowledge.md) for the optional
 six-topic reading map and the signals -> affected obligations -> selected checks
 -> gaps handoff. OKF types stay open and no topic or corpus is mandatory.
 
-## Meaning is prepared before mechanics
+## The applying operation owns preparation and review
 
 The responsible Spec or knowledge specialist reads the base, current canonical
 file, source intent, relevant decisions, and every affected requirement and
@@ -24,23 +24,23 @@ Given/When/Then scenario. They prepare complete proposed files, identify preserv
 meaning, and return conflicts to the human. A heading match or successful CLI
 check cannot decide semantic preservation, approval, or implementation truth.
 
-After the responsible human approves changed meaning, the Spec owner may install
-the exact prepared standing-Spec and related knowledge bytes through the natural
-`Forge spec apply <change>` skill operation. A fast Worker can prepare bounded
-whole files; a separate fast checker
-performs the existing Spec boundary fidelity check against the retained accepted
-baseline, approved change, scenarios, decisions, and source. Use the models and
-capabilities the current host exposes, honoring user preferences. Missing
-independent checking stays a gap; it does not require a provider default or a
-second full Review team.
+`Forge spec apply <change>` requires an approved change and an explicit request or
+authority, whether called directly or once by [Finish](finish.md). The operation's
+responsible owner prepares complete target bytes from the approved meaning and
+current canonical base. One fresh independent agent with no write ownership then
+performs a proportional read-only adversarial review of the complete changed
+result plus directly affected canonical documents—not the whole corpus by default.
+It checks contradictions, omitted or distorted approved commitments,
+meaning-changing duplication, broken requirement/scenario meaning or normative
+links, and wrong-repository targets.
 
-Early application is a document-only result. Plan and Build still follow. Before
-independent Build Review, assemble the complete candidate diff containing actual
-code, tests, canonical Spec, and earned factual knowledge edits. Review receives
-the retained accepted baseline and approved change separately from the working
-files. Acceptance exercises that exact Review-passed candidate. A standalone
-authorized document change can stop after Spec apply; it does not imply Build,
-runtime acceptance, Ship, or publication.
+Record the checker's concise `PASS` or `BLOCKED` verdict and material findings in
+the loop log when one exists, otherwise in the direct operation result. The checker
+cannot rewrite the proposal or approve changed meaning. `BLOCKED` stops before
+mutation; on `PASS`, use the existing guarded verification and application
+mechanics below. Preparation, this single adversarial read, and guarded apply are
+one Spec-apply sequence. Finish never repeats them. This is not a panel, lifecycle
+Review, durable report protocol, or whole-corpus review.
 
 Human decisions use the guarded command
 `forge decision record [LOOP_DECISIONS_PATH] --repo REPO --authorization-file FILE
@@ -55,9 +55,15 @@ silently rewrites a prior decision.
 `Forge spec apply <change>` is a natural skill operation, not an executable
 subcommand. The Spec owner prepares the version 1 manifest and uses `forge memory
 verify MANIFEST --repo REPO`, then `forge memory apply MANIFEST --repo REPO` only
-after the full input and independent fidelity check pass. Existing generic memory
+after the inputs and single adversarial read above pass. Existing generic memory
 and KB jobs remain compatible. Natural-language `Forge spec merge` means this same
 skill operation; there is no executable Spec apply or merge command.
+
+Finish invokes this natural Spec-apply operation once; there is no executable
+`forge finish`.
+Standing-Spec and knowledge changes are optional and independent. Record each
+successful receipt. On retry, matching receipts and installed bytes are complete;
+do not replay them.
 
 ```json
 {

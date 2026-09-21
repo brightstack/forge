@@ -141,6 +141,9 @@ bun run build:cli
 FORGE_TEST_BINARY="$PWD/dist/forge" bun test ./tests
 ```
 
+These tests cover CLI mechanics. Forge's behavioral evaluation suite, which is
+what actually measures instruction quality, is not yet public.
+
 ## License
 
 [MIT](LICENSE). Copyright 2026 Bright. Dependencies and attributed source retain

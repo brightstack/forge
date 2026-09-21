@@ -26,3 +26,9 @@ not semantic correctness or runtime behavior.
 For work in progress, report `Done`, `Evidence`, `Gaps`, and `Next`. Omit
 empty sections, unchanged status, prompt transcripts, token counts, raw agent
 rosters, and speculative follow-on work.
+
+At a human gate, follow the [gate briefing](workflows.md#gate-briefing). That
+guidance is chat reporting only. Lead with what changed for the user,
+added/removed, and the ask. Then include the exact artifact links. Do not
+treat a path, heading list, or loop ID as the briefing, and do not omit the
+links. Do not save the briefing as a loop record.

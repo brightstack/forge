@@ -10,6 +10,8 @@
 - Comparison base and dirty state: TODO
 - Path scope: TODO
 - Inspected authority: TODO
+- Authority status: TODO: whether that authority carries recorded human approval,
+  or is a draft this review is judged against as written
 
 ## Checks and observed evidence
 

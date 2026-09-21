@@ -5,8 +5,9 @@ context retrieval, informed questions, and the proposed change to standing meani
 It does not authorize Build or Ship.
 
 Start with accepted [Launch choices and workflow assignments](workflows.md).
-PM prepares a missing/unready Issue at either depth with Engineer assessment;
-Designer and Architect join under the shared triggers before dependent work.
+PM prepares a missing/unready Issue at either depth; Engineer assesses after
+that draft exists. Designer and Architect join under the shared triggers in
+that order, each waiting on the upstream artifact.
 
 ## Choose the smallest useful artifact
 
@@ -17,7 +18,7 @@ Designer and Architect join under the shared triggers before dependent work.
   need early alignment.
 - **Issue:** reuse a ready Issue or have PM create/complete
   [issue.md](../assets/issue.md), including effort/complexity, uncertainty, depth,
-  specialist assignments, and proof with Engineer input. Do not duplicate it into
+  specialist assignments, and proof after Engineer assessment. Do not duplicate it into
   a project Spec or infer low complexity from its workflow name.
 - **Bug:** Engineer records expected/actual behavior, impact, available
   reproduction, and applicable scenarios in [bug.md](../assets/bug.md). Do not
@@ -49,7 +50,10 @@ interfaces, repository facts, and existing solutions. Missing coverage is a
 visible gap rather than a reason to block incremental adoption. Ask only
 consequential human choices that cannot be retrieved, and include a recommendation.
 Do not force a fixed interview, document spine, exhaustive catalog, or empty
-sections.
+sections. Do not add Spec files, feature flags, configuration, extra scenarios,
+or compatibility promises the human did not ask for. Delete unused template
+sections. Do not bury extra product or technical decisions inside a Spec to
+make it look complete.
 
 Use `forge kb ask` to retrieve authority and existing vocabulary. Keep human
 decisions, accepted requirements, observations, and proposals distinct. A loop
@@ -71,13 +75,14 @@ Do not add a second lifecycle review or provider/model default. If the checker i
 unavailable or meaning is ambiguous, report the gap to the responsible owner;
 return newly consequential meaning to the human.
 
-Apply approved behavioral intent during Spec with the natural skill request
-`Forge spec apply <change>` as described in [memory](memory.md). Retain the
-accepted baseline and approved change as named,
-hashed inputs independently of the current write base and canonical result. The
-application receipt proves only the checked document mutation. An interrupted or
-direct Spec call can resume from those retained inputs and current files without
-promoting the working copy to accepted baseline or claiming implementation.
+Record proposed standing-Spec and knowledge meaning independently when the work
+earns either. Both are optional. The active repository owns its canonical memory,
+and a user-facing deliverable is not automatically knowledge. Spec records and
+approves the loop change; it does not routinely edit canonical Specs or knowledge.
+The explicit natural operation `Forge spec apply <change>` remains available with
+separate request or authority. Routine [Finish](finish.md) may invoke it at actual
+work completion, normally Build-or-later or after a general-work deliverable;
+direct Spec and Plan remain proposal-only.
 
 For behavior, assign stable scenario IDs and write explicit Given/When/Then:
 
@@ -94,12 +99,12 @@ viewports so later Review and Acceptance can compare the actual result.
 
 ## Completion
 
-Return the artifact paths, accepted and open decisions, retained baseline/change
-sources and hashes, application receipt/result hashes when applied, knowledge
-topics or affected records, preservation chain, boundary-check status, and next
-requested boundary. Mark installed target meaning as document-only and runtime
-proof as pending. A direct Spec call stops here, including under Auto. In Guided
-delivery, present new/materially revised Spec and stop before Plan; record human
-approval of that revision before boundary review. Auto follows its grant through
+Return the artifact paths, accepted and open decisions, proposed Spec or knowledge
+meaning when present, active repository, preservation chain, boundary-check status,
+and next requested boundary. A direct Spec call stops here, including under Auto.
+In Guided
+delivery, brief the new/materially revised Spec in the conversation, link the
+exact draft, and stop before Plan; record human approval of that revision
+before boundary review. Auto follows its grant through
 ordinary gates and retains the same review. Follow [workflow authority rules](workflows.md)
 for consequential revisions, depth changes, and protected-Spec application.

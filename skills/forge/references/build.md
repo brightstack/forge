@@ -11,7 +11,8 @@ delegation, integration, behavior-preserving simplification, internal review,
 evidence, and coherent repair. Read the accepted Spec/ticket, Plan, decisions,
 applicable repository harness, current candidate/base, shared seams, and proof
 contract. Follow [Launch and workflow preparation](workflows.md): a missing or
-unready Issue goes to PM with Engineer input before Build, even at Quick depth.
+unready Issue goes to PM first, then Engineer assessment, before Build, even at
+Quick depth.
 This does not require a Project Spec. Do not bypass Launch, new intent, or
 consequential strategy gates because the user requested implementation.
 
@@ -51,7 +52,7 @@ record a justified no-op. Direct “Forge simplify” performs this bounded Buil
 operation without becoming a lifecycle phase.
 
 Before independent Review, assemble the complete actual candidate diff: code,
-tests, early-applied canonical Spec, earned factual knowledge edits, and decision
+tests, any directly applied canonical Spec, earned factual knowledge edits, and decision
 references that the outcome changed. Supply the retained accepted baseline and
 approved delta separately so canonical working bytes do not become their own
 authority. Review and Acceptance bind to this same candidate. A document-only

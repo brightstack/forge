@@ -2,7 +2,8 @@
 
 Forge uses professional personas for accountable judgment and temporary helpers
 for bounded investigation, production, or inspection. Load only the roles earned
-by the current work.
+by the current work. Address them by role: Product Manager, Designer, Architect,
+Engineer, Reviewer, QA, Researcher. Never first names.
 
 ## Professional personas
 

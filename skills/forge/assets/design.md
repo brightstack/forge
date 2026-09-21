@@ -7,7 +7,8 @@ accepted user outcome.
 
 ## Visual Authority
 
-- Companion record: TODO: identified visual.md path
+- Companion record: TODO: identified visual.md path, or `Not granted.` naming
+  the assignment that owns it
 - Accepted asset or board: TODO
 - Accepted revision and represented states: TODO
 - Exploratory variants: TODO or none

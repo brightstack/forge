@@ -16,12 +16,17 @@ Before closure, check once that:
 - each requested PR, merge, deployment, release, document publication, or other
   external action is explicitly authorized.
 
-The canonical target normally entered the working tree during approved Spec
-application and joined the complete Build candidate. Do not routinely perform a
-second substantive canonical apply or request another semantic post-apply verdict
-at Ship. The existing Build Review judged code, tests, actual canonical Spec, and
-earned KB bytes together; Acceptance exercised that same candidate. Structural
-checks, receipt matching, or a clean tree do not replace either judgment.
+Run [Finish](finish.md) before publication when approved unapplied Spec/knowledge
+meaning or authorized existing-PR readiness remains. It reuses existing guarded
+operations and observed Git/PR state; it does not replace Build Review or
+Acceptance. Structural checks, receipt matching, or a clean tree do not replace
+either judgment.
+
+An exact inspected canonical-only delta produced by Finish's Spec apply does not
+by itself stale the implementation Review or Acceptance candidate. Record and
+inspect that the delta is limited to the reviewed canonical result. Any code,
+runtime, test, configuration, uninspected canonical file, or additional meaning
+change returns to the affected Review or Acceptance boundary before closure.
 
 Record one concise [ship.md](../assets/ship.md) closure with the accepted candidate,
 current candidate, comparison base, Review and Acceptance references, applicable

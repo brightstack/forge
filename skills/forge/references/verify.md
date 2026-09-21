@@ -2,8 +2,8 @@
 
 Acceptance exercises the actual outcome after independent Review. Use a
 clean-context QA professional for software or the relevant acceptance specialist
-for general work. Acceptance stays read-only on the candidate and does not
-prescribe implementation.
+for general work when there is a distinct outcome to exercise. Acceptance stays
+read-only on the candidate and does not prescribe implementation.
 The natural requests `Forge acceptance` and `Forge verify` enter this same phase;
 the `verify.md` filename and `verify/` evidence path remain stable compatibility
 names.
@@ -12,7 +12,7 @@ Pin the Review-passed candidate/base and load accepted scenarios, NFRs, design
 revision, relevant decisions, environment/fixtures, runnable setup, and known
 gaps. If current independent Review is missing, changed, or unbound, first obtain a
 bounded Review of the same candidate. That Review does not itself prove acceptance.
-For an early-applied Spec, also retain the accepted baseline and approved delta as
+For a directly applied Spec, also retain the accepted baseline and approved delta as
 independent inputs; the current canonical file and matching receipt do not prove
 authority or implementation.
 
@@ -21,6 +21,13 @@ unchanged outcomes, and material failure paths named by the obligations. Reuse
 unaffected proof only with a reason tied to the scope. A changed path list alone
 does not establish preservation, and every patch does not require full-product
 reverification.
+
+When a candidate changes only instructions or documentation and has no runtime,
+UI, or external outcome that Acceptance can exercise beyond exact-candidate Review
+and deterministic checks, reuse that evidence by reference. Do not dispatch a
+separate acceptance agent or create a standalone Acceptance record. State any
+unrun live-agent or provider behavior honestly; evidence reuse does not turn it
+into runtime proof.
 
 For each applicable item, record in [acceptance.md](../assets/acceptance.md):
 scenario/NFR, environment and candidate, action or command, expected result,

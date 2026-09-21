@@ -46,13 +46,13 @@ inventory unrelated untouched areas.
 
 ## Ownership and timing
 
-Spec and Plan carry domain, API, process, data, runtime, operations, and design
-intent into the early-applied canonical target after human approval. The Builder
-finishes factual observations as implementation becomes observable and proposes
-the preservation scope. The Reviewer challenges it and reviews actual canonical
-bytes beside code and tests. Acceptance exercises affected unchanged and changed
-or new outcomes. Ship checks the complete candidate once and records concise
-closure; it does not routinely rewrite canonical knowledge.
+Spec and Plan record approved domain, API, process, data, runtime, operations, and
+design intent without routine canonical writes. Direct Spec apply or Finish later
+uses guarded memory mechanics for approved changes in the active repository. The
+Builder finishes factual observations as implementation becomes observable and
+proposes the preservation scope. The Reviewer challenges it. Acceptance exercises
+affected unchanged and changed or new outcomes. Ship checks the complete candidate
+once and records concise closure.
 
 Use `forge kb ask` to retrieve authority. Use `forge kb history` to inspect
 successful receipt-derived changes. KB search and structural verification never

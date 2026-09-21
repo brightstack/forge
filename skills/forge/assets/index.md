@@ -9,7 +9,7 @@ TODO: State the requested outcome and current boundary in one short paragraph.
 - Workflow: TODO - Project, Issue, Bug, or Work
 - Depth: TODO - Quick or Full
 - Control: TODO - Guided or Auto
-- Agents: TODO - role names; actual host IDs after dispatch
+- Agents: TODO - role names only, never first names; actual host IDs after dispatch
 - Boundary: TODO
 - Sequence: TODO - performed, reused, and pending phases
 - Gates: TODO - pending/satisfied approvals and decisions outside authority

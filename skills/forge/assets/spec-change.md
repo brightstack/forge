@@ -55,13 +55,14 @@ TODO: Write the complete normative behavior this operation proposes.
 
 ## Reconciliation and Proof Gaps
 
-- Prepared manifest and operation ID: TODO
-- Proposed files and SHA-256: TODO
-- Fidelity checker and result: TODO or `NOT RUN`
+- Approved proposal and authority source: TODO
+- Routine application timing: actual work completion through Finish, or an
+  explicitly authorized direct Spec apply
 - Application receipt and result SHA-256: TODO or `NOT APPLIED`
-- Application status: TODO: `document-only` or `NOT APPLIED`
+- Application status: TODO: `NOT APPLIED` during ordinary Spec, or `document-only`
+  after an authorized apply
 - Candidate implementation and Review: TODO or `NOT RUN`
 - Required acceptance evidence: TODO
 - Semantic conflict, concurrent change, or unavailable proof: TODO or none
 
-<!-- After human approval, Spec may apply the exact checked files. Application does not prove implementation, Review, Acceptance, Ship, or publication. -->
+<!-- Spec records the approved proposal without routine canonical writes. Routine apply waits for actual work completion and Finish. An explicitly authorized direct Forge spec apply remains available; it prepares, reviews, and applies the complete result through guarded mechanics. Application does not prove implementation, Review, Acceptance, Ship, or publication. -->

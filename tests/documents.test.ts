@@ -79,6 +79,24 @@ function authorization(changes: Record<string, unknown> = {}): string {
 }
 
 describe('document CLI', () => {
+  test('docs help lists every kind and describes each subcommand', () => {
+    const run = (args: string[]) =>
+      spawnSync(command[0] as string, [...command.slice(1), ...args], { encoding: 'utf8' })
+    const docs = run(['docs', '--help'])
+    expect(docs.status, docs.stderr).toBe(0)
+    for (const description of [
+      'Scaffold a new identified document',
+      'Replace a document body or set ordinary',
+      'Check structure, identities, and local links',
+      'Append a headed entry to an execution log',
+    ]) {
+      expect(docs.stdout).toContain(description)
+    }
+    const create = run(['docs', 'create', '--help'])
+    expect(create.status, create.stderr).toBe(0)
+    for (const kind of KINDS) expect(create.stdout).toContain(`"${kind}"`)
+  })
+
   test('every template creates an identified draft', () => {
     setup()
     cli(['init', 'demo', '--title', 'Demo'])
@@ -166,7 +184,10 @@ describe('document CLI', () => {
   test('valid UTF-8 body bytes including a leading BOM are preserved', () => {
     setup()
     create()
-    const body = write('body.txt', '\uFEFF\n# Body\n\nJosé 😀\n')
+    const body = write(
+      'body.txt',
+      '\uFEFF\n# Body\n\n## Context\n\nJosé 😀\n\n## Acceptance Criteria\n\n- The body bytes survive the round trip.\n',
+    )
     cli(['docs', 'update', 'task.md', '--body-file', body])
     expect(read_document(join(repo, 'task.md'))[1]).toBe(readFileSync(body, 'utf8'))
     const prefixed = Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), readFileSync(join(repo, 'task.md'))])
@@ -230,7 +251,7 @@ describe('document CLI', () => {
   test('frontmatter accepts UUID variants and rejects duplicates and malformed dates', () => {
     setup()
     const document = (id: string, code: string) =>
-      `---\nid: ${id}\ncode: ${code}\ntype: issue\ntitle: Legacy\nstatus: draft\ncreatedAt: 2026-09-09\nupdatedAt: 2026-09-09T12:30:00Z\n---\n# Legacy\n`
+      `---\nid: ${id}\ncode: ${code}\ntype: issue\ntitle: Legacy\nstatus: draft\ncreatedAt: 2026-09-09\nupdatedAt: 2026-09-09T12:30:00Z\n---\n# Legacy\n\n## Context\n\nA legacy record kept for identity checks.\n\n## Acceptance Criteria\n\n- The identity fields validate.\n`
     write('nil.md', document('00000000-0000-0000-0000-000000000000', 'ISSUE-NIL'))
     const versionSeven = write(
       'v7.md',
@@ -251,9 +272,10 @@ describe('document CLI', () => {
     create('spec-change', 'change.md')
     const incomplete =
       '# Change\n\n## Scenario A\n- GIVEN a task\n- WHEN it is completed\n- THEN it stays visible\n\n## Scenario B\n- GIVEN an archived task\n- WHEN it is restored\n'
-    cli(['docs', 'update', 'change.md', '--body-file', write('body.txt', incomplete)])
     expect(
-      cli(['docs', 'update', 'change.md', '--set', 'status=ready'], { success: false }),
+      cli(['docs', 'update', 'change.md', '--body-file', write('body.txt', incomplete)], {
+        success: false,
+      }),
     ).toContain('each behavioral scenario')
     cli([
       'docs',
@@ -265,6 +287,34 @@ describe('document CLI', () => {
       'status=ready',
     ])
     cli(['docs', 'validate', 'change.md'])
+  })
+
+  test('a draft document is structurally checked once its body is authored', () => {
+    setup()
+    create()
+    const path = join(repo, 'task.md')
+    const content = readFileSync(path, 'utf8')
+    const header = content.slice(0, content.indexOf('\n---\n', 4) + '\n---\n'.length)
+    const rewrite = (body: string) => writeFileSync(path, header + body)
+    const authored = (criteria: string) =>
+      `# Draft issue\n\n## Context\n\nA draft issue is an authored document.\n\n## Acceptance Criteria\n\n${criteria}`
+    expect(read_document(path)[0].status).toBe('draft')
+
+    rewrite('# Draft issue\n\n## Context\n\nNo criteria were authored.\n')
+    expect(cli(['docs', 'validate', 'task.md'], { success: false })).toContain(
+      'issue requires Acceptance Criteria',
+    )
+
+    rewrite(authored('- GIVEN an archived task\n- WHEN it is restored\n'))
+    expect(cli(['docs', 'validate', 'task.md'], { success: false })).toContain(
+      'each behavioral scenario',
+    )
+
+    rewrite(authored('- GIVEN an archived task\n- WHEN it is restored\n- THEN it lists as active\n'))
+    cli(['docs', 'validate', 'task.md'])
+
+    rewrite(authored('- The restored task appears in the active list.\n'))
+    cli(['docs', 'validate', 'task.md'])
   })
 
   test('creation rejects escape, symlink traversal, and overwrite', () => {
@@ -388,7 +438,10 @@ describe('document CLI', () => {
       'update',
       'task.md',
       '--body-file',
-      write('body.txt', '# Task\n\n[missing](missing.md)\n'),
+      write(
+        'body.txt',
+        '# Task\n\n## Context\n\n[missing](missing.md)\n\n## Acceptance Criteria\n\n- The broken link is reported.\n',
+      ),
     ])
     cli(['docs', 'validate'], { success: false })
   })

@@ -36,8 +36,9 @@ blind to peer conclusions. Give it the [Judge contract](../../../agents/judge/in
 selected skill or rubric, exact candidate/base and paths, accepted authority,
 verified anchors, allowed commands/tools, supplied proof, gaps, and stopping boundary.
 Code Review uses the bundled sibling leaf skill by default and never starts a panel.
-Run independent assignments in parallel where resources permit; serialize shared
-browser use with explicit ownership. If nested spawning is unavailable, the host
+Run independent Review Judge assignments in parallel where resources permit;
+serialize shared browser use with explicit ownership. This is Review inspection,
+not Spec authoring. If nested spawning is unavailable, the host
 coordinator dispatches the Reviewer's required assignments. Required delegation,
 independence, access, or proof gaps prevent judgment;
 never label the Builder's self-review an independent return.
@@ -92,6 +93,13 @@ reconsideration; `READY_FOR_USER` identifies a consequential intent/authority
 choice; `BLOCKED` means required access, evidence, or capability prevents judgment.
 Disabled coverage and an explicit scoped human waiver follow the judge guidance;
 label exclusions, never imply they passed. Review PASS does not establish Acceptance.
+
+State the authority status of the intent you judged against. When it carries no
+recorded human approval, say so in the boundary and scope the verdict to fidelity
+to that draft. Unapproved intent is reported, not escalated: it is not a finding
+on its own, and it is not `READY_FOR_USER` when the loop record already shows the
+Coordinator routed that gate under a standing grant. Reserve `READY_FOR_USER` for
+an intent or authority choice nobody has made yet.
 
 On a changed repair candidate, review the complete accepted packet again and
 inspect prior dispositions without narrowing to a patch list. Reuse unaffected

@@ -13,12 +13,13 @@ Launch is an opening step, not another phase. Review stays inside Build and
 | Entry | Result and stopping boundary |
 | --- | --- |
 | Explore | Answers a question or compares approaches; creates no delivery authority |
-| Spec | Defines accepted intent and, after human approval, may apply its exact target with document-only provenance |
+| Spec | Defines and approves proposed intent without routine canonical writes |
 | Plan | Defines the implementation approach and useful outcome Issues |
 | Build | Produces one integrated candidate, simplifies it, and obtains independent Review |
 | Review | Judges one pinned candidate without editing it |
 | Acceptance | Exercises the actual Review-passed outcome |
 | Ship | Checks the complete accepted candidate once, records concise closure, and performs authorized publication |
+| Finish | At actual work completion, reconciles approved unapplied memory and authorized existing-PR readiness; direct Spec and Plan remain proposal-only |
 | Spec apply / legacy Spec merge / KB | Maintains canonical meaning directly, without claiming software delivery |
 
 A full run may reuse an accepted ticket as Spec and record a one-sentence Plan for

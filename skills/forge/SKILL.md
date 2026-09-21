@@ -1,6 +1,6 @@
 ---
 name: forge
-description: "Drive a software or general-work outcome through Forge's composable Spec, Plan, Build, Acceptance, and Ship lifecycle. Use when the user explicitly asks to use Forge, asks Forge to explore, spec, plan, build, review, accept, verify, simplify, ship, reconcile a Spec change, or maintain Forge knowledge. Direct phase requests stop at that boundary; importing a ticket, exploring, specifying, or planning never implies Build or Ship authority."
+description: "Drive a software or general-work outcome through Forge's composable Spec, Plan, Build, Acceptance, and Ship lifecycle. Use when the user explicitly asks to use Forge, asks Forge to explore, spec, plan, build, review, accept, verify, simplify, finish, ship, reconcile a Spec change, or maintain Forge knowledge. Direct phase requests stop at that boundary; importing a ticket, exploring, specifying, or planning never implies Build or Ship authority."
 ---
 
 # Forge
@@ -78,10 +78,9 @@ Spec -> Plan -> Build -> Acceptance -> Ship
 
 Depth, staffing, artifacts, and proof vary; the phases do not disappear. Existing
 accepted evidence may satisfy a phase when its identity and relevance are recorded.
-Spec includes intake and discovery. After human approval, the natural skill
-operation `Forge spec apply <change>` may apply the exact approved standing-Spec
-and related knowledge bytes; the
-result stays document-only until Build Review and Acceptance prove it. Build
+Spec includes intake and discovery. It records proposed meaning and approval but
+does not routinely edit canonical Specs or knowledge. The direct natural operation
+`Forge spec apply <change>` remains available when explicitly requested. Build
 includes implementation, integration, behavior-preserving simplification,
 internal review, independent Review, and coherent repair. Acceptance exercises
 the Review-passed candidate. Ship checks the complete accepted candidate once,
@@ -91,7 +90,7 @@ Each phase is directly callable and stops at its named boundary. Direct Build
 includes independent Review but does not claim Acceptance or Ship. Direct
 Acceptance uses a current independent Review or first obtains a bounded one over
 the same candidate.
-Explore, Review, Simplify, Spec apply, the legacy natural wording Spec merge, and
+Explore, Review, Simplify, Finish, Spec apply, the legacy natural wording Spec merge, and
 knowledge maintenance are also direct entries; they do not manufacture completion
 of the five-phase lifecycle.
 </contract>
@@ -101,17 +100,17 @@ Follow the [workflow gates](references/workflows.md#spec-and-plan-gates).
 In Guided, full delivery stops when Forge authors a new or materially revised
 Spec or consequential Plan. A later terminal boundary is not artifact approval.
 
-- **Guided Spec gate:** present the exact reviewable Spec draft or revision, then stop
-  with human approval as the next action. Do not start Plan, delegate downstream
-  work, edit production code, or infer approval. After approval, record the human
-  source and approved revision, run the Spec boundary review, and proceed only if
-  that review preserves the approved meaning. A consequential revision returns to
-  this gate.
-- **Guided Plan gate:** present the exact consequential Plan, then stop before Build. Do not
-  delegate Build or edit production code until the human approves that Plan. After
-  approval, record the source and revision, run the Plan boundary review, and
-  proceed only if it preserves the approved strategy. A consequential revision
-  returns to this gate.
+- **Guided Spec gate:** brief the change in the user's words, link the exact
+  reviewable Spec draft or revision, then stop with human approval as the next
+  action. Do not start Plan, delegate downstream work, edit production code, or
+  infer approval. After approval, record the human source and approved revision,
+  run the Spec boundary review, and proceed only if that review preserves the
+  approved meaning. A consequential revision returns to this gate.
+- **Guided Plan gate:** brief the strategy in the user's words, link the exact
+  consequential Plan, then stop before Build. Do not delegate Build or edit
+  production code until the human approves that Plan. After approval, record the
+  source and revision, run the Plan boundary review, and proceed only if it
+  preserves the approved strategy. A consequential revision returns to this gate.
 
 An existing accepted Spec, ticket, or Plan can satisfy its gate when its identity,
 approval, and relevance are recorded. An explicit direct Build or fix request over
@@ -130,9 +129,11 @@ returns conflicts, new scope, and decisions outside its grant to the user.
 
 <routing>
 Select the workflow and depth using [workflow definitions](references/workflows.md).
-The user's explicit choice wins. Issue does not mean small: PM prepares a missing
-or unready Issue with Engineer input at either depth, and Designer/Architect join
-under the concrete triggers before dependent implementation.
+The user's explicit choice wins. A clear current request can be the ready
+issue-like object; PM prepares only missing product intent. Issue does not mean
+small. Engineer assesses after intent exists.
+Designer then Architect join under the concrete triggers, in that order, before
+dependent implementation.
 
 Route direct entries as follows:
 
@@ -143,6 +144,8 @@ Route direct entries as follows:
   [bug diagnosis](references/debug.md)
 - `review` -> [Review](references/review.md)
 - `acceptance`, `verify`, or `verify browser` -> [Acceptance](references/verify.md)
+- `finish` -> [Finish](references/finish.md), an actual-work-completion
+  reconciliation operation inside Forge rather than a sixth phase
 - `ship` -> [Ship](references/ship.md)
 - `spec apply`, legacy natural wording `spec merge`, or
   `kb ask|add|update|remove|verify|history` ->
@@ -187,9 +190,9 @@ the small record described in [protocol](references/protocol.md). Ask only about
 consequential choices that cannot be retrieved or inferred safely.
 When a change can affect existing behavior, record the compact preservation chain
 of signals, affected obligations, selected checks, and gaps.
-During Spec, apply a behavioral change only after its human approval is already
-available. Retain the accepted baseline, approved change and source independently
-from the current files and application receipt.
+During Spec, record and approve proposed meaning without routinely editing
+canonical Specs or knowledge. Spec and knowledge remain optional and independent;
+the active repository owns them and a deliverable is not automatically memory.
 Apply Guided/Auto gates from the workflow reference. The requested terminal outcome
 alone does not let the agent approve its own artifact.
 </step>
@@ -197,7 +200,8 @@ alone does not let the agent approve its own artifact.
 <step n="2" name="Run the phase at earned depth">
 Load only the routed phase reference and relevant professional instructions. One
 accountable owner integrates the phase result. Dispatch the concrete workflow
-assignments; loading their personas into the Coordinator does not satisfy them.
+assignments in [specialist sequence](references/workflows.md#specialist-sequence);
+loading their personas into the Coordinator does not satisfy them.
 Keep write ownership disjoint or serialized and return a compact handoff with
 authority, candidate, proof, and gaps.
 </step>
@@ -245,7 +249,8 @@ merge, deployment, release, or publication authority the user did not grant.
 </composition>
 
 <reporting>
-Use [reporting and failure routes](references/reporting.md). Lead with the result,
+Use [reporting and failure routes](references/reporting.md). At a human gate,
+brief in the user's words before linking artifacts. Keep those links. Lead with the result,
 exact phase/candidate, evidence, gaps, and next required action. Use the owning
 phase's defined disposition; do not promote local checks into independent Review
 or actual acceptance.
@@ -254,10 +259,13 @@ or actual acceptance.
 <checklist>
 - Explicit Forge activation and exact requested stopping boundary
 - Spec, Plan, Build, Acceptance, and Ship all accounted for in full delivery
-- Launch shown; Guided acceptance or explicit Auto grant recorded
-- New Spec and consequential Plan gates follow control; human approvals and
-  exercised delegated authority remain distinct, with source and revision
-- Workflow/depth and concrete agent assignments followed; missing Issue gets PM
+- Launch shown with a plain-language briefing, then the Launch list; Guided
+  acceptance or explicit Auto grant recorded
+- New Spec and consequential Plan gates brief the change, then link artifacts;
+  human approvals and exercised delegated authority remain distinct, with source
+  and revision
+- Workflow/depth and concrete agent assignments followed; a clear current request
+  can satisfy Issue readiness; PM, Designer, and Architect join only when triggered
 - One accountable Builder and a separate integrated-candidate Reviewer
 - Current candidate/base, authority, source anchors, runnable proof, and gaps
 - Given/When/Then scenarios preserved where behavior matters
@@ -272,6 +280,6 @@ or actual acceptance.
   affected unchanged plus changed or new outcomes
 - KB retrieval and structural checks are never reported as compliance proof
 - CLI used only for actual supported mechanics; no invented commands or flags
-- Early application stays document-only; honest result at the requested boundary,
-  with no implied Build, Acceptance, or Ship authority
+- Finish records actual applied, skipped, persisted, and PR outcomes without
+  implying Build, Acceptance, Ship, or publication authority
 </checklist>

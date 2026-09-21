@@ -8,6 +8,8 @@
 - Comparison base: TODO
 - Reviewer: TODO
 - Accepted authority: TODO
+- Authority status: TODO: whether that intent carries recorded human approval, or
+  is a draft the loop record shows was routed under a standing grant
 - Inspected scope: TODO
 - Staffing and reason: TODO: Reviewer alone or focused delegated judges
 - Known evidence or source gaps: TODO

@@ -34,7 +34,8 @@ Use `.forge/loops/<loop-id>/` for a managed delivery loop:
 - `log.md` from [the loop-log template](../assets/log.md): concise lifecycle
   events and handoffs;
 - `spec/`: only earned intent, design, technical, work, Issue, Plan, and change
-  records;
+  records. Do not add Spec files, flags, or config the request did not earn.
+  A gate briefing is chat only; do not save it here.
 - `build/log.md` from [the Build-log template](../assets/build-log.md):
   candidate, Build evidence, independent Review rounds, findings,
   dispositions, repairs, and rethink record;
@@ -58,6 +59,13 @@ Reference an existing approved ticket as authority rather than re-recording its
 approval as a new decision. Only a new human decision warrants a decision entry.
 Logs and pointers describe successful observed operations; a failed command must
 not be followed by an unconditional success claim.
+
+For Quick Build, keep brief Plan notes and current state in the existing Issue,
+index, or Build log. Do not create separate Issue, technical-contract, Plan,
+decision, or Acceptance records unless one is independently needed for authority,
+handoff, or distinct evidence. Record each fact once and link to it elsewhere;
+do not repeat candidate identity, authority, checks, findings, or exclusions
+across lifecycle files.
 
 Create documents from the assets linked by the phase references. Managed Markdown
 keeps immutable `id`, readable `code`, title/type/status metadata, and ordinary
@@ -83,6 +91,19 @@ PROOF: runnable setup, checks, and expected observations
 GAPS: unavailable evidence and unresolved facts
 RETURN: changed behavior/artifact, candidate, evidence, integration concerns, gaps
 ```
+
+When a defect outside the owned writes prevents assigned proof, return
+`BLOCKED_BY_SCOPE` naming the defect, the authority it blocks, the minimal
+repair, and why no in-scope route exists. An owner may instead make that repair
+itself when it is required to produce assigned proof, is reversible, changes no
+accepted meaning, and is reported in the return. Every other write outside the
+owned paths is a violation.
+
+This reconciles two rules that otherwise contradict each other: never claim a
+check that was not run, and never write outside the grant. An Engineer whose
+assigned proof needs a broken test script it does not own, and a Designer whose
+template asks for a companion record its assignment did not grant, both use this
+route rather than choosing silently between the two rules.
 
 Passing local checks do not imply integrated Review or Acceptance. On resume,
 read the index, independently retained accepted baseline and approved change,

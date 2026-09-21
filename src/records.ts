@@ -202,6 +202,28 @@ export function isIsoDateTime(value: string): boolean {
   )
 }
 
+function acceptance_criteria(body: string): string {
+  const heading = body.match(/^(#{1,3})\s+Acceptance Criteria\s*$/m)
+  if (!heading || heading.index === undefined) return ''
+  const rest = body.slice(heading.index + heading[0].length)
+  const next = rest.match(new RegExp(`^#{1,${(heading[1] as string).length}}\\s+\\S`, 'm'))
+  return next?.index === undefined ? rest : rest.slice(0, next.index)
+}
+
+function check_scenarios(body: string, required: boolean): void {
+  const scenarios = body.split(/^#{1,6}\s+.*$/m).flatMap((section) => {
+    const fields = new Set(
+      [...section.matchAll(/^\s*(?:[-*]\s*)?(?:\*\*)?(GIVEN|WHEN|THEN)\b/gim)].map(
+        (match) => match[1]?.toUpperCase(),
+      ),
+    )
+    return fields.size ? [fields] : []
+  })
+  if ((required && !scenarios.length) || scenarios.some((fields) => fields.size !== 3)) {
+    throw new ForgeError('each behavioral scenario requires GIVEN, WHEN, and THEN fields')
+  }
+}
+
 export function validate_document_content(content: string, expected_kind?: string): Metadata {
   const [metadata, body] = parse_document(content)
   const missing = [...REQUIRED].filter((key) => !Object.hasOwn(metadata, key)).sort()
@@ -230,32 +252,16 @@ export function validate_document_content(content: string, expected_kind?: strin
   }
   if (!/^#\s+\S/m.test(body)) throw new ForgeError('document body requires a descriptive title')
 
-  if (metadata.status !== 'draft') {
-    if (kind === 'issue' || kind === 'bug') {
-      for (const heading of ['Context', 'Acceptance Criteria']) {
-        if (!new RegExp(`^#{1,3}\\s+${heading}\\s*$`, 'm').test(body)) {
-          throw new ForgeError(`${kind} requires ${heading}`)
-        }
+  if (kind === 'issue' || kind === 'bug') {
+    for (const heading of ['Context', 'Acceptance Criteria']) {
+      if (!new RegExp(`^#{1,3}\\s+${heading}\\s*$`, 'm').test(body)) {
+        throw new ForgeError(`${kind} requires ${heading}`)
       }
     }
-    if (kind === 'spec-change' || kind === 'standing-spec') {
-      const scenarios = body.split(/^#{1,6}\s+.*$/m).flatMap((section) => {
-        const fields = new Set(
-          [...section.matchAll(/^\s*(?:[-*]\s*)?(?:\*\*)?(GIVEN|WHEN|THEN)\b/gim)].map(
-            (match) => match[1]?.toUpperCase(),
-          ),
-        )
-        return fields.size ? [fields] : []
-      })
-      if (
-        !scenarios.length ||
-        scenarios.some(
-          (fields) => fields.size !== 3 || !['GIVEN', 'WHEN', 'THEN'].every((field) => fields.has(field)),
-        )
-      ) {
-        throw new ForgeError('each behavioral scenario requires GIVEN, WHEN, and THEN fields')
-      }
-    }
+    check_scenarios(acceptance_criteria(body), false)
+  }
+  if (kind === 'spec-change' || kind === 'standing-spec') {
+    check_scenarios(body, true)
   }
   return metadata
 }

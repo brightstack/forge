@@ -22,9 +22,11 @@ host cannot provide required independent context or evidence, report the gap.
 
 Use the [concrete workflow assignments](workflows.md#concrete-staffing). These are
 native subagent jobs, not multiple personas adopted by the Coordinator. A Quick
-ready Issue without additional triggers uses Engineer and Reviewer. Parallelize only
-when seams are coherent and writes do not overlap; one accountable owner integrates
-all returns. Keep useful subagents across repair follow-ups while their context
+ready Issue without additional triggers uses Engineer and Reviewer. Spec
+specialists follow [specialist sequence](workflows.md#specialist-sequence). Do
+not spawn Product Manager, Designer, and Architect together. Parallelize other
+work when it is read-only or writes do not overlap; one accountable owner
+integrates all returns. Keep useful subagents across repair follow-ups while their context
 stays focused. Judge Review independence by separate relevant context, read-only
 ownership, pinned authority and candidate, and checked evidence. A different
 provider, model family, or lineage is not required. Never claim clean context,
