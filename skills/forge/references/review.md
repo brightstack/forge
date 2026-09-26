@@ -18,6 +18,10 @@ authority sources, current canonical result, decisions, Plan or bounded assignme
 applicable repository harness, exact candidate/base including dirty state, verified
 source anchors, runnable proof, and known gaps. Inspect the actual candidate before
 trusting author conclusions, document-only receipts, or earlier PASS labels.
+Check the exact source and scope of each material addition, removal, or stronger
+guarantee. A question, edited Spec, green check, or earlier Review is not approval.
+If an accepted scenario disappeared because its code path appears dead, retain it
+as unresolved until a scoped human decision or valid grant covers the removal.
 Re-resolve the harness when a trace enters another subtree or standards domain.
 
 Use [Review judges](judges.md) to select Code Review, Design, Quality, Spec, and Craft
@@ -68,6 +72,12 @@ Merge duplicates, route concerns to their owning dimension, and disposition
 conflicts from evidence rather than votes. Preserve sufficient evidence for every
 applicable dimension; a passing dimension cannot conceal a failed one. Check the
 managed-artifact contract for accompanying software records without adding Quality.
+
+Use [Craft](judges.md#craft-rubric) to challenge both needless machinery and
+missing guards at real present boundaries. A finding is evidence to assess, not
+an order to add another layer. Judge whether the existing owner can meet the
+accepted result and why a proposed new mechanism is necessary. After a narrowed
+scope, reject Review work that serves only the superseded design.
 
 Challenge the Builder's preservation scope using [knowledge guidance](knowledge.md).
 Check signals against real consumers and semantics, name affected and preserved

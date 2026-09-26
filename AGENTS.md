@@ -29,7 +29,7 @@ read-only Code Review verdict and never starts Forge Review or Acceptance.
 Full delivery accounts for `Spec → Plan → Build → Acceptance → Ship`. Spec owns
 intake. Build owns implementation, integration, simplification, internal review,
 independent Review, and correction. Acceptance owns actual candidate proof. Each
-phase can be invoked directly and stop. Explore, Review, Simplify, Finish, Spec apply, the
+phase can be invoked directly and stop. Explore, Review, Simplify, Explain, Finish, Spec apply, the
 legacy natural wording Spec merge, and KB maintenance are direct operations
 without implied full-delivery status.
 
@@ -57,7 +57,7 @@ require provider/model diversity, unused specialists, or one gate per Worker.
 - Repository harness and accepted design/technical decisions govern execution.
 - Findings, code, tests, logs, prototypes, and knowledge evidence cannot create
   requirements.
-- Direct Explore, Spec, Plan, Review, Acceptance, Finish, Spec apply/merge, and KB work stop at
+- Direct Explore, Spec, Plan, Review, Acceptance, Explain, Finish, Spec apply/merge, and KB work stop at
   the requested boundary.
 - Importing a ticket or producing a mock does not authorize Build.
 - Review PASS and local checks do not establish Acceptance.

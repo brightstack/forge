@@ -14,6 +14,17 @@ finding, or synthetic-user reaction into a requirement. If accepted sources
 conflict or changed meaning is needed, state the conflict, consequences, options,
 and recommendation for the human.
 
+A question, possibility, analogy, inference, or recommendation is not a decision.
+For each normative addition, removal, or stronger guarantee, retain the exact
+human source and its scope, or the specifically bounded Auto grant. A generic
+go-ahead to a decision brief covers its disclosed material choices, not a buried
+commitment in a linked draft. Explicit approval of an exact full revision retains
+that revision's stated scope. One answered choice leaves independent choices open.
+An edited Spec or favorable Review cannot approve itself. When the human corrects
+an authority claim, repair the existing source note and dependent records with
+the actual sequence of question, correction, and later answer before relying on
+them again.
+
 ## Small managed record
 
 Record [Launch choices](workflows.md) in the existing index/log: Workflow, Depth,

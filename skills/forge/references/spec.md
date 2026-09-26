@@ -49,11 +49,23 @@ Retrieve relevant standing Spec, decisions, domain concepts, processes,
 interfaces, repository facts, and existing solutions. Missing coverage is a
 visible gap rather than a reason to block incremental adoption. Ask only
 consequential human choices that cannot be retrieved, and include a recommendation.
-Do not force a fixed interview, document spine, exhaustive catalog, or empty
+Treat a question, possibility, analogy, or agent recommendation as open, not as
+authority for a stronger guarantee. Trace each proposed addition or removal to an
+exact accepted source or bounded Auto grant; otherwise label it proposed and keep
+the accepted baseline. A later answer does not retroactively turn an earlier
+question into approval. Correct mistaken source and dependent records in order.
+Do not force a fixed interview, exhaustive catalog, or empty
 sections. Do not add Spec files, feature flags, configuration, extra scenarios,
 or compatibility promises the human did not ask for. Delete unused template
 sections. Do not bury extra product or technical decisions inside a Spec to
 make it look complete.
+
+For a substantial Product, Design, Technical, or Work artifact, open with a short
+Summary, Context, and self-contained End State before earned detail. State the
+proposal, why it matters, and the observable or operational result and boundaries.
+Omit empty sections. A ready Quick Issue stays brief. First look for the existing
+owner or pattern that can deliver the outcome; new machinery must earn its cost
+under [Craft](judges.md#craft-rubric), including a first real safety boundary.
 
 Use `forge kb ask` to retrieve authority and existing vocabulary. Keep human
 decisions, accepted requirements, observations, and proposals distinct. A loop

@@ -16,6 +16,17 @@ Before closure, check once that:
 - each requested PR, merge, deployment, release, document publication, or other
   external action is explicitly authorized.
 
+Reconcile the exact candidate, human grant, Spec status, Build changes, Review and
+Acceptance results, and affected target prerequisites. A missing accepted clause
+or an unrun required check remains a gap, even if focused tests passed. If code
+depends on a new schema step, confirm that separately authorized operation has
+completed on the target before the dependent code serves; otherwise hold
+activation and report the missing prerequisite or authority. A release grant alone
+does not authorize an additive or destructive schema mutation. Follow the target
+repository's exact operation-and-target authorization rule and inspect destructive
+SQL where that rule requires it. Correct contradictions in existing records rather
+than creating a parallel release ledger.
+
 Run [Finish](finish.md) before publication when approved unapplied Spec/knowledge
 meaning or authorized existing-PR readiness remains. It reuses existing guarded
 operations and observed Git/PR state; it does not replace Build Review or

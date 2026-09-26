@@ -30,6 +30,12 @@ complete path across every necessary layer. For bugs, load [bug
 diagnosis](debug.md), establish a red-capable signal, test hypotheses, fix the
 root cause, and retain the original reproduction. For general work, choose the
 appropriate creator and proof rather than forcing software files or tests.
+Check no-change and existing-owner routes before adding a new mechanism. Apply
+the [Craft](judges.md#craft-rubric) test to new state, caches, parsers, classes,
+and contracts; a present trust, data-loss, accessibility, or recovery boundary can
+earn a guard on its first demonstrated failure. An apparently dead code path does
+not erase its accepted scenario. If a simpler scope supersedes planned machinery,
+drop its dependent side quests and reassess depth and staffing.
 
 Before implementation, the Builder proposes a preservation scope using
 [knowledge guidance](knowledge.md): signals, affected accepted obligations,
@@ -72,6 +78,8 @@ Group symptoms by state owner, lifecycle, or contract and repair the shared caus
 Reassess the complete outcome and affected proof; a changed candidate needs a new
 independent verdict. P2 advice never extends the loop. Use the finite rethink and
 stop contract in the main skill.
+If repeated repairs to the same mechanism do not converge, revisit its owner and
+invariant at the existing RETHINK boundary rather than growing case-by-case guards.
 
 ## Completion
 

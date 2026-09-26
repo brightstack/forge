@@ -85,22 +85,16 @@ This applies at Launch, Spec, Plan, and any return for a decision, including
 `READY_FOR_USER`, new scope, and Auto conflicts. Auto still briefs when it
 actually pauses.
 
-Show, in this order:
-
-1. One or two short paragraphs: what changes for the user or product, and why
-   this stop exists.
-2. Added, removed, and unchanged, as bullets. Name user-visible behavior, not
-   files, unless a file is the decision.
-3. The ask: approve, reject, or choose among named options. One next action.
-4. When UI or visual direction is in play, the key screenshot or identified
-   board states. Representative, not a catalog.
-5. A simple table or mermaid only when added/removed or before/after is faster
-   to see than prose. No dashboard.
-6. Links to the exact artifacts. Required. Do not omit them. Do not replace
-   the briefing with them.
-
-The briefing must be enough for a good-enough decision. The links are there
-to inspect. Keep the briefing short. Do not rewrite the Spec in the chat.
+Name the proposed result, every material addition or removal, important preserved
+behavior, risks and proof limits, and the exact choices with a recommendation and
+consequence. A generic reply cannot approve a material commitment omitted here;
+an explicit approval of the exact full revision retains its stated scope. If the
+human answers one choice, leave the other choices open. Give one clear next ask
+and links to the exact revision. Aim for about one page of chat; use more when the
+decision requires it. Group related changes, use verified quantities when useful,
+and show a representative screenshot or small comparison table only when it makes
+the choice easier. Keep implementation detail in the linked artifact. See the
+adaptable [decision and change briefs](reporting.md#chat-briefs).
 
 ## Depth
 
@@ -141,6 +135,13 @@ and staffing before further delegation. A direct instruction to use the simpler
 approach supersedes machinery that existed only for the broader design unless the
 human explicitly preserves Full depth. Superseded artifacts and assignments do
 not trigger specialists, expanded Review, or additional gates.
+
+At every depth, understand the actual flow and accepted outcome, then choose the
+first sound route: no change, existing owner or pattern, standard library, native
+platform, installed dependency, then the smallest new mechanism. The target
+harness may add technique, but cannot weaken accepted meaning or proof. Apply the
+same simple-first judgment in Spec, Plan, Build, repair, and Review; it creates no
+extra pass or form. [Craft](judges.md#craft-rubric) defines when complexity is earned.
 
 ## Workflow sequences
 

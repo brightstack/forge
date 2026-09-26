@@ -48,6 +48,8 @@ end state, including confirmed design, cross-Issue behavior, preserved standing
 commitments, and material regressions. Passing every listed Issue or scenario is
 not sufficient when the combined experience is missing or contradictory. Reuse
 current credible evidence; runtime contradictions outrank earlier green checks.
+Focused passing tests cannot make an unimplemented or unrun accepted clause PASS;
+mark that clause FAIL or NOT RUN and withhold complete Acceptance PASS.
 This is part of Acceptance, not an additional Product gate. A project checkpoint
 uses the same Review then Acceptance composition over its stated completed scope
 and names unfinished outcomes without claiming full-project completion.

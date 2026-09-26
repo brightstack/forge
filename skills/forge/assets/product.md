@@ -1,14 +1,18 @@
 # Product outcome
 
-## Problem and User
+## Summary
+
+TODO: State the proposed product change and why it matters in a few sentences.
+
+## Context
 
 TODO: Name the specific user, situation, current pain, and evidence or accepted
 human intent behind the work.
 
-## Desired End State
+## End State
 
-TODO: Describe the smallest coherent product change and what the user can do or
-observe when it succeeds.
+TODO: Describe what the user can do or observe when the smallest coherent change
+succeeds, including material boundaries.
 
 ## Scope
 

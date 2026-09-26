@@ -1,5 +1,18 @@
 # Experience and visual intent
 
+## Summary
+
+TODO: State the proposed experience change and why it matters.
+
+## Context
+
+TODO: Name the accepted product intent, current experience, and affected users.
+
+## End State
+
+TODO: Describe the visible result, material states, and interaction boundaries a
+reviewer can judge without opening another artifact.
+
 ## User Journey
 
 TODO: Describe entry, decisive action, feedback, recovery, and exit for the

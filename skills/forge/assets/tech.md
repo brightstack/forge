@@ -2,10 +2,23 @@
 
 <!-- Keep only load-bearing choices that independent work must share. -->
 
-## Current System and Target Shape
+## Summary
 
-TODO: Name the verified owners and reusable machinery, then describe the minimum
-technical shape needed for the accepted outcome.
+TODO: State the proposed technical change and why it matters for the accepted outcome.
+
+## Context
+
+TODO: Name verified current owners, reusable machinery, and the constraint driving change.
+
+## End State
+
+TODO: State the operational result, material invariants, and boundaries independent
+work must preserve.
+
+## Target Shape
+
+TODO: Describe the minimum technical shape needed for the accepted outcome and why
+the existing owner or simpler route cannot meet any proposed new mechanism's need.
 
 ## Contracts and Ownership
 

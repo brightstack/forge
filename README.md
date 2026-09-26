@@ -121,7 +121,9 @@ Name the stopping boundary.
 | `Forge plan …` | Implementation approach |
 | `Forge build …` | Implementation, review, and repair |
 | `Forge review …` | Read-only engineering verdict |
+| `Forge explain …` | Read-only explanation of an artifact or change |
 | `Forge acceptance …` | Actual acceptance, including browser QA when needed |
+| `Forge finish …` | Reconcile approved Spec and knowledge changes at work completion |
 | `Forge ship …` | Authorized publication |
 
 Guided is the default: Forge waits before dispatch, then at a new Spec and a

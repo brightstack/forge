@@ -1,13 +1,17 @@
 # Work outcome
 
+## Summary
+
+TODO: State the proposed deliverable and why it matters.
+
 ## Context
 
 TODO: Explain the request, intended reader or user, and boundary. State whether
 this work changes software, a document, research, operations, or another artifact.
 
-## Deliverable
+## End State
 
-TODO: Describe the concrete end state and where it will exist.
+TODO: Describe the concrete, inspectable result and where it will exist.
 
 ## Acceptance Criteria
 
@@ -17,11 +21,11 @@ TODO: Describe the concrete end state and where it will exist.
 
 - TODO: Authority, source-of-truth, safety, format, or explicit exclusion
 
-## Approach
+## Plan
 
-<!-- Optional when the work is already obvious. -->
+<!-- Keep only when the work needs sequencing; omit when the route is obvious. -->
 
-TODO: Record the shortest credible route and any useful source anchors.
+TODO: Record the smallest meaningful steps and any useful source anchors.
 
 ## Proof
 

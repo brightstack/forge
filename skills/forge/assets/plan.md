@@ -5,14 +5,23 @@ Create this document only when coordination detail has no better home. A clear
 Issue with short implementation notes needs no separate Plan.
 -->
 
-## Accepted Outcome
+## Summary
 
-TODO: Link the approved intent and selected outcome Issues or work artifact.
+TODO: State the proposed delivery route and why this coordination is needed.
 
-## Approach
+## Context
 
-TODO: Describe the smallest coherent route through the work. Keep reversible
-file-level tactics with the Builder.
+TODO: Link approved intent and outcome Issues or work artifact; name current
+owners, constraints, and dependencies that shape the route.
+
+## End State
+
+TODO: State the complete outcome and material boundaries in this Plan's own words.
+
+## Plan
+
+TODO: List the smallest meaningful steps, integration order, and proof. Keep
+reversible file-level tactics with the Builder.
 
 ## Dependencies and Shared Seams
 

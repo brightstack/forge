@@ -90,7 +90,7 @@ Each phase is directly callable and stops at its named boundary. Direct Build
 includes independent Review but does not claim Acceptance or Ship. Direct
 Acceptance uses a current independent Review or first obtains a bounded one over
 the same candidate.
-Explore, Review, Simplify, Finish, Spec apply, the legacy natural wording Spec merge, and
+Explore, Review, Simplify, Explain, Finish, Spec apply, the legacy natural wording Spec merge, and
 knowledge maintenance are also direct entries; they do not manufacture completion
 of the five-phase lifecycle.
 </contract>
@@ -143,6 +143,7 @@ Route direct entries as follows:
 - `build`, `fix`, or `simplify` -> [Build](references/build.md); bugs also load
   [bug diagnosis](references/debug.md)
 - `review` -> [Review](references/review.md)
+- `explain <artifact or change>` -> [read-only Explain](references/reporting.md#explain)
 - `acceptance`, `verify`, or `verify browser` -> [Acceptance](references/verify.md)
 - `finish` -> [Finish](references/finish.md), an actual-work-completion
   reconciliation operation inside Forge rather than a sixth phase
@@ -178,6 +179,11 @@ users, and descriptive knowledge cannot create or rewrite accepted intent. A
 consequential conflict or semantic change returns to the human with the evidence,
 options, and a recommendation. Reversible tactics remain with the accountable
 professional.
+Questions, possibilities, analogies, and recommendations remain proposals until
+an exact human answer or bounded Auto grant resolves them. A generic approval of
+an incomplete chat brief covers only disclosed material choices; an explicit
+approval of an exact full revision retains its stated scope. Follow
+[authority and records](references/protocol.md) when recording either.
 Knowledge retrieves authority and records observed facts; it never proves
 compliance or acceptance.
 </authority>

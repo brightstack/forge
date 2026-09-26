@@ -4,6 +4,10 @@ Plan translates accepted intent into the smallest useful implementation approach
 It never creates product requirements and always remains an explicit accounted
 phase, even when its result is one concise note.
 
+A substantial Plan opens with a short Summary, Context, and self-contained End
+State, then a Plan of the smallest meaningful steps and proof. A brief Quick note
+can stay in its Issue, index, or Build log without those headings.
+
 For direct Plan, this procedure is the entrypoint; full-lifecycle setup is not a
 prerequisite. Apply or reuse [Launch, depth, and workflow assignments](workflows.md)
 only for this requested boundary. Plan can live as Issue notes or under `spec/`;
@@ -95,6 +99,12 @@ scope; it is not a path-only pass or a full-product replay.
 Avoid speculative architecture, unrequested feature flags, configuration,
 fixed agent counts, file-by-file instructions, and duplicated Spec prose. Builders own reversible tactics. If implementation
 would require a semantic change, return the decision before dependent work.
+Trace the actual flow first and use the existing owner or sound reusable pattern
+when it meets accepted intent. If a new cache, parser, class, configuration, or
+durable contract is proposed, state the current boundary or demonstrated cost it
+solves and why the simpler route fails; use [Craft](judges.md#craft-rubric) to
+judge whether it is earned. Do not plan away accepted scenarios because code now
+appears unreachable. Preserve them as obligations or seek a scoped change.
 
 In Guided, brief a newly consequential Plan in the conversation, link the
 exact Plan, and obtain human approval before its boundary review. Auto uses the explicit grant without an ordinary pause and
