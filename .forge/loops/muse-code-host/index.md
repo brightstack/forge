@@ -64,10 +64,8 @@ override depth, staffing, or the README question in the Plan.
 ## Current Gaps
 
 - Muse Code proof is human-run on macOS with Muse Code 1.4.1 only; Windows untested.
-- Muse Auto-review interaction during the Quick loop is unreported.
 - A `forge setup` warning for duplicate user-level copies is left open as [brightstack/forge#3](https://github.com/brightstack/forge/issues/3).
 
 ## Next
 
-None for this loop. Follow-ups live in brightstack/forge#3 and a future check
-of Muse Auto-review.
+None for this loop. Follow-up lives in brightstack/forge#3.

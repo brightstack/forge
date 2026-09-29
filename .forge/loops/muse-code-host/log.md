@@ -72,3 +72,11 @@ updatedAt: "2026-09-29T04:22:16.797Z"
 - Observed: human replied "push", then asked for the PR and merged it; Issue #2 closed by the merge. Finish found no approved standing-Spec or knowledge change, so apply was skipped
 - Evidence: GitHub PR #4 and Issue #2 state
 - Next: none; follow-up [brightstack/forge#3](https://github.com/brightstack/forge/issues/3) stays open
+
+## 2026-09-29 — Muse Auto-review checked
+
+- Actor: human, recorded by Coordinator
+- Artifact or candidate: a fresh Quick loop in Muse Code 1.4.1 (multiply change in a throwaway repo), plus a `muse export` of that session
+- Observed: "Auto-review" is Muse's built-in permission profile (`"approval":"on_request","reviewer":"auto_review"`; reviewer options human, auto_review, none). It decides tool-approval requests, not work verification. The session shows no observer or verification agent; the Engineer, Reviewer, and QA subagents all passed and the loop reached Acceptance PASS
+- Evidence: human-run export search results in conversation
+- Next: none; no docs change needed
