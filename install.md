@@ -8,7 +8,7 @@ macOS and Linux only. Windows and npm are out of this release.
 ## Curl
 
 Run this from the project directory you want Forge in. Default host is
-`.agents` (Cursor and Codex):
+`.agents` (Cursor, Codex, and Muse Code):
 
 ```bash
 curl -fsSL https://get.brightstack.ai/forge/install.sh | sh
@@ -52,13 +52,17 @@ forge init LOOP --title "A readable title"
 `~/.local/bin`. The binary directory is not a skill pack and must not receive
 `skills/` or `agents/`.
 
-Default `--tools` is `agents` (Cursor and Codex). Other hosts:
+Default `--tools` is `agents` (Cursor, Codex, and Muse Code). Other hosts:
 
 ```bash
 forge setup --tools claude
 forge setup --tools cursor
 forge setup --tools agents,claude,cursor
 ```
+
+Muse Code discovers the `.agents` install, not `.cursor`. With `--tools cursor`
+or `--tools claude`, add `agents` for Muse Code, for example
+`forge setup --tools agents,cursor`.
 
 Unknown tools fail. Setup overwrites only Forge-owned names (`skills/forge`,
 `skills/forge-code-review`, `agents`, `OKF.md`). Other skills stay.
@@ -94,13 +98,19 @@ forge candidate
 `init` does not require git. `candidate` does. Restart the agent if a new
 skill directory is not visible.
 
+Muse Code skips project skills until the workspace is trusted. Open `muse` in
+the project once and accept the trust prompt; `muse --trust-workspace` trusts
+for one run only. Install Forge in the project only. If `/forge` appears twice,
+pick the `project` entry or remove the user-level copy (for example under
+`~/.codex/skills`).
+
 Give the agent the `forge` path when a request creates or validates managed
 Forge state. Skill invocation happens in agent chat. The executable does not
 select phases.
 
 ## LLM paste prompt
 
-**Cursor or Codex** (writes `.agents`):
+**Cursor, Codex, or Muse Code** (writes `.agents`):
 
 ```text
 Install Forge in this project.

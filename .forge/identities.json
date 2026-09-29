@@ -1,0 +1,27 @@
+{
+  ".forge/loops/muse-code-host/build/log.md": {
+    "id": "6a77ea79-af9b-42f1-9e19-31790659b1a5",
+    "code": "BUILD-LOG-6a77ea79",
+    "type": "build-log"
+  },
+  ".forge/loops/muse-code-host/decisions.md": {
+    "id": "f3bad89c-fcda-473c-8ea7-614370e46d10",
+    "code": "DECISIONS-f3bad89c",
+    "type": "decisions"
+  },
+  ".forge/loops/muse-code-host/index.md": {
+    "id": "c6a4b2f4-19c1-4180-a9cd-cbd8168c3ac7",
+    "code": "INDEX-c6a4b2f4",
+    "type": "index"
+  },
+  ".forge/loops/muse-code-host/log.md": {
+    "id": "90142c4e-9ba8-4d34-85a8-b803845f7ca7",
+    "code": "LOG-90142c4e",
+    "type": "log"
+  },
+  ".forge/loops/muse-code-host/spec/plan.md": {
+    "id": "296809ae-94d3-4350-af35-9b38a344d200",
+    "code": "PLAN-296809ae",
+    "type": "plan"
+  }
+}
