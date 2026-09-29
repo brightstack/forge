@@ -26,10 +26,10 @@ boundary: Plan. Plan drafted; Build pending.
 - Agents: Engineer, Reviewer
 - Boundary: Plan
 - Sequence: Spec reused (Issue #2); Plan drafted; Build, Acceptance, Ship not started
-- Gates: Launch accepted; Plan judged consequential, Guided human Plan gate pending; Reviewer boundary review follows approval
+- Gates: Launch accepted; Plan approved by the human in conversation ("Yes. Approval of the plan"), answers recorded in the Plan; Reviewer boundary review PASS
 - Workspace: brightstack/forge, branch `claude/relaxed-davinci-xzvnrg`
 - Launch acceptance or Auto grant: human accepted the Launch with "go" in conversation, after a human-accepted scope revision (below)
-- Current step: Plan drafted and briefed to the human; awaiting Plan approval
+- Current step: Plan boundary complete; Build pending
 - Authority status: Issue #2 plus accepted Launch revision; no new canonical decisions
 - Accountable owner: Engineer
 - Current candidate: none
@@ -56,7 +56,7 @@ override depth, staffing, or the README question in the Plan.
 - Human decisions: Launch revision above (conversation); [decisions](decisions.md) empty
 - Accepted or proposed Spec: [Issue #2](https://github.com/brightstack/forge/issues/2)
 - Retained accepted baseline and approved change: none
-- Selected Issues or work: [Issue #2](https://github.com/brightstack/forge/issues/2); [Plan](spec/plan.md) (draft)
+- Selected Issues or work: [Issue #2](https://github.com/brightstack/forge/issues/2); [Plan](spec/plan.md) (human-approved 2026-09-29)
 - Build record: [build log](build/log.md) (empty)
 - Acceptance record: none
 - Canonical Spec or knowledge: none
@@ -65,10 +65,8 @@ override depth, staffing, or the README question in the Plan.
 
 - Muse Code is unavailable in the container; all Muse discovery, validation, and lifecycle proof must come from human-run steps on macOS.
 - Muse Code facts in the issue are unverified.
-- README.md scope and setup (b) disposition are open human questions in the Plan.
 
 ## Next
 
-Human approves or revises the Plan and answers its open questions; then the
-Reviewer runs the Plan boundary review. Build stays pending and is blocked on
-the human-run Muse proof.
+Human runs the Muse proof on macOS (Plan step 1) and returns the evidence;
+the Engineer supplies the runbook when Build is requested.

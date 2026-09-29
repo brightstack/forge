@@ -3,7 +3,7 @@ id: "296809ae-94d3-4350-af35-9b38a344d200"
 code: "PLAN-296809ae"
 type: "plan"
 title: "Add Muse Code as a supported host"
-status: "draft"
+status: "accepted"
 createdAt: "2026-09-29T04:22:16.848Z"
 updatedAt: "2026-09-29T04:22:16.848Z"
 ---
@@ -57,11 +57,15 @@ limitation; install.md and `references/cli.md` name Muse Code under the default
    runbook; the human executes it.
 2. **Decide from evidence.** If every stopping condition below is clear,
    proceed to 3. Otherwise return to the human with the recorded failure.
-3. **Docs edit.** Update the host sentences in install.md (lines 11 and 55
-   area) and `skills/forge/references/cli.md` (line ~22): Muse Code joins
+3. **Docs edit.** Update the host sentences in install.md (lines 11 and 55,
+   and the line ~103 "Cursor or Codex" paste-prompt heading) and `skills/forge/references/cli.md` (line ~22): Muse Code joins
    Cursor and Codex under `agents`; add one sentence that Cursor-only or
-   Claude-only installs must add `agents` for Muse Code. Add a concise
-   known-limitation note only if step 1 found one. Setup help text in
+   Claude-only installs must add `agents` for Muse Code. In README.md, add
+   Muse Code to the default-host line and the two "Cursor or Codex"
+   install-prompt headings; add a Muse Code "Prompt your agent" example only
+   if step 1 confirmed how it invokes the skill. If setup (b) double-loads but
+   the intended copy runs, add a short "install Forge in one place" note. Add a
+   concise known-limitation note only if step 1 found one. Setup help text in
    `src/cli.ts` lists tool values, not hosts, and stays unchanged.
 4. **Container checks, simplify, independent Review**, then Acceptance using the
    returned Muse records by reference.
@@ -121,16 +125,18 @@ host mapping is real rather than inferred from the issue.
 
 - Stopping conditions — return to the human, do not add a `muse` tool value or
   alter the skill corpus: `muse skills validate` rejects unmodified SKILL.md;
-  setup (b) double-loads `/forge` or picks a stale user-level copy; setup (a)
+  setup (b) runs a stale or wrong copy of `/forge` (a harmless double listing
+  gets the step 3 note instead); setup (a)
   fails to discover the skills, so `agents` is insufficient; Muse's lead
   orchestration prevents Forge dispatch or clean-context Review in a way a
   documented limitation cannot honestly cover; any Muse fact from the issue
   proves false in a way that changes the docs' claim.
-- Open (human): README.md also names hosts ("Cursor and Codex" at lines 28,
-  53, 87 and host-specific paste prompts) but is outside the issue's criteria.
-  Include it in the docs edit or leave it?
-- Open (human): if (b) double-loads, is a documented "install in one place"
-  note acceptable, or is that a stop?
+- Resolved (human, 2026-09-29, at Plan approval): README.md is in scope as in
+  step 3, with the prompt example pending step 1; a double-loading `/forge`
+  gets an "install in one place" note and stops only if the wrong copy runs;
+  one generic host sentence in `references/cli.md` is acceptable although it
+  ships in the installed skill; no check of Muse Code's model quality, since
+  its model can change.
 - Open (human, from issue): whether Forge should constrain Muse's multi-worker
   default; this Plan only observes and documents.
 - Risk: without the Muse evidence the docs edit must not ship; Build is blocked
