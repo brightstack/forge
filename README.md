@@ -25,7 +25,7 @@ or call one phase. Forge follows **your repository's stack and standards**.
 
 ## Install
 
-macOS and Linux. Default host is `.agents` (Cursor and Codex):
+macOS and Linux. Default host is `.agents` (Cursor, Codex, and Muse Code):
 
 ```bash
 curl -fsSL https://get.brightstack.ai/forge/install.sh | sh
@@ -50,7 +50,7 @@ If you are a coding agent, install Forge into the current project, then follow
 the skill. Do not invent a different workflow. Select the host that matches the
 agent you are.
 
-**Cursor or Codex** (writes `.agents`):
+**Cursor, Codex, or Muse Code** (writes `.agents`):
 
 ```text
 Install Forge in this project.
@@ -84,7 +84,7 @@ Install Forge in this project.
 
 Humans can paste one of these:
 
-**Cursor or Codex**
+**Cursor, Codex, or Muse Code**
 
 > Install Forge in this repo with `curl -fsSL https://get.brightstack.ai/forge/install.sh | sh`, then read `.agents/skills/forge/SKILL.md` and use Forge for this request. Stop after Plan unless I ask you to build.
 
@@ -113,6 +113,10 @@ Name the stopping boundary.
 
 > `$forge` Use Forge to run Acceptance on the current reviewed candidate.
 > Exercise the real behavior and stop before Ship.
+
+**Muse Code**
+
+> `/forge` Use Forge to fix this bug: `<bug>`. Stop after independent Review.
 
 | Request | Result |
 | --- | --- |

@@ -19,11 +19,11 @@ forge init LOOP_ID --title TITLE
 from `--pack` when you pass a local package directory. `init` creates loop
 records. Do not run these from `~/.local/bin`; that directory is not a pack root.
 
-Default `--tools` is `agents` (Cursor and Codex). Claude Code users must pass
-`--tools claude`, or pipe the curl installer into `FORGE_TOOLS=claude sh` (the
-assignment goes on the `sh`, not on the `curl`), and then read
-`.claude/skills/forge/SKILL.md`. Pass `--tools cursor` or a comma-separated
-list when a project uses more than one host. Unknown tools fail.
+Default `--tools` is `agents` (Cursor, Codex, and Muse Code). Claude Code
+users must pass `--tools claude`, or pipe the curl installer into
+`FORGE_TOOLS=claude sh` (the assignment goes on the `sh`, not on the `curl`),
+and then read `.claude/skills/forge/SKILL.md`. Pass `--tools cursor` or a
+comma-separated list when a project uses more than one host. Unknown tools fail.
 
 From the Forge package directory in a source checkout, inspect the live contract before using it:
 

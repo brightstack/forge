@@ -48,3 +48,19 @@ updatedAt: "2026-09-29T04:22:16.797Z"
 - Observed: PASS, no P0/P1; P2 advisories: add the install.md line ~103 heading (applied), mark the Plan accepted (applied), give an exact copy command for setup (b) and list Acceptance records for the Quick loop (left to the Build runbook)
 - Evidence: Reviewer report in conversation
 - Next: Plan boundary complete; Build pending, blocked on the human-run Muse proof (Plan step 1)
+
+## 2026-09-29 — Muse proof returned
+
+- Actor: human, recorded by Coordinator
+- Artifact or candidate: Plan step 1 on macOS, Muse Code 1.4.1
+- Observed: validate passes; skills load after one workspace-trust prompt; Quick loop ran with separate subagents; `.cursor`-only not discovered; setup (b) double-lists and the second entry runs the user copy — human chose to document it and track a warning in brightstack/forge#3
+- Evidence: conversation; [build log](build/log.md)
+- Next: Engineer docs edit
+
+## 2026-09-29 — Build and Review
+
+- Actor: Engineer, Reviewer
+- Artifact or candidate: `git:510fe415942e861300baab02e7cee51d00039941:sha256:197c4ecd760e95a8f81246c28ebea88d5bd695f6c0740e5d8f083dbffc951b28`
+- Observed: docs edit; Review REVISE (P1 `~/.claude/skills` claim), repaired; re-review PASS
+- Evidence: [build log](build/log.md)
+- Next: human approval to commit and push

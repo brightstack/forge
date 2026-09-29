@@ -29,10 +29,10 @@ boundary: Plan. Plan drafted; Build pending.
 - Gates: Launch accepted; Plan approved by the human in conversation ("Yes. Approval of the plan"), answers recorded in the Plan; Reviewer boundary review PASS
 - Workspace: brightstack/forge, branch `claude/relaxed-davinci-xzvnrg`
 - Launch acceptance or Auto grant: human accepted the Launch with "go" in conversation, after a human-accepted scope revision (below)
-- Current step: Plan boundary complete; Build pending
+- Current step: Build complete with independent Review PASS; awaiting human approval to commit and push
 - Authority status: Issue #2 plus accepted Launch revision; no new canonical decisions
 - Accountable owner: Engineer
-- Current candidate: none
+- Current candidate: `git:510fe415942e861300baab02e7cee51d00039941:sha256:197c4ecd760e95a8f81246c28ebea88d5bd695f6c0740e5d8f083dbffc951b28` (README.md, install.md, skills/forge/references/cli.md, uncommitted)
 - Comparison base: `7625bbf`
 - Applied Spec status and receipt: not applicable
 
@@ -68,5 +68,5 @@ override depth, staffing, or the README question in the Plan.
 
 ## Next
 
-Human runs the Muse proof on macOS (Plan step 1) and returns the evidence;
-the Engineer supplies the runbook when Build is requested.
+Human reviews the docs diff and approves commit and push. Acceptance and Ship
+were not requested. Muse Auto-review interaction remains unreported.
