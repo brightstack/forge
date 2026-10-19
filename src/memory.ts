@@ -25,6 +25,8 @@ import {
   authorization_context,
   check_identity,
   contained_path,
+  document_path,
+  input_path,
   isIsoDateTime,
   parse_document,
   read_utf8,
@@ -109,6 +111,7 @@ interface PreparedChange {
 
 interface Prepared {
   repo: string;
+  loop?: string;
   manifest_path: string;
   manifest: JsonObject;
   manifest_sha256: string;
@@ -150,18 +153,18 @@ export const _memory_test_hooks: {
   register_document?: typeof register_document;
 } = {};
 
-export function verify_prepared(repo: string, manifest: string): JsonObject {
-  return verificationResult(prepare(repo, manifest));
+export function verify_prepared(repo: string, manifest: string, loop?: string): JsonObject {
+  return verificationResult(prepare(repo, manifest, { loop }));
 }
 
-export function apply_prepared(repo: string, manifest: string): JsonObject {
-  return withMutationLock(repo, () => existingSpecApplication(repo, manifest) ?? applyOwned(repo, manifest));
+export function apply_prepared(repo: string, manifest: string, loop?: string): JsonObject {
+  return withMutationLock(repo, () => existingSpecApplication(repo, manifest, loop) ?? applyOwned(repo, manifest, { loop }));
 }
 
-export function apply_kb(repo: string, manifest: string, operation: string): JsonObject {
+export function apply_kb(repo: string, manifest: string, operation: string, loop?: string): JsonObject {
   if (!ACTIONS.has(operation)) throw new ForgeError(`unsupported KB operation: ${operation}`);
   if (operation === "move") throw new ForgeError(`unsupported KB operation: ${operation}`);
-  return apply(repo, manifest, { requiredAction: operation as Action, kbOnly: true });
+  return apply(repo, manifest, { requiredAction: operation as Action, kbOnly: true, loop });
 }
 
 export function record_kb_decision(
@@ -169,12 +172,12 @@ export function record_kb_decision(
   loopPath: string | undefined,
   authorizationFile: string,
   bodyFile: string,
-  options: { title?: string; supersedes?: string } = {},
+  options: { title?: string; supersedes?: string; loop?: string } = {},
 ): JsonObject {
   return withMutationLock(repo, () => {
     const root = realRepo(repo);
-    const context = authorization_context(root, authorizationFile);
-    const body = read_utf8(contained_path(root, bodyFile, { must_exist: true })).trim();
+    const context = authorization_context(root, authorizationFile, options.loop);
+    const body = read_utf8(input_path(root, bodyFile, options.loop)).trim();
     if (!body || body.startsWith("---")) {
       throw new ForgeError("decision body must be nonempty Markdown without frontmatter");
     }
@@ -185,10 +188,12 @@ export function record_kb_decision(
     if (existsSync(target)) throw new ForgeError(`decision target already exists: ${relativeTarget}`);
     const createdAt = new Date().toISOString().replace("Z", "+00:00");
     const acceptedOn = mustString(context.date);
-    const source = mustString(context.source);
+    const source = options.loop && !/^https?:\/\//.test(mustString(context.source))
+      ? sourceReference(root, input_path(root, mustString(context.source), options.loop))
+      : mustString(context.source);
     const supersedes = options.supersedes;
     const loop = loopPath
-      ? prepareLoopDecisionReference(root, loopPath, code, title, relativeTarget, context, supersedes)
+      ? prepareLoopDecisionReference(root, loopPath, code, title, relativeTarget, context, supersedes, options.loop)
       : null;
     if (supersedes) assertSupersededDecision(root, supersedes, loop?.old);
 
@@ -232,10 +237,10 @@ export function record_kb_decision(
     const manifest = {
       version: 1,
       operation_id: `decision-${code}`,
-      authorization_file: repoRelative(root, contained_path(root, authorizationFile, { must_exist: true })),
+      authorization_file: input_path(root, authorizationFile, options.loop),
       proof: {
         status: "document-only",
-        source: [repoRelative(root, contained_path(root, authorizationFile, { must_exist: true }))],
+        source: [input_path(root, authorizationFile, options.loop)],
         evidence: [],
         acceptance: [],
       },
@@ -245,7 +250,7 @@ export function record_kb_decision(
           kind: "kb-decision",
           action: "add",
           base_sha256: null,
-          proposed_file: repoRelative(root, decisionDraft),
+          proposed_file: decisionDraft,
           metadata_changes: [],
         },
         {
@@ -253,7 +258,7 @@ export function record_kb_decision(
           kind: "kb-index",
           action: indexBefore === null ? "add" : "update",
           base_sha256: indexBefore === null ? null : digest(indexBefore),
-          proposed_file: repoRelative(root, indexDraft),
+          proposed_file: indexDraft,
           metadata_changes: [],
         },
       ],
@@ -269,7 +274,7 @@ export function record_kb_decision(
         _write_atomic(loop.target, loop.next);
         loopWritten = true;
       }
-      const result = applyOwned(root, manifestPath);
+      const result = applyOwned(root, manifestPath, { loop: options.loop });
       return {
         ...result,
         decision: code,
@@ -673,11 +678,12 @@ export function verify_knowledge(repo: string, scopes?: string[]): JsonObject {
 interface ApplyOptions {
   requiredAction?: Action;
   kbOnly?: boolean;
+  loop?: string;
 }
 
-function existingSpecApplication(repo: string, manifest: string): JsonObject | null {
+function existingSpecApplication(repo: string, manifest: string, loop?: string): JsonObject | null {
   const root = realRepo(repo);
-  const manifestPath = contained_path(root, manifest, { must_exist: true });
+  const manifestPath = input_path(root, manifest, loop);
   if (!isFile(manifestPath)) throw new ForgeError("prepared manifest must be a regular file");
   const manifestBytes = readFileSync(manifestPath);
   let value: unknown;
@@ -737,7 +743,7 @@ function existingSpecApplication(repo: string, manifest: string): JsonObject | n
     result_match: "matching",
     receipt: repoRelative(root, receiptPath),
     proof: receipt.proof,
-    claim: "recorded document-only result still matches working-copy bytes; semantic fidelity, implementation, Review, Acceptance, and publication were not established",
+    claim: "recorded document-only result still matches working-copy bytes; semantic fidelity, implementation, Review, Verify, and publication were not established",
   };
 }
 
@@ -853,7 +859,7 @@ function applyOwned(repo: string, manifest: string, options: ApplyOptions = {}):
 
 function prepare(repo: string, manifest: string, options: ApplyOptions = {}): Prepared {
   const root = realRepo(repo);
-  const manifestPath = contained_path(root, manifest, { must_exist: true });
+  const manifestPath = input_path(root, manifest, options.loop);
   if (!isFile(manifestPath)) throw new ForgeError("prepared manifest must be a regular file");
   const manifestBytes = readFileSync(manifestPath);
   let value: unknown;
@@ -876,7 +882,7 @@ function prepare(repo: string, manifest: string, options: ApplyOptions = {}): Pr
   if (typeof authorizationFile !== "string" || !authorizationFile.trim()) {
     throw new ForgeError("manifest requires authorization_file");
   }
-  const authorization = authorization_context(root, authorizationFile);
+  const authorization = authorization_context(root, authorizationFile, options.loop);
   const authorizationDate = authorization.date;
   if (typeof authorizationDate !== "string" || !validIsoDate(authorizationDate)) {
     throw new ForgeError("memory authorization date must be an ISO date");
@@ -888,8 +894,8 @@ function prepare(repo: string, manifest: string, options: ApplyOptions = {}): Pr
   if (specApply && (!isObject(value.proof) || value.proof.status !== "document-only")) {
     throw new ForgeError("spec apply requires document-only proof");
   }
-  const proof = prepareProof(root, value.proof);
-  const retainedInputs = prepareRetainedInputs(root, value.retained_inputs, specApply);
+  const proof = prepareProof(root, value.proof, options.loop);
+  const retainedInputs = prepareRetainedInputs(root, value.retained_inputs, specApply, options.loop);
   const rawChanges = value.changes;
   if (!Array.isArray(rawChanges)) {
     throw new ForgeError("manifest changes must be a list");
@@ -908,7 +914,7 @@ function prepare(repo: string, manifest: string, options: ApplyOptions = {}): Pr
   const targets = new Set<string>();
   const proposedPaths = new Set<string>();
   for (const [index, rawChange] of rawChanges.entries()) {
-    const change = prepareChange(root, rawChange, index, specApply);
+    const change = prepareChange(root, rawChange, index, specApply, options.loop);
     if (targets.has(change.target)) throw new ForgeError(`duplicate manifest target: ${change.relative}`);
     targets.add(change.target);
     if (change.proposed_path !== null) proposedPaths.add(change.proposed_path);
@@ -941,16 +947,17 @@ function prepare(repo: string, manifest: string, options: ApplyOptions = {}): Pr
   checkManifestIdentities(changes);
   checkCurrentState(changes);
   checkOverlayLinks(root, changes);
-  const authorizationSnapshot = localSnapshot(root, repoRelative(root, contained_path(root, authorizationFile, { must_exist: true })));
+  const authorizationSnapshot = localSnapshot(root, input_path(root, authorizationFile, options.loop), undefined, options.loop);
   if (!sameJson(JSON.parse(mustString(authorizationSnapshot.content)), authorization)) {
     throw new ForgeError("authorization context changed while preparing the operation");
   }
-  const humanSourceSnapshot = referenceSnapshot(root, mustString(authorization.source));
+  const humanSourceSnapshot = referenceSnapshot(root, mustString(authorization.source), options.loop);
   if (humanSourceSnapshot.content !== null && !humanSourceSnapshot.content.includes(mustString(authorization.quote))) {
     throw new ForgeError("authorization source changed while preparing the operation");
   }
   return {
     repo: root,
+    loop: options.loop,
     manifest_path: manifestPath,
     manifest: value,
     manifest_sha256: Bun.CryptoHasher.hash("sha256", manifestBytes, "hex"),
@@ -966,7 +973,7 @@ function prepare(repo: string, manifest: string, options: ApplyOptions = {}): Pr
   };
 }
 
-function prepareChange(root: string, raw: unknown, index: number, specApply: boolean): PreparedChange {
+function prepareChange(root: string, raw: unknown, index: number, specApply: boolean, loop?: string): PreparedChange {
   const label = `change ${index + 1}`;
   if (!isObject(raw)) throw new ForgeError(`${label} must be an object`);
   onlyFields(raw, CHANGE_FIELDS, label, OPTIONAL_CHANGE_FIELDS);
@@ -1026,7 +1033,7 @@ function prepareChange(root: string, raw: unknown, index: number, specApply: boo
     if (typeof proposedFile !== "string" || !proposedFile.trim()) {
       throw new ForgeError(`${action} requires proposed_file: ${relativePath}`);
     }
-    proposedPath = contained_path(root, proposedFile, { must_exist: true });
+    proposedPath = input_path(root, proposedFile, loop);
     if (!isFile(proposedPath)) throw new ForgeError(`proposed_file must be a regular file: ${proposedFile}`);
     proposedBytes = readFileSync(proposedPath);
     proposedContent = decodeUtf8(proposedBytes, `proposed document: ${proposedFile}`);
@@ -1172,7 +1179,7 @@ function prepareChange(root: string, raw: unknown, index: number, specApply: boo
   };
 }
 
-function prepareProof(root: string, raw: unknown): JsonObject {
+function prepareProof(root: string, raw: unknown, loop?: string): JsonObject {
   if (!isObject(raw)) throw new ForgeError("manifest requires a proof object");
   onlyFields(raw, PROOF_FIELDS, "proof");
   const status = raw.status;
@@ -1185,7 +1192,7 @@ function prepareProof(root: string, raw: unknown): JsonObject {
     if (!Array.isArray(values) || values.some((value) => typeof value !== "string" || !value.trim())) {
       throw new ForgeError(`proof ${field} must be a list of references`);
     }
-    result[field] = values.map((value) => proofReference(root, value as string));
+    result[field] = values.map((value) => proofReference(root, value as string, loop));
   }
   if (!(result.source as string[]).length) throw new ForgeError("proof requires at least one source reference");
   if (status === "integrated" && (!(result.evidence as string[]).length || !(result.acceptance as string[]).length)) {
@@ -1194,7 +1201,7 @@ function prepareProof(root: string, raw: unknown): JsonObject {
   return result;
 }
 
-function prepareRetainedInputs(root: string, raw: unknown, required: boolean): SourceSnapshot[] {
+function prepareRetainedInputs(root: string, raw: unknown, required: boolean, loop?: string): SourceSnapshot[] {
   if (raw === undefined && !required) return [];
   if (!Array.isArray(raw)) throw new ForgeError("retained_inputs must be a list");
   const snapshots = raw.map((item, index) => {
@@ -1215,13 +1222,14 @@ function prepareRetainedInputs(root: string, raw: unknown, required: boolean): S
     if (typeof item.sha256 !== "string" || !/^[0-9a-f]{64}$/.test(item.sha256)) {
       throw new ForgeError(`local retained input requires a lowercase SHA-256 hash: ${source}`);
     }
-    const snapshot = localSnapshot(root, source, role);
+    const snapshot = localSnapshot(root, source, role, loop);
     if (snapshot.sha256 !== item.sha256) {
       throw new ForgeError(`stale retained input ${source}: expected ${item.sha256}, found ${snapshot.sha256}`);
     }
+    const inputRelative = repoRelative(root, input_path(root, source, loop));
     if (
       (role === "accepted-baseline" || role === "approved-change") &&
-      (snapshot.source.startsWith("docs/specs/") || snapshot.source.startsWith("docs/knowledge/"))
+      (inputRelative.startsWith("docs/specs/") || inputRelative.startsWith("docs/knowledge/"))
     ) {
       throw new ForgeError(`${role} must be retained independently of canonical files`);
     }
@@ -1241,13 +1249,13 @@ function prepareRetainedInputs(root: string, raw: unknown, required: boolean): S
   return snapshots;
 }
 
-function localSnapshot(root: string, source: string, role?: string): SourceSnapshot {
-  const path = contained_path(root, source, { must_exist: true });
+function localSnapshot(root: string, source: string, role?: string, loop?: string): SourceSnapshot {
+  const path = input_path(root, source, loop);
   if (!isFile(path)) throw new ForgeError(`retained source must be a regular file: ${source}`);
   const bytes = readFileSync(path);
   return {
     ...(role ? { role } : {}),
-    source: repoRelative(root, path),
+    source: loop ? path : sourceReference(root, path),
     sha256: Bun.CryptoHasher.hash("sha256", bytes, "hex"),
     content: decodeUtf8(bytes, `retained source: ${source}`),
     provenance: "local-snapshot",
@@ -1266,8 +1274,8 @@ function remoteSnapshot(source: string, role?: string): SourceSnapshot {
   };
 }
 
-function referenceSnapshot(root: string, source: string): SourceSnapshot {
-  return /^https?:\/\/[^/]+/i.test(source) ? remoteSnapshot(source) : localSnapshot(root, source);
+function referenceSnapshot(root: string, source: string, loop?: string): SourceSnapshot {
+  return /^https?:\/\/[^/]+/i.test(source) ? remoteSnapshot(source) : localSnapshot(root, source, undefined, loop);
 }
 
 function checkPreparedInputs(prepared: Prepared): void {
@@ -1277,18 +1285,23 @@ function checkPreparedInputs(prepared: Prepared): void {
     prepared.human_source_snapshot,
   ]) {
     if (snapshot.provenance === "remote-reference") continue;
-    const path = contained_path(prepared.repo, snapshot.source, { must_exist: true });
+    const path = input_path(prepared.repo, snapshot.source, prepared.loop);
     if (!isFile(path)) throw new ForgeError(`prepared source changed before apply: ${snapshot.source}`);
     const current = Bun.CryptoHasher.hash("sha256", readFileSync(path), "hex");
     if (current !== snapshot.sha256) throw new ForgeError(`prepared source changed before apply: ${snapshot.source}`);
   }
 }
 
-function proofReference(root: string, value: string): string {
+function proofReference(root: string, value: string, loop?: string): string {
   if (/^https?:\/\/[^/]+/i.test(value)) return value;
-  const path = contained_path(root, value, { must_exist: true });
+  const path = input_path(root, value, loop);
   if (!isFile(path)) throw new ForgeError(`proof reference must be a file: ${value}`);
-  return repoRelative(root, path);
+  return loop ? path : sourceReference(root, path);
+}
+
+function sourceReference(root: string, path: string): string {
+  const relativePath = repoRelative(root, path);
+  return relativePath === '..' || relativePath.startsWith('../') ? path : relativePath;
 }
 
 function checkCurrentState(changes: PreparedChange[]): void {
@@ -1376,7 +1389,7 @@ function checkOverlayLinks(root: string, changes: PreparedChange[]): void {
 
 function verificationResult(prepared: Prepared, applied = false): JsonObject {
   const claim = prepared.application === "spec"
-    ? "installed or validated document-only target bytes; semantic fidelity, human authenticity, implementation, Review, Acceptance, and publication were not established"
+    ? "installed or validated document-only target bytes; semantic fidelity, human authenticity, implementation, Review, Verify, and publication were not established"
     : prepared.changes.length
     ? "structurally validated prepared files; semantic preservation, human authenticity, implementation, and PR merge were not established"
     : "structurally validated authorized integrated delivery references; evidence meaning, human authenticity, deployment, publication, and compliance were not established";
@@ -1949,8 +1962,9 @@ function prepareLoopDecisionReference(
   decisionPath: string,
   context: Metadata,
   supersedes?: string,
+  loop?: string,
 ): { target: string; old: string; next: string } {
-  const target = contained_path(root, path, { must_exist: true });
+  const target = document_path(root, path, loop, true);
   const old = read_utf8(target);
   const metadata = validate_document_content(old, "decisions");
   check_identity(root, target, metadata);

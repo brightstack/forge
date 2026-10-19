@@ -6,6 +6,11 @@ description: "Independently review an exact code candidate, including UI markup 
 # Forge Code Review
 
 <setup>
+Load [authority](../forge-shared/references/authority.md),
+[impact-based admission](../forge-shared/references/severity.md),
+[target harness resolution](../forge-shared/references/target-harness.md), and
+[returns](../forge-shared/references/returns.md); these provide the common judgment
+and evidence contract without starting a lifecycle or Launch.
 Adopt the bundled [Reviewer](../../agents/reviewer/instructions.md) as the senior
 engineering lens. Stay adversarial in investigation, conservative in findings,
 and read-only throughout.
@@ -21,15 +26,17 @@ portable review method.
 This is a leaf skill. It may run directly for a standalone code review or as the
 Code Review dimension assigned by Forge Review. It never invokes Forge Review,
 starts a delivery lifecycle, integrates other dimensions, edits the candidate,
-runs Acceptance, or routes repair.
+runs Verify, or routes repair.
 
 Code includes UI markup and styles, even a CSS-only change. Inspect their source
 correctness and engineering standards; an assigned Design judge owns the rendered
 visual judgment. Pure design artifacts without code are outside this leaf.
 
 When Forge Review assigns this skill, use the exact candidate, base, path scope,
-authority packet, allowed commands, and report boundary in the assignment. When
-invoked directly, resolve those inputs with the procedure.
+authority packet, actual applicable target harness/rule/reference/check paths,
+allowed commands, and report boundary in the assignment. Read those sources rather
+than relying on an assigning owner's summary. When invoked directly, resolve
+those inputs with the procedure.
 </activation>
 
 <workflow>
@@ -45,25 +52,23 @@ contradictory, or needed to test a concrete hypothesis.
 
 <finding_policy>
 Admit a finding only when authority, a reachable current trigger, observed
-evidence or a concrete causal trace, and a material consequence all survive scrutiny. Use Forge's severity semantics:
-
-- `P0`: demonstrated applicable accepted-Spec or critical trust, correctness, security,
-  privacy, data-loss, public-contract, or build-boundary failure.
-- `P1`: reachable current-path defect, material engineering-standard violation,
-  misleading required proof, or required evidence gap with a scope-aligned remedy.
-- `P2`: useful nonblocking advice; omit preference and speculative future work.
+evidence or a concrete causal trace, and a material consequence all survive scrutiny.
+Apply the shared impact-based severity rules. A Spec mismatch is not automatically
+P0, and severity does not authorize a remedy outside the accepted scope. Missing
+required evidence is an explicit gap, not an invented runtime defect.
 
 Use `PASS`, `REVISE`, `RETHINK`, `READY_FOR_USER`, or `BLOCKED`. PASS means the
 Code Review dimension found no unresolved P0/P1 and has sufficient evidence for
 its claims. REVISE means supported correction; RETHINK means the mechanism needs
 reconsideration; READY_FOR_USER identifies a consequential authority/intent choice;
 BLOCKED means required evidence or capability prevents judgment. Missing required
-proof precludes PASS. It does not establish integrated Forge Review or Acceptance.
+proof precludes PASS. It does not establish integrated Forge Review or Verify.
 </finding_policy>
 
 <output>
 Use the concise [Code Review report](assets/report.md). Return the selected skill
-and source, exact candidate/base and path scope, inspected authority, checks and
+and source, exact candidate/base and path scope, inspected authority including
+actual applicable app standard/reference paths, checks and
 observed evidence, findings, gaps, and one Code Review verdict. The record-owning
 coordinator preserves the return as its own labelled section
 or linked managed document when Forge Review assigned it; this reviewer never

@@ -4,6 +4,11 @@ Pin one change, attack its most consequential current risks, and report only
 high-confidence problems the author should act on now. Search broadly enough to
 falsify the candidate; admit findings conservatively.
 
+Use [authority](../../forge-shared/references/authority.md),
+[finding admission](../../forge-shared/references/severity.md), and
+[return evidence](../../forge-shared/references/returns.md). Grade actual impact;
+separate current defect severity from authority to implement its remedy.
+
 ## 1. Pin the candidate
 
 Use the caller's target. Otherwise inspect the complete current working tree.
@@ -40,7 +45,12 @@ Read progressively, including `AGENTS.md`, `CLAUDE.md` when present, and relevan
 Accepted artifacts own intent. Applicable repository instructions own standards
 routing and direct constraints. Named canonical exemplars and mechanical checks
 inherit only the authority that routes to them. A sibling pattern is evidence about the code; it does not create a
-standard. If the applicable route resolves no engineering authority, record `NOT_FOUND` rather than inventing one.
+standard. If the applicable route resolves no engineering authority, record `NOT_FOUND`
+rather than inventing one. Use [target harness resolution](../../forge-shared/references/target-harness.md)
+for actual source paths, delegated handoffs, and explicit procedure replacements.
+Read the assigned source contents even when the caller supplies a summary; add
+newly applicable paths when tracing crosses a subtree. Report the actual relevant
+standards and evidence in the existing inspected-authority and checks fields.
 
 ## 3. Choose the threat focus
 

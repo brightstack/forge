@@ -1,0 +1,68 @@
+# Ship
+
+Apply [authority](../../forge-shared/references/authority.md)
+and [returns with owner inspection](../../forge-shared/references/returns.md).
+
+Ship closes the authorized local outcome and performs only publication actions
+the user actually authorized. It starts from the exact Review-passed and
+Verify-passed candidate, comparison base, retained accepted baseline and
+approved change, current canonical files, applicable Spec-apply receipts, and
+explicit external-action authority.
+
+Before closure, check once that:
+
+- candidate/base still match Review and Verify;
+- required scenarios, NFRs, preserved obligations, and visual acceptance passed
+  or have explicit blocking gaps;
+- selected authority, runtime inputs, canonical files, and applicable receipt
+  hashes still match the reviewed candidate; and
+- each requested PR, merge, deployment, release, document publication, or other
+  external action is explicitly authorized.
+
+Reconcile the exact candidate, human grant, Spec status, Build changes, Review and
+Verify results, and affected target prerequisites. A missing accepted clause
+or an unrun required check remains a gap, even if focused tests passed. If code
+depends on a new schema step, confirm that separately authorized operation has
+completed on the target before the dependent code serves; otherwise hold
+activation and report the missing prerequisite or authority. A release grant alone
+does not authorize an additive or destructive schema mutation. Follow the target
+repository's exact operation-and-target authorization rule and inspect destructive
+SQL where that rule requires it. Correct contradictions in existing records rather
+than creating a parallel release ledger.
+
+Run [Finish](../../forge-shared/references/finish.md) before publication when approved unapplied Spec/knowledge
+meaning or authorized existing-PR readiness remains. It reuses existing guarded
+operations and observed Git/PR state; it does not replace Build Review or
+Verify. Structural checks, receipt matching, or a clean tree do not replace
+either judgment.
+
+An exact inspected canonical-only delta produced by Finish's Spec apply does not
+by itself stale the implementation Review or Verify candidate. Record and
+inspect that the delta is limited to the reviewed canonical result. Any code,
+runtime, test, configuration, uninspected canonical file, or additional meaning
+change returns to the affected Review or Verify boundary before closure.
+
+Record one concise [ship.md](../assets/ship.md) closure with the accepted candidate,
+current candidate, comparison base, Review and Verify references, applicable
+Spec-apply receipts, publication actions, and limits. Normally accepted and final
+candidate are identical. Publication facts belong in this closure; a deployment
+timestamp does not require a canonical status edit or another review loop.
+
+If an authorized merge or rebase changes only Git identity, retain the historical
+verdicts under their original candidate, record the exact old-to-new relationship,
+and judge which proof remains applicable. Never relabel an old verdict. If source,
+runtime input, authority, canonical meaning, or accepted behavior changed, route
+the affected work to its owning Build, Review, or Verify boundary before
+closure.
+
+For an existing operation ID, inspect its retained receipt and current result
+hashes. Matching bytes are already applied; do not replay writes or invent another
+operation ID. Diverged bytes, malformed provenance, a missing Review/Verify
+reference, or a changed authority/runtime input stop the affected claim and name
+the owner who must resolve it.
+
+Execute only authorized repository or publication mechanics. A PR request does
+not imply merge or deploy; a merge request does not imply production release.
+Use `READY_FOR_USER` for an ungranted external action or unresolved human-owned
+meaning. Mechanical freshness success does not prove semantic fidelity,
+Verify, deployment, or publication.

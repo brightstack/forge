@@ -17,13 +17,16 @@ function sorted(value: unknown): unknown {
 function output(value: unknown) { console.log(JSON.stringify(sorted(value))); }
 const collect = (value: string, previous: string[]) => [...previous, value];
 function repo(command: Command) {
-  return command.option("--repo <path>", "Repository containing the managed corpus", ".");
+  return command.option("--repo <path>", "Target repository containing source and canonical memory", ".");
+}
+function loop(command: Command) {
+  return repo(command).option("--loop <id-or-path>", "Select the loop separately from its target repository");
 }
 
 export async function main(argv = process.argv.slice(2)): Promise<void> {
   try {
     const program = new Command("forge")
-      .description("Local file mechanics and artifact previews. Invoke the Forge agent skill for semantic Explore/Spec/Plan/Build/Review/Acceptance/Ship.")
+      .description("Local file mechanics and artifact previews. Invoke the Forge agent skill for semantic Explore/Spec/Plan/Build/Review/Simplify/Verify/Ship.")
       .enablePositionalOptions()
       .exitOverride()
       .configureOutput({ writeErr: () => {} });
@@ -45,10 +48,10 @@ export async function main(argv = process.argv.slice(2)): Promise<void> {
     repo(program.command("init <loop_id>").description("Initialize a loop; this is not approval").requiredOption("--title <title>"))
       .action((id: string, options: { repo: string; title: string }) => output(init_loop(options.repo, id, options.title)));
     const docs = program.command("docs").description("Scaffold and validate identified documents");
-    repo(docs.command("create").description("Scaffold a new identified document from its template").addArgument(new Argument("<kind>", "Document template to scaffold").choices([...KINDS])).argument("<path>", "Repository-relative .md path to create").requiredOption("--title <title>").option("--code <code>").option("--body-file <file>"))
-      .action((kind: string, path: string, options: { repo: string; title: string; code?: string; bodyFile?: string }) => output(create_document(options.repo, kind, path, options.title, options.code, options.bodyFile)));
-    repo(docs.command("update <path>").description("Replace a document body or set ordinary metadata").option("--body-file <file>").option("--set <key=value>", "Set ordinary metadata", collect, []))
-      .action((path: string, options: { repo: string; bodyFile?: string; set: string[] }) => {
+    loop(docs.command("create").description("Scaffold a new identified document from its template").addArgument(new Argument("<kind>", "Document template to scaffold").choices([...KINDS])).argument("<path>", ".md path relative to the selected loop, or repository without --loop").requiredOption("--title <title>").option("--code <code>").option("--body-file <file>"))
+      .action((kind: string, path: string, options: { repo: string; loop?: string; title: string; code?: string; bodyFile?: string }) => output(create_document(options.repo, kind, path, options.title, options.code, options.bodyFile, { loop: options.loop })));
+    loop(docs.command("update <path>").description("Replace a document body or set ordinary metadata").option("--body-file <file>").option("--set <key=value>", "Set ordinary metadata", collect, []))
+      .action((path: string, options: { repo: string; loop?: string; bodyFile?: string; set: string[] }) => {
         const fields: Record<string, unknown> = {};
         for (const assignment of options.set) {
           const separator = assignment.indexOf("=");
@@ -56,23 +59,23 @@ export async function main(argv = process.argv.slice(2)): Promise<void> {
           const key = assignment.slice(0, separator), value = assignment.slice(separator + 1);
           try { fields[key] = JSON.parse(value); } catch { fields[key] = value; }
         }
-        output(update_document(options.repo, path, options.bodyFile, fields));
+        output(update_document(options.repo, path, options.bodyFile, fields, options.loop));
       });
-    repo(docs.command("validate [paths...]").description("Check structure, identities, and local links; not approval or execution proof"))
-      .action((paths: string[], options: { repo: string }) => output(validate_documents(options.repo, paths)));
-    repo(docs.command("append <path>").description("Append a headed entry to an execution log").requiredOption("--heading <heading>").requiredOption("--body-file <file>"))
-      .action((path: string, options: { repo: string; heading: string; bodyFile: string }) => output(append_record(options.repo, path, options.heading, options.bodyFile)));
-    repo(program.command("decision").command("record [loop_decisions_path]").requiredOption("--authorization-file <file>").requiredOption("--body-file <file>").option("--title <title>").option("--supersedes <id>"))
-      .action((path: string | undefined, options: { repo: string; authorizationFile: string; bodyFile: string; title?: string; supersedes?: string }) => output(record_kb_decision(options.repo, path, options.authorizationFile, options.bodyFile, { title: options.title, supersedes: options.supersedes })));
-    repo(program.command("candidate").description("Fingerprint current candidate including dirty files").option("--path <path>", "Explicit candidate input", collect, []).option("--expect <identity>"))
-      .action((options: { repo: string; path: string[]; expect?: string }) => {
-        const result = candidate_snapshot(options.repo, options.path);
-        if (options.expect && options.expect !== result.candidate) throw new ForgeError("candidate changed; prior Review/Acceptance evidence is stale");
+    loop(docs.command("validate [paths...]").description("Check structure, identities, and local links; not approval or execution proof"))
+      .action((paths: string[], options: { repo: string; loop?: string }) => output(validate_documents(options.repo, paths, options.loop)));
+    loop(docs.command("append <path>").description("Append a headed entry to an execution log").requiredOption("--heading <heading>").requiredOption("--body-file <file>"))
+      .action((path: string, options: { repo: string; loop?: string; heading: string; bodyFile: string }) => output(append_record(options.repo, path, options.heading, options.bodyFile, options.loop)));
+    loop(program.command("decision").command("record [loop_decisions_path]").requiredOption("--authorization-file <file>").requiredOption("--body-file <file>").option("--title <title>").option("--supersedes <id>"))
+      .action((path: string | undefined, options: { repo: string; loop?: string; authorizationFile: string; bodyFile: string; title?: string; supersedes?: string }) => output(record_kb_decision(options.repo, path, options.authorizationFile, options.bodyFile, { title: options.title, supersedes: options.supersedes, loop: options.loop })));
+    loop(program.command("candidate").description("Fingerprint current candidate including dirty files").option("--path <path>", "Explicit repository input, or absolute input inside the selected loop", collect, []).option("--expect <identity>"))
+      .action((options: { repo: string; loop?: string; path: string[]; expect?: string }) => {
+        const result = candidate_snapshot(options.repo, options.path, options.loop);
+        if (options.expect && options.expect !== result.candidate) throw new ForgeError("candidate changed; prior Review/Verify evidence is stale");
         output(result);
       });
     const memory = program.command("memory").description("Validate or apply prepared canonical files");
     for (const operation of ["verify", "apply"]) {
-      repo(memory.command(`${operation} <manifest>`)).action((manifest: string, options: { repo: string }) => output((operation === "verify" ? verify_prepared : apply_prepared)(options.repo, manifest)));
+      loop(memory.command(`${operation} <manifest>`)).action((manifest: string, options: { repo: string; loop?: string }) => output((operation === "verify" ? verify_prepared : apply_prepared)(options.repo, manifest, options.loop)));
     }
     const kb = program.command("kb").description("Query or maintain canonical local knowledge");
     repo(kb.command("scaffold <path>").requiredOption("--type <type>").requiredOption("--title <title>").requiredOption("--code <code>").option("--body-file <file>"))
@@ -88,7 +91,7 @@ export async function main(argv = process.argv.slice(2)): Promise<void> {
     repo(kb.command("history").description("Read successful canonical memory-operation receipts"))
       .action((options: { repo: string }) => output(knowledge_history(options.repo)));
     for (const operation of ["add", "update", "remove"] as const) {
-      repo(kb.command(`${operation} <manifest>`)).action((manifest: string, options: { repo: string }) => output(apply_kb(options.repo, manifest, operation)));
+      loop(kb.command(`${operation} <manifest>`)).action((manifest: string, options: { repo: string; loop?: string }) => output(apply_kb(options.repo, manifest, operation, options.loop)));
     }
     await program.parseAsync(argv, { from: "user" });
   } catch (error) {

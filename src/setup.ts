@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, resolve, sep } from "node:path";
 import { ForgeError } from "./errors.ts";
 import { contained_path } from "./records.ts";
 
@@ -16,7 +16,16 @@ export type SetupTool = keyof typeof SETUP_TOOLS;
 const FORGE_PACK_REPO = "https://github.com/brightstack/forge";
 
 const PACK_MARKER = join("skills", "forge", "SKILL.md");
-const PACK_PATHS = [PACK_MARKER, join("skills", "forge-code-review", "SKILL.md"), join("agents", "README.md"), "OKF.md"] as const;
+const PHASES = ["spec", "plan", "build", "review", "simplify", "verify", "ship"] as const;
+const PACK_PATHS = [
+  PACK_MARKER,
+  ...PHASES.map((phase) => join("skills", `forge-${phase}`, "SKILL.md")),
+  join("skills", "forge-code-review", "SKILL.md"),
+  ...["authority", "pragmatism", "severity", "repair", "target-harness"].map((name) => join("skills", "forge-shared", "references", `${name}.md`)),
+  ...PHASES.map((phase) => join("commands", "claude", "forge", `${phase}.md`)),
+  join("agents", "README.md"),
+  "OKF.md",
+];
 
 export function parse_setup_tools(value = "agents"): SetupTool[] {
   const tools: SetupTool[] = [];
@@ -51,17 +60,42 @@ function install_from_pack(root: string, tools: SetupTool[], packRoot: string): 
   tools: SetupTool[];
   hosts: Array<{ tool: SetupTool; dir: string; skill: string }>;
 } {
+  const destinations = ["OKF.md", join("skills", "forge-acceptance")];
+  for (const directory of ["skills", "agents"]) {
+    destinations.push(directory, ...readdirSync(join(packRoot, directory), { recursive: true, encoding: "utf8" })
+      .filter((path) => directory !== "skills" || (path !== "forge-eval" && !path.startsWith(`forge-eval${sep}`)))
+      .map((path) => join(directory, path)));
+  }
+  const commands = tools.includes("claude")
+    ? [join("commands", "forge"), ...readdirSync(join(packRoot, "commands", "claude", "forge"), { recursive: true, encoding: "utf8" })
+      .map((path) => join("commands", "forge", path))]
+    : [];
+
+  // Validate every selected destination before cleanup changes any host.
   const hosts = tools.map((tool) => {
     const dir = contained_path(root, SETUP_TOOLS[tool]);
+    for (const path of tool === "claude" ? [...destinations, ...commands] : destinations) {
+      contained_path(root, join(dir, path));
+    }
+    return { tool, dir, skill: join(dir, PACK_MARKER) };
+  });
+  for (const { tool, dir, skill } of hosts) {
     mkdirSync(join(dir, "skills"), { recursive: true });
-    copy_into(join(packRoot, "skills", "forge"), join(dir, "skills", "forge"));
-    copy_into(join(packRoot, "skills", "forge-code-review"), join(dir, "skills", "forge-code-review"));
+    for (const skill of ["forge", "forge-code-review", "forge-shared", "forge-acceptance", ...PHASES.map((phase) => `forge-${phase}`)]) {
+      rmSync(join(dir, "skills", skill), { recursive: true, force: true });
+    }
+    cpSync(join(packRoot, "skills"), join(dir, "skills"), {
+      recursive: true,
+      filter: (source) => source !== join(packRoot, "skills", "forge-eval"),
+    });
     copy_into(join(packRoot, "agents"), join(dir, "agents"));
     copy_into(join(packRoot, "OKF.md"), join(dir, "OKF.md"));
-    const skill = join(dir, PACK_MARKER);
+    if (tool === "claude") {
+      rmSync(join(dir, "commands", "forge"), { recursive: true, force: true });
+      copy_into(join(packRoot, "commands", "claude", "forge"), join(dir, "commands", "forge"));
+    }
     if (!existsSync(skill)) throw new ForgeError(`setup did not write ${skill}`);
-    return { tool, dir, skill };
-  });
+  }
   return { repo: root, pack: packRoot, tools, hosts };
 }
 

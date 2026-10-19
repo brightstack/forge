@@ -301,6 +301,7 @@ describe("knowledge maintenance CLI", () => {
     const firstBytes = readFileSync(firstPath);
     expect(firstResult).toMatchObject({ decision: "D1" });
 
+    write("forge.yml", "loopsPath: .forge/loops\n");
     ok(["init", "review", "--title", "Review loop"]);
     const loopPath = join(repo, ".forge/loops/review/decisions.md");
     const legacy = "\n## LEGACY-ENTRY\n\nKeep this legacy loop decision readable.\n";

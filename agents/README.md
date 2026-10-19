@@ -21,6 +21,52 @@ An accountable professional may use bounded helpers and remains responsible for
 their assignment, returned evidence, and integration. Review stays independent
 from Build authorship. QA acceptance is distinct from Build Review.
 
+Each professional is a designed perspective with a self-contained Markdown body.
+Its YAML frontmatter contains exactly `id`, `name`, and `description`; those fields
+identify the perspective and do not register a host agent, grant tools, or confer
+authority. Read the complete body, including its mental-model limits and
+communication guidance. The existing `agents/<role>/instructions.md` paths remain
+the loading entrypoints. These identities claim no literal personal careers or
+credentials.
+
+## Loading judgment and procedure
+
+The persona supplies professional priorities and ways of thinking. The selected
+skill supplies workflow, templates, staffing, stopping conditions, and verdict
+formats. Load the relevant phase procedure with the professional rather than
+asking the persona to reproduce it. Phases and helpers use shared
+[authority](../skills/forge-shared/references/authority.md) and
+[target harness resolution](../skills/forge-shared/references/target-harness.md).
+Load [pragmatism](../skills/forge-shared/references/pragmatism.md) for mechanism
+choices, [severity](../skills/forge-shared/references/severity.md) for findings,
+[repair](../skills/forge-shared/references/repair.md) when correction is needed, and
+[evidence and returns](../skills/forge-shared/references/returns.md) for handoffs.
+The [workflow guide](../skills/forge-shared/references/workflows.md) owns Launch,
+gates, and concrete staffing.
+
+| Work | Procedure |
+| --- | --- |
+| Product intent, Design, and technical agreements | [Spec](../skills/forge-spec/references/spec.md) |
+| Planning implementation | [Plan](../skills/forge-plan/references/plan.md) |
+| Implementation, integration, and repair | [Build](../skills/forge-build/references/build.md) |
+| Independent integrated judgment | [Review](../skills/forge-review/references/review.md) |
+| Post-Review behavior-preserving simplification | [Simplify](../skills/forge-simplify/SKILL.md) |
+| Actual candidate acceptance | [Verify](../skills/forge-verify/references/verify.md) |
+| Explicit standalone code-only judgment | [Code Review](../skills/forge-code-review/SKILL.md) |
+
+For visual work, use the shared
+[design direction and craft guidance](../skills/forge-shared/references/design-direction.md)
+unless the target selects a replacement. The Spec-owned
+[design study guidance](../skills/forge-spec/references/design-studies.md) supplies
+the study procedure and companion asset. For research, knowledge maintenance,
+simplification, completion, or shipping, load the owning operation from the
+selected skill; the professional identity does not authorize another phase.
+
+The Markdown contract and intact loading paths establish authoring and packaging
+facts. Behavioral comparison is separate evidence. Do not describe these
+personas as behaviorally validated merely because their sections or frontmatter
+pass a structural check.
+
 ## Temporary helpers
 
 | Helper | Mission |

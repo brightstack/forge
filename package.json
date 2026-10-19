@@ -1,12 +1,12 @@
 {
   "name": "forge",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "private": true,
   "license": "MIT",
   "type": "module",
   "description": "Composable delivery skills and a compiled local mechanics CLI",
   "bin": { "forge": "./dist/forge" },
-  "files": ["dist", "skills", "agents", "LICENSE", "README.md", "OKF.md", "THIRD_PARTY_NOTICES.md"],
+  "files": ["dist", "skills", "agents", "commands", "LICENSE", "README.md", "OKF.md", "THIRD_PARTY_NOTICES.md"],
   "scripts": {
     "build": "bun run build:cli",
     "build:cli": "bun build --compile --minify ./src/cli.ts --outfile ./dist/forge",

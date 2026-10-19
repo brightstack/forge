@@ -16,12 +16,15 @@ combines composable agent skills, professional personas, Markdown artifacts, and
 a small CLI for bookkeeping.
 
 ```text
-Spec  ->  Plan  ->  Build  ->  Acceptance  ->  Ship
-                  -> simplify, review, repair
+Spec  ->  [Build <-> Review]  ->  Simplify  ->  Verify  ->  Ship
 ```
 
 Start with a project, an issue, a bug, or a quick patch. Use the whole lifecycle
-or call one phase. Forge follows **your repository's stack and standards**.
+or call one phase. Plan remains a job: brief Engineer notes for Quick work, with
+a direct Plan skill available. A separate Engineer simplifies after passing
+Build/Review. Changes get affected proof and independent delta Review of the
+resulting complete candidate; a no-op retains prior Review. Verify exercises the
+reviewed outcome, including browser QA when needed. Forge follows **your repository's stack and standards**.
 
 ## Install
 
@@ -102,16 +105,16 @@ Name the stopping boundary.
 
 **Claude Code**
 
-> `/forge` Use Forge to plan this accepted issue: `<issue>`. Stop after Plan.
+> `/forge:plan` Plan this accepted issue: `<issue>`. Stop after Plan.
 
 **Cursor**
 
-> `/forge` Use Forge to build this accepted issue: `<issue>`. Include
-> simplification and independent Review. Stop before Acceptance and Ship.
+> `/forge` Use Forge to build this accepted issue: `<issue>`. Include independent
+> Review and stop there.
 
 **Codex**
 
-> `$forge` Use Forge to run Acceptance on the current reviewed candidate.
+> `$forge` Use Forge to run Verify on the current reviewed candidate.
 > Exercise the real behavior and stop before Ship.
 
 **Muse Code**
@@ -125,18 +128,50 @@ Name the stopping boundary.
 | `Forge plan …` | Implementation approach |
 | `Forge build …` | Implementation, review, and repair |
 | `Forge review …` | Read-only engineering verdict |
+| `Forge simplify …` | Bounded simplification, affected proof and independent Review of the whole result when changed; no mandatory pre-edit Review PASS |
 | `Forge explain …` | Read-only explanation of an artifact or change |
-| `Forge acceptance …` | Actual acceptance, including browser QA when needed |
+| `Forge verify …` | Actual acceptance, including browser QA when needed |
 | `Forge finish …` | Reconcile approved Spec and knowledge changes at work completion |
 | `Forge ship …` | Authorized publication |
+
+Claude setup registers `/forge:spec`, `/forge:plan`, `/forge:build`,
+`/forge:review`, `/forge:simplify`, `/forge:verify`, and `/forge:ship` through native command
+files. Each delegates to its owning `forge-<phase>/SKILL.md`. The generic `forge`
+skill remains the router. See the [host matrix and copying instructions](install.md)
+for the current invocation limits, including the unresolved literal Codex colon
+syntax. A copied command file alone does not prove that a host invoked it. Direct Build
+or Review stops before Simplify unless also authorized; direct Simplify stops
+before QA or Ship, records actual prior Review or its absence, and requires
+independent Review of a changed result without adding a pre-edit Review PASS gate.
 
 Guided is the default: Forge waits before dispatch, then at a new Spec and a
 consequential Plan. Asking for full delivery does not pre-approve unseen work.
 
-Depth lives in [Launch](skills/forge/references/workflows.md). Records live under
-`.forge/` in the **target** repository. See the
-[record contract](skills/forge/references/protocol.md) and
-[CLI guide](skills/forge/references/cli.md).
+Depth lives in [Launch](skills/forge-shared/references/workflows.md). New loop
+records live under `~/.forge/repos/<repository-key>/loops/<loop>/`.
+Root `forge.yml` can set `loopsPath` to another loop parent; relative values
+resolve from the target repository. Existing `.forge/loops/` records stay usable
+in place. Source and canonical memory stay in the target repository. See the
+[record contract](skills/forge-shared/references/protocol.md) and
+[CLI guide](skills/forge-shared/references/cli.md).
+
+```bash
+forge init example --title "Example"
+forge docs create issue spec/issue.md --loop example --title "Example issue"
+forge docs validate --loop example
+```
+
+Loop records use Markdown frontmatter for identity and loop-local codes, without
+a JSON Issue registry. CLI edits keep identity fields immutable. A raw file edit
+cannot be compared with an original loop registration that is no longer stored.
+Canonical Spec/knowledge guards retain their separate registration and approval
+checks.
+
+At actual work completion, `Forge finish <loop>` reconciles approved unapplied
+Spec changes and stops processes owned by the work when they are no longer
+needed. Explicit `Forge spec apply <change>` uses the guarded memory operation;
+see [memory](skills/forge-shared/references/memory.md). These are agent operations,
+not executable CLI subcommands, and do not grant publication authority.
 
 ## Develop
 

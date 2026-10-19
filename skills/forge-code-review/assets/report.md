@@ -9,7 +9,7 @@
 - Candidate: TODO
 - Comparison base and dirty state: TODO
 - Path scope: TODO
-- Inspected authority: TODO
+- Inspected authority: TODO: actual applicable target harness and routed app standard/reference paths
 - Authority status: TODO: whether that authority carries recorded human approval,
   or is a draft this review is judged against as written
 

@@ -7,13 +7,19 @@ import {
   readlinkSync,
   statSync,
 } from 'node:fs'
-import { dirname, extname, relative, resolve, sep } from 'node:path'
+import { dirname, extname, isAbsolute, relative, resolve, sep } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { ForgeError } from './errors.ts'
 import {
   _registry,
   check_identity,
   contained_path,
+  document_path,
+  input_path,
+  loop_documents,
+  loop_root,
+  loops_path,
+  resolve_loop,
   read_utf8,
   validate_document_content,
 } from './records.ts'
@@ -31,22 +37,35 @@ function metadataString(metadata: Record<string, unknown>, field: string): strin
 export function validate_documents(
   repoInput: string,
   paths?: string[],
+  loop?: string,
 ): Record<string, unknown> {
   const repo = contained_path(repoInput, '.', { must_exist: true })
-  const registry = _registry(repo)
-  const selected = paths?.length
-    ? paths
-    : Object.keys(registry).filter((path) => !path.startsWith('docs/knowledge/'))
+  const explicit = paths?.length ? paths.map((path) => document_path(repo, path, loop, true)) : undefined
+  const registry = loop || explicit?.every((path) => loop_root(repo, path)) ? {} : _registry(repo)
+  let selected = explicit
+  if (!selected) {
+    const loops = loop ? [resolve_loop(repo, loop)] : [resolve(repo, '.forge/loops'), loops_path(repo)]
+      .flatMap((parent) => existsSync(parent) ? readdirSync(parent, { withFileTypes: true })
+        .filter((entry) => entry.isDirectory()).flatMap((entry) => {
+          const selected = loop_root(repo, resolve(parent, entry.name, 'index.md'))
+          return selected ? [selected] : []
+        }) : [])
+    selected = [
+      ...Object.keys(registry).filter((path) => !path.startsWith('docs/knowledge/') && !loop_root(repo, path)).map((path) => contained_path(repo, path, { must_exist: true })),
+      ...[...new Set(loops)].flatMap((selectedLoop) => loop_documents(repo, selectedLoop)),
+    ]
+  }
   const checked: string[] = []
   const identifiers = new Map<string, string>()
   const codes = new Map<string, string>()
 
   for (const [registeredPath, identity] of Object.entries(registry)) {
+    if (loop_root(repo, registeredPath)) continue
     for (const [field, seen] of [
       ['id', identifiers],
       ['code', codes],
     ] as const) {
-      const value = identity[field]
+      const value = `${repo}\0${identity[field]}`
       const previous = seen.get(value)
       if (previous) throw new ForgeError(`duplicate ${field}: ${registeredPath} and ${previous}`)
       seen.set(value, registeredPath)
@@ -54,19 +73,20 @@ export function validate_documents(
   }
 
   for (const raw of selected) {
-    const path = contained_path(repo, raw, { must_exist: true })
+    const path = document_path(repo, raw, undefined, true)
     const relativePath = repoRelative(repo, path)
     if (relativePath.startsWith('docs/knowledge/')) {
       throw new ForgeError('canonical knowledge uses kb verify')
     }
     const content = read_utf8(path)
     const metadata = validate_document_content(content)
-    check_identity(repo, path, metadata)
+    check_identity(repo, path, metadata, loop)
+    const namespace = loop_root(repo, path) ?? repo
     for (const [field, seen] of [
       ['id', identifiers],
       ['code', codes],
     ] as const) {
-      const value = metadataString(metadata, field)
+      const value = `${namespace}\0${metadataString(metadata, field)}`
       const previous = seen.get(value)
       if (previous && previous !== relativePath) {
         throw new ForgeError(`duplicate ${field}: ${relativePath} and ${previous}`)
@@ -84,9 +104,7 @@ export function validate_documents(
       if (query >= 0) reference = reference.slice(0, query)
       if (!reference) continue
       const decodedPath = decodeURIComponent(reference)
-      const destination = contained_path(repo, resolve(dirname(path), decodedPath), {
-        must_exist: true,
-      })
+      const destination = document_path(repo, resolve(dirname(path), decodedPath), undefined, true)
       if (fragment && extname(destination) === '.md') {
         const headings = [...read_utf8(destination).matchAll(/^#{1,6}\s+(.+?)\s*#*$/gm)]
         const anchors = new Set(
@@ -140,14 +158,17 @@ function walk(repo: string, directory: string, names: Map<string, Buffer>): void
   }
 }
 
-export function candidate_snapshot(repoInput: string, paths?: string[]): Record<string, unknown> {
+export function candidate_snapshot(repoInput: string, paths?: string[], loop?: string): Record<string, unknown> {
   const repo = contained_path(repoInput, '.', { must_exist: true })
-  const selectedPaths = paths?.map((path) => contained_path(repo, path))
+  const selectedPaths = paths?.map((path) => {
+    if (loop && isAbsolute(path)) return input_path(repo, path, loop, false)
+    return contained_path(repo, path)
+  })
   const relativePaths = selectedPaths?.map((path) => repoRelative(repo, path))
   const scope = relativePaths?.length ? relativePaths : ['.']
   const head = git(repo, 'rev-parse', 'HEAD').toString().trim()
-  const pathspecs = scope.map((path) => `:(literal)${path}`)
-  const rawNames = git(
+  const pathspecs = scope.filter((path) => path !== '..' && !path.startsWith('../')).map((path) => `:(literal)${path}`)
+  const rawNames = pathspecs.length ? git(
     repo,
     'ls-files',
     '-z',
@@ -156,7 +177,7 @@ export function candidate_snapshot(repoInput: string, paths?: string[]): Record<
     '--exclude-standard',
     '--',
     ...pathspecs,
-  ).subarray()
+  ).subarray() : Buffer.alloc(0)
   const names = new Map<string, Buffer>()
   for (const raw of rawNames.toString().split('\0')) {
     if (raw) names.set(raw, Buffer.from(raw))
@@ -165,7 +186,7 @@ export function candidate_snapshot(repoInput: string, paths?: string[]): Record<
   selectedPaths?.forEach((selectedPath, index) => {
     const selected = relativePaths?.[index]
     if (selected === undefined) return
-    if (selected === '.git' || selected.startsWith('.git/')) {
+    if (selected.split('/').includes('.git')) {
       throw new ForgeError(`candidate paths cannot select .git metadata: ${selected}`)
     }
     if (!existsSync(selectedPath)) {
@@ -187,7 +208,7 @@ export function candidate_snapshot(repoInput: string, paths?: string[]): Record<
   for (const raw of sorted) {
     const name = raw.toString()
     if (
-      (name === '.forge' || name.startsWith('.forge/')) &&
+      (name === '.forge' || name.startsWith('.forge/') || loop_root(repo, resolve(repo, name))) &&
       !relativePaths?.some((selected) => contains(selected, name))
     ) {
       continue

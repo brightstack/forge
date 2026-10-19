@@ -6,6 +6,7 @@ import {
   mkdirSync,
   openSync,
   readFileSync,
+  readdirSync,
   readlinkSync,
   realpathSync,
   renameSync,
@@ -28,6 +29,8 @@ import { randomUUID } from 'node:crypto'
 import { ForgeError } from './errors.ts'
 import { withMutationLock } from './lock.ts'
 import { TEMPLATES } from './templates.ts'
+import { loops_path } from './roots.ts'
+export { loops_path } from './roots.ts'
 
 export type Metadata = Record<string, unknown>
 export type Identity = Record<'id' | 'code' | 'type', string>
@@ -110,6 +113,105 @@ export function contained_path(
   }
   if (!isWithin(root, path)) throw new ForgeError(`path must exist within repository: ${raw}`)
   return path
+}
+
+function storage_path(parent: string, candidate: string): string {
+  let ancestor = resolve(parent)
+  while (!existsSync(ancestor)) ancestor = dirname(ancestor)
+  return contained_path(ancestor, candidate)
+}
+
+function loop_location(repo: string, path: string): string {
+  for (const canonical of [join(repo, 'docs/specs'), join(repo, 'docs/knowledge')]) {
+    if (isWithin(canonical, path) || isWithin(path, canonical)) {
+      throw new ForgeError('loop storage cannot overlap canonical memory')
+    }
+  }
+  return path
+}
+
+/** Select one loop without changing the target repository. Existing history stays in place. */
+export function resolve_loop(repo: string, selector: string): string {
+  const root = realpathSync(repo)
+  const legacy = join(root, '.forge/loops')
+  const parent = loops_path(root)
+  if (CODE.test(selector)) {
+    // ponytail: select the parent once, preserving existing legacy loops.
+    const base = existsSync(join(legacy, selector)) ? legacy : parent
+    return loop_location(root, storage_path(base, join(base, selector)))
+  }
+  const raw = resolve(root, expandUser(selector))
+  for (const base of [legacy, parent]) {
+    let selected: string
+    try { selected = storage_path(base, raw) } catch { continue }
+    const normalizedBase = storage_path(base, base)
+    if (!isWithin(normalizedBase, selected) || selected === normalizedBase) continue
+    if (relative(normalizedBase, selected).split(sep).length !== 1) throw new ForgeError('select a loop directory, not a nested artifact')
+    return loop_location(root, selected)
+  }
+  throw new ForgeError('selected loop must be inside the configured loopsPath or legacy .forge/loops')
+}
+
+export function loop_root(repo: string, path: string): string | null {
+  const root = realpathSync(repo)
+  const absolute = resolve(root, expandUser(path))
+  try {
+    const canonical = contained_path(root, absolute)
+    if ([join(root, 'docs/specs'), join(root, 'docs/knowledge')].some((base) => isWithin(base, canonical))) return null
+  } catch { /* An external loop is checked against its own configured parent below. */ }
+  for (const parent of [join(root, '.forge/loops'), loops_path(root)]) {
+    let candidate: string
+    try { candidate = storage_path(parent, absolute) } catch { continue }
+    const normalizedParent = storage_path(parent, parent)
+    if (!isWithin(normalizedParent, candidate) || candidate === normalizedParent) continue
+    const name = relative(normalizedParent, candidate).split(sep)[0]
+    if (!name) continue
+    let selected: string
+    try { selected = resolve_loop(root, join(normalizedParent, name)) } catch { continue }
+    if (normalizedParent !== join(root, '.forge/loops')) {
+      const index = join(selected, 'index.md')
+      if (!existsSync(index)) continue
+      try {
+        const [metadata] = read_document(contained_path(selected, index, { must_exist: true }))
+        if (metadata.type !== 'index') continue
+      } catch { continue }
+    }
+    return selected
+  }
+  return null
+}
+
+export function document_path(repo: string, path: string, loop?: string, must_exist = false): string {
+  if (loop) return contained_path(resolve_loop(repo, loop), path, { must_exist })
+  const selected = loop_root(repo, path)
+  return contained_path(selected ?? repo, selected ? resolve(repo, expandUser(path)) : path, { must_exist })
+}
+
+/** Prepared inputs can come only from the repository and the explicitly selected loop. */
+export function input_path(repo: string, path: string, loop?: string, must_exist = true): string {
+  if (!loop || !isAbsolute(expandUser(path))) return contained_path(loop ? resolve_loop(repo, loop) : repo, path, { must_exist })
+  const selected = resolve_loop(repo, loop)
+  try { return contained_path(selected, path, { must_exist }) } catch { return contained_path(repo, path, { must_exist }) }
+}
+
+export function loop_documents(repo: string, loop: string): string[] {
+  const root = resolve_loop(repo, loop)
+  if (!existsSync(root)) return []
+  const documents: string[] = []
+  function walk(directory: string): void {
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      const path = contained_path(root, join(directory, entry.name), { must_exist: true })
+      if (entry.isDirectory()) walk(path)
+      else if (entry.isFile() && extname(path) === '.md') {
+        const content = read_utf8(path)
+        if (!content.startsWith('---\n') && !content.startsWith('---\r\n')) continue
+        const [metadata] = parse_document(content)
+        if (['id', 'code', 'type'].some((field) => Object.hasOwn(metadata, field))) documents.push(path)
+      }
+    }
+  }
+  walk(root)
+  return documents.sort()
 }
 
 function parts(content: string): [string, string, string] {
@@ -367,6 +469,7 @@ export function set_registered_identity(
     if (!CODE.test(next.code)) throw new ForgeError('registered identity code is invalid')
     if (!next.type.trim()) throw new ForgeError('registered identity type is required')
     for (const [other, existing] of Object.entries(registry)) {
+      if (loop_root(repo, other)) continue
       if (other !== target && (existing.id === next.id || existing.code === next.code)) {
         throw new ForgeError(`duplicate id/code with ${other}`)
       }
@@ -376,7 +479,21 @@ export function set_registered_identity(
   })
 }
 
-export function check_identity(repo: string, path: string, metadata: Metadata): Metadata {
+export function check_identity(repo: string, path: string, metadata: Metadata, selected_loop?: string): Metadata {
+  const loop = selected_loop ? resolve_loop(repo, selected_loop) : loop_root(repo, path)
+  if (loop) {
+    const target = selected_loop ? contained_path(loop, path) : document_path(repo, path)
+    const current = identity(metadata)
+    // ponytail: Markdown is the loop identity source; raw edits have no historical registry comparison.
+    for (const other of loop_documents(repo, loop)) {
+      if (other === target) continue
+      const existing = identity(validate_document_content(read_utf8(other)))
+      if (existing.id === current.id || existing.code === current.code) {
+        throw new ForgeError(`duplicate id/code with ${other}`)
+      }
+    }
+    return metadata
+  }
   const relative = relativePath(repo, path)
   const registry = _registry(repo)
   const current = identity(metadata)
@@ -385,6 +502,7 @@ export function check_identity(repo: string, path: string, metadata: Metadata): 
     throw new ForgeError(`immutable identity changed: ${relative}`)
   }
   for (const [other, existing] of Object.entries(registry)) {
+    if (loop_root(repo, other)) continue
     if (other !== relative && (existing.id === current.id || existing.code === current.code)) {
       throw new ForgeError(`duplicate id/code with ${other}`)
     }
@@ -392,10 +510,11 @@ export function check_identity(repo: string, path: string, metadata: Metadata): 
   return metadata
 }
 
-export function register_document(repo: string, path: string, content: string): Metadata {
+export function register_document(repo: string, path: string, content: string, loop?: string): Metadata {
   return withMutationLock(repo, () => {
     const metadata = validate_document_content(content)
-    check_identity(repo, path, metadata)
+    check_identity(repo, path, metadata, loop)
+    if (loop || loop_root(repo, path)) return metadata
     const registry = _registry(repo)
     registry[relativePath(repo, path)] = identity(metadata)
     writeRegistry(repo, registry)
@@ -443,6 +562,7 @@ export function transfer_identity(
       throw new ForgeError('identity transfer needs its registered draft and an unused target')
     }
     for (const [other, existing] of Object.entries(registry)) {
+      if (loop_root(repo, other)) continue
       if (other !== source && (existing.id === current.id || existing.code === current.code)) {
         throw new ForgeError(`duplicate id/code with ${other}`)
       }
@@ -457,12 +577,12 @@ export function transfer_identity(
 }
 
 function protectedTarget(repo: string, path: string, kind: string): boolean {
-  const relative = relativePath(repo, path)
+  const local = relative(realpathSync(repo), path).split(sep).join('/')
   return (
     kind === 'decisions' ||
-    basename(relative) === 'decisions.md' ||
-    relative.startsWith('docs/specs/') ||
-    relative.startsWith('docs/knowledge/')
+    basename(local) === 'decisions.md' ||
+    local.startsWith('docs/specs/') ||
+    local.startsWith('docs/knowledge/')
   )
 }
 
@@ -473,18 +593,18 @@ export function create_document(
   title: string,
   code?: string,
   body_file?: string,
-  options: { _guarded?: boolean; _status?: string; _body?: string } = {},
+  options: { _guarded?: boolean; _status?: string; _body?: string; loop?: string } = {},
 ): Record<string, unknown> {
   return withMutationLock(repo, () => {
     if (!KINDS.has(kind)) throw new ForgeError(`unknown template kind: ${kind}`)
-    const target = contained_path(repo, path)
+    const target = document_path(repo, path, options.loop)
     if (protectedTarget(repo, target, kind) && !options._guarded) {
       throw new ForgeError(`${kind} requires the dedicated decision or memory operation`)
     }
     if (extname(target) !== '.md' || existsSync(target)) {
       throw new ForgeError('create needs an unused .md path')
     }
-    let body = body_file ? read_utf8(body_file) : options._body ?? TEMPLATES[kind]
+    let body = body_file ? read_utf8(options.loop ? input_path(repo, body_file, options.loop) : body_file) : options._body ?? TEMPLATES[kind]
     if (body === undefined) throw new ForgeError(`unknown template kind: ${kind}`)
     if (body.startsWith('---\n')) [, body] = parse_document(body)
     if (!body.trim()) throw new ForgeError('document body is empty')
@@ -503,13 +623,13 @@ export function create_document(
     }
     const content = serialize_document(metadata, body)
     validate_document_content(content)
-    check_identity(repo, target, metadata)
+    check_identity(repo, target, metadata, options.loop)
     mkdirSync(dirname(target), { recursive: true })
     const descriptor = openSync(target, 'wx')
     writeFileSync(descriptor, content)
     closeSync(descriptor)
     try {
-      register_document(repo, target, content)
+      register_document(repo, target, content, options.loop)
     } catch (error) {
       unlinkSync(target)
       throw error
@@ -551,19 +671,20 @@ export function update_document(
   path: string,
   body_file?: string,
   fields?: Metadata,
+  loop?: string,
 ): Record<string, unknown> {
   return withMutationLock(repo, () => {
-    const target = contained_path(repo, path, { must_exist: true })
+    const target = document_path(repo, path, loop, true)
     const old = read_utf8(target)
     const metadata = validate_document_content(old)
-    check_identity(repo, target, metadata)
+    check_identity(repo, target, metadata, loop)
     if (protectedTarget(repo, target, stringField(metadata, 'type'))) {
       throw new ForgeError('generic updates cannot write protected decisions or canonical memory')
     }
     let content = old
     if (body_file) {
       const [, , prefix] = parts(old)
-      const body = read_utf8(body_file)
+      const body = read_utf8(loop ? input_path(repo, body_file, loop) : body_file)
       if (body.startsWith('---\n')) {
         throw new ForgeError('body-file must contain only the Markdown body')
       }
@@ -576,8 +697,8 @@ export function update_document(
   })
 }
 
-export function authorization_context(repo: string, path: string): Metadata {
-  const source = contained_path(repo, path, { must_exist: true })
+export function authorization_context(repo: string, path: string, loop?: string): Metadata {
+  const source = input_path(repo, path, loop)
   let context: unknown
   try {
     context = JSON.parse(read_utf8(source))
@@ -601,7 +722,7 @@ export function authorization_context(repo: string, path: string): Metadata {
   }
   const sourceReference = metadata.source as string
   if (!/^https?:\/\//.test(sourceReference)) {
-    const transcript = contained_path(repo, sourceReference, { must_exist: true })
+    const transcript = input_path(repo, sourceReference, loop)
     if (!read_utf8(transcript).includes(metadata.quote as string)) {
       throw new ForgeError('authorization quote is absent from its source')
     }
@@ -612,24 +733,29 @@ export function authorization_context(repo: string, path: string): Metadata {
 export function init_loop(repo: string, loop_id: string, title: string): Record<string, unknown> {
   return withMutationLock(repo, () => {
     if (!CODE.test(loop_id)) throw new ForgeError('loop id must be a readable path-safe code')
-    const root = contained_path(repo, `.forge/loops/${loop_id}`)
+    const root = resolve_loop(repo, loop_id)
     if (existsSync(root)) throw new ForgeError('loop already exists')
+    mkdirSync(root, { recursive: true })
     const created = [
       create_document(repo, 'index', join(root, 'index.md'), title, undefined, undefined, {
         _guarded: true,
         _status: 'active',
+        loop: root,
       }),
       create_document(repo, 'decisions', join(root, 'decisions.md'), 'Human decisions', undefined, undefined, {
         _guarded: true,
         _status: 'active',
+        loop: root,
       }),
       create_document(repo, 'log', join(root, 'log.md'), 'Execution log', undefined, undefined, {
         _guarded: true,
         _status: 'active',
+        loop: root,
       }),
       create_document(repo, 'build-log', join(root, 'build/log.md'), 'Build and independent Review', undefined, undefined, {
         _guarded: true,
         _status: 'active',
+        loop: root,
         _body: '# Build and independent Review\n\n<!-- Append candidate and Review entries when Build begins. -->\n',
       }),
     ]
@@ -642,12 +768,13 @@ export function append_record(
   path: string,
   heading: string,
   body_file: string,
+  loop?: string,
 ): Record<string, unknown> {
   return withMutationLock(repo, () => {
-    const target = contained_path(repo, path, { must_exist: true })
+    const target = document_path(repo, path, loop, true)
     const content = read_utf8(target)
     const metadata = validate_document_content(content)
-    check_identity(repo, target, metadata)
+    check_identity(repo, target, metadata, loop)
     if (!['log', 'build-log', 'kb-log'].includes(stringField(metadata, 'type'))) {
       throw new ForgeError('append only supports execution logs; use decision record for human decisions')
     }
@@ -658,7 +785,7 @@ export function append_record(
     if (new RegExp(`^## ${escaped}\\s*$`, 'm').test(content)) {
       throw new ForgeError('duplicate log heading')
     }
-    const body = read_utf8(body_file).trim()
+    const body = read_utf8(loop ? input_path(repo, body_file, loop) : body_file).trim()
     if (!body) throw new ForgeError('log body is empty')
     _write_atomic(target, `${content.trimEnd()}\n\n## ${heading}\n\n${body}\n`)
     return { path: target, heading }

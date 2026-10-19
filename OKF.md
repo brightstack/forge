@@ -2,7 +2,7 @@
 
 Forge treats `docs/knowledge/` as a native Open Knowledge Format (OKF) bundle.
 The bundle root is that directory. This document records the supported format
-boundary; Forge workflow records under `.forge/` and standing specifications
+boundary; Forge workflow records in the selected loop and standing specifications
 under `docs/specs/` keep their own strict identity, authority, and lifecycle
 contracts.
 
@@ -39,7 +39,7 @@ readable concept unusable.
 
 Forge offers six optional reading topics: Domain, Data, Runtime, Core processes,
 Operations, and Shared foundations. Use the open OKF `type` field and the concise
-[knowledge templates](skills/forge/references/knowledge.md); these labels are
+[knowledge templates](skills/forge-shared/references/knowledge.md); these labels are
 retrieval guidance, not a type registry. Create only topics earned by the work.
 An empty corpus, placeholder concept, or exhaustive source copy is unnecessary.
 
@@ -111,13 +111,13 @@ frontmatter and immutable-identity checks.
 
 Adoption is explicit and non-destructive: existing registered documents are not
 rewritten, moved, or retyped automatically. There is no bootstrap or `init`
-operation for creating a KB corpus. Standing Specs and `.forge` workflow files
+operation for creating a KB corpus. Standing Specs and loop workflow files
 continue to use Forge's strict schemas and authority rules rather than becoming
 OKF concepts by implication.
 
 `forge kb ask` labels every retrieved file as a working-copy observation. Matching
 or diverged Spec-apply provenance can aid recovery, but never establishes accepted
-authority, implementation, Acceptance, or current delivery truth.
+authority, implementation, Verify, or current delivery truth.
 
 The producer does not fetch or export a corpus and never executes a referenced
 resource, computation, executor, or attester. A prepared apply proves authorized

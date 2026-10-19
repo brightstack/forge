@@ -13,6 +13,7 @@ import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { KINDS, read_document } from '../src/records.ts'
+import { TEMPLATES } from '../src/templates.ts'
 
 const APP = join(import.meta.dir, '..')
 const command = process.env.FORGE_TEST_BINARY
@@ -27,6 +28,7 @@ afterEach(() => {
 
 function setup(): void {
   repo = mkdtempSync(join(tmpdir(), 'forge-documents-'))
+  write('forge.yml', 'loopsPath: .forge/loops\n')
 }
 
 function cli(
@@ -99,12 +101,19 @@ describe('document CLI', () => {
 
   test('every template creates an identified draft', () => {
     setup()
+    expect(TEMPLATES.acceptance).toBe(readFileSync(join(APP, 'skills/forge-verify/assets/acceptance.md'), 'utf8'))
     cli(['init', 'demo', '--title', 'Demo'])
     for (const kind of [...KINDS].sort().filter((kind) => kind !== 'decisions')) {
       expect(create(kind, `.forge/loops/demo/drafts/${kind}.md`).status).toBe('draft')
     }
     const result = cli(['docs', 'validate']) as { checked: string[] }
     expect(result.checked).toHaveLength(KINDS.size + 3)
+  })
+
+  test('simplify retains its embedded template key and owning asset bytes', () => {
+    const asset = readFileSync(join(APP, 'skills/forge-simplify/assets/simplify.md'), 'utf8')
+    expect(TEMPLATES.simplify).toBe(asset)
+    expect(KINDS.has('simplify')).toBe(false)
   })
 
   test('create supplies a missing title without changing an explicit title or weakening updates', () => {
