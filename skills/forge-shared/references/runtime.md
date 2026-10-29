@@ -45,8 +45,38 @@ browser access, or independence the host did not provide.
 
 ## Model selection
 
-Honor explicit user and host preferences, then inspect only models and capabilities
-the current host actually exposes. The host's current model is a sensible default.
+Before each new native assignment, resolve the active engine's optional defaults
+from the target application's `forge.yml` with
+`forge config resolve --repo <target> --engine <actual-engine> --role <role>`.
+Use `worker` for Worker, `reviewer` for Reviewer, `judge` for Judge, and `main`
+for other professionals/helpers. Pass any explicit current user model and effort
+as separate `--model` and `--effort` arguments, including a user choice scoped to
+this assignment. Never copy values from another engine's section.
+
+Resolve model and effort independently: explicit current user field, configured
+role field, configured `main` field, then orchestration discretion. A role that
+sets only model inherits the configured main effort; a role that sets only effort
+inherits the configured main model. Omitted settings leave that field to the
+orchestrator. See [configuration and storage](cli.md#configuration-and-storage)
+for the optional schema and inspection output.
+
+Inspect the current host's exposed native model IDs, effort values, supported
+pairs, and dispatch controls. Validate the resulting pair, including inherited
+fields, before dispatch. Pass the resolved fields through those native controls
+when available. If a selected value/pair is unsupported or the host cannot apply
+it, report the specific gap and hold that assignment until an authorized valid
+choice is available. Do not translate IDs, silently change effort, borrow another
+engine's settings, or claim an override the host did not apply. Host permissions
+and actual capabilities remain controlling.
+
+Record the actual agent ID, role, resolved model/effort and each field's source
+from inspection in the existing assignment/log evidence. Distinguish requested
+values from host-confirmed effective values and retain any capability gap. The
+CLI resolves defaults; it never launches an agent. `main` is a default for new
+dispatches and does not switch the already-running Coordinator's host model.
+Parsing configuration alone does not prove native dispatch support.
+
+When a field remains discretionary, the host's current model is a sensible default.
 Choose proportionately: a fast economical model can extract a bounded fact, update
 a local mechanical seam, or run a focused check; stronger reasoning fits ambiguous
 architecture, cross-boundary integration, or a difficult Review. A small patch may
@@ -58,8 +88,8 @@ already crisp. Deterministic claims still come from tools and executed checks.
 An independent Reviewer may use the same model family as the Builder when the
 context and capability meet the Review contract. Do not invent model equivalence
 or availability, hard-code a provider default, or use maximum effort for every
-task. Model selection remains natural-language guidance. Model configuration is
-deferred.
+task. Configuration adds optional defaults without changing staffing,
+independence, authority, or the requested phase boundary.
 
 For Review, use its own judge selection and the shared [staffing triggers](workflows.md#concrete-staffing).
 The Reviewer covers dimensions directly or dispatches required Judges

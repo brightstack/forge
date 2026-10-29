@@ -93,6 +93,45 @@ bundle under `skills/`. Shared contracts live in focused `authority.md`,
 phase procedures load the relevant owner directly. Target harness routing carries
 actual app rule/reference/check paths into professional and Judge assignments.
 
+## Select an installation outside the application
+
+The normal setup above colocates Forge's pack with the application. A complete
+external pack can instead be selected through the application's harness or an
+actual supported host registration. Keep three paths explicit: installation,
+application checkout, and selected loop storage. Directory names and sibling
+layout carry no meaning.
+
+For example, a pack at `/opt/delivery/kiln` can serve an application at
+`/work/products/orchid`. Put an explicit pointer in that application's `AGENTS.md`:
+
+```markdown
+For Forge work, read /opt/delivery/kiln/skills/forge/SKILL.md and its linked
+resources. This application remains the target; follow this AGENTS.md and the
+applicable nested instructions for implementation and checks. Pass
+--repo /work/products/orchid to Forge mechanics.
+```
+
+Start the host in the application and have it read the actual linked entrypoint.
+The complete pack's sibling `agents/`, skill references, assets, and `OKF.md`
+must remain readable by the owner and its native subagents. Use the host's real
+registration if available; if it cannot discover external skills, the local
+harness pointer is the thin entrypoint. Missing access is a capability gap.
+Shell CLI availability does not establish skill discovery or colon invocation.
+
+```bash
+forge config resolve --repo /work/products/orchid
+forge init sample --repo /work/products/orchid --title "Sample change"
+forge docs validate --repo /work/products/orchid --loop sample
+```
+
+With no application configuration, records still go to
+`/work/products/orchid/.forge/loops/sample/`. Read `forge.yml` only from the
+application root; it does not locate the installation. The external installation
+or factory's implementation standards never replace the application's harness,
+Specs, canonical knowledge, tests, or QA customizations. An alternative is the
+existing `forge setup --repo /work/products/orchid --pack /opt/delivery/kiln`,
+which copies the complete pack into application discovery directories.
+
 ## Phase invocation and host support
 
 | Host | Registration and invocation | Verification boundary |
@@ -137,20 +176,38 @@ forge docs validate --loop LOOP
 forge candidate
 ```
 
-`init` does not require Git. `candidate` does. New loop records default to
-`~/.forge/repos/<repository-key>/loops/LOOP/`. To select another loop parent,
-put this in the target repository's root `forge.yml` before initialization:
+`init` does not require Git. `candidate` does. New loop records default to the
+application's gitignored `.forge/loops/LOOP/`. Init adds a narrow ignore rule
+when needed without untracking existing files. To select another loop parent,
+use the application's optional root `forge.yml` before initialization:
 
 ```yaml
-loopsPath: ./work-records
+storage:
+  path: /records/orchid
+  loops: {path: runs}
 ```
 
-Relative paths resolve from the target repository; absolute and `~/` paths also
-work. `--repo` always identifies the target source/canonical repository.
+Here records go under `/records/orchid/runs/LOOP/`. `storage.path` defaults to
+`.forge` and resolves from the application; `storage.loops.path` defaults to
+`loops` and resolves from that base. Absolute loops paths override the base;
+home paths work. `--repo` always identifies the target source/canonical repository.
 `--loop LOOP` selects its record directory separately, and loop document paths
-are relative to that directory. A bare loop ID resumes an existing legacy
-`.forge/loops/LOOP/` before looking in the configured new location. Explicit
-legacy paths stay in place; setup never migrates history.
+are relative to that directory. Canonical identities, receipts, and the target
+lock stay in the application. The old `loopsPath` spelling remains a deprecated
+alias; conflicting old/new destinations fail before mutation.
+
+Unique existing loops at the current parent, local `.forge/loops`, or former
+home parent for this checkout resume in place. Duplicate codes require an explicit
+qualified path; initialization refuses to shadow historical codes. A previous
+custom parent or an old home parent after moving a checkout needs its explicit
+known path. Setup never migrates history. See the
+[configuration contract](skills/forge-shared/references/cli.md#configuration-and-storage)
+for inspection, recovery, and optional per-engine model/effort defaults consumed
+by [native dispatch](skills/forge-shared/references/runtime.md#model-selection).
+
+Ignored or external records need an authorized durable copy and demonstrated
+restore before claiming recovery. A Git push alone does not retain them.
+Automation-host integration and remote storage remain deferred.
 
 Memory operations also accept `--loop`: manifests and prepared input references
 resolve within that loop, while canonical target paths stay repository-relative.

@@ -40,7 +40,9 @@ without implied full-delivery status.
 
 Start with [Launch](skills/forge-shared/references/workflows.md): Workflow is Project,
 Issue, Bug, or Work; Depth is Quick or Full; Control is Guided or explicitly Auto.
-Guided waits before dispatch, then at new Spec/consequential Plan gates. Auto
+Guided waits before dispatch, then at new Spec/consequential Plan gates, except the
+direct bounded read-only Review exception in Launch: brief scope/team/boundary and
+proceed to the requested report without another Launch acceptance ask. Auto
 exercises its grant without inventing approval or overriding protected-Spec rules.
 An Issue's complexity governs depth. A clear current request can supply ready
 intent; PM fills missing product intent only. Bounded guidance-only changes
@@ -112,10 +114,16 @@ generic memory changes; query,
 validate, update, and read receipt-derived history for the canonical KB. It never
 launches agents or chooses phases, personas, findings, remedies, or verdicts.
 
-New loops default to `~/.forge/repos/<repository-key>/loops/<loop>/`; root
-`forge.yml` can set `loopsPath` to another parent. `--repo` identifies the target
-repository and `--loop` selects its records. Existing `.forge/loops/` history
-stays in place. Loop identities and loop-local codes come from readable Markdown
+New loops default to the target application's gitignored `.forge/loops/<loop>/`.
+Its optional root `forge.yml` can set `storage.path` and `storage.loops.path`;
+legacy `loopsPath` remains an alias. `--repo` identifies the application and
+`--loop` selects its records. Installation, application, and loop storage are
+separate locations; explicit external installation does not replace application
+authority. Existing local and known former home history stays in place under
+the [configuration/discovery contract](skills/forge-shared/references/cli.md#configuration-and-storage).
+Native assignments consume optional active-engine role model/effort defaults
+through [runtime selection](skills/forge-shared/references/runtime.md#model-selection).
+Loop identities and loop-local codes come from readable Markdown
 frontmatter scans under the mutation lock, without a JSON Issue registry.
 
 Preserve Forge `id`, `code`, and record-kind fields through CLI updates. The loop

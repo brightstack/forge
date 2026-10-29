@@ -6,6 +6,15 @@ component style, framework, or package commands.
 
 ## Resolve applicable authority progressively
 
+Resolve three locations explicitly: the Forge installation/resources, the target
+application checkout, and the selected loop directory. Normally Forge is installed
+in the application. An explicit target-harness link or host registration can select
+a complete installation elsewhere; arbitrary directory names and non-sibling
+locations work without a naming convention. Read that actual entrypoint and keep
+the complete pack's relative resources accessible. Inaccessible resources or
+missing host discovery remain visible gaps. Do not guess a sibling installation
+or create another installation to hide the gap.
+
 Start with the target root `AGENTS.md`, `CLAUDE.md` when present, and relevant
 project rules, including `.cursor/` instructions when the target routes to them.
 Read the maps first. For each owned or inspected path, read its applicable nested
@@ -23,6 +32,14 @@ not an independent rule. When the route yields no applicable standard, record
 `NOT_FOUND` and its consequence instead of inventing one. A missing required rule
 or inaccessible source is a visible gap, not permission to ignore the obligation.
 
+Read optional configuration only from the target application's root `forge.yml`.
+An installation or factory can supply delivery procedure and custom flows through
+the selected harness, but its stack policy does not replace the application's
+rules, accepted intent, ontology, canonical Specs/knowledge, tests, or QA policy.
+`--repo` always identifies the application; another storage repository is only a
+record location. Installation selection does not change configuration path bases
+or canonical write ownership.
+
 Before entering another subtree, framework boundary, or standards domain,
 re-resolve its applicable harness and load newly relevant sources. Paths narrow
 initial retrieval; real callers and actual semantics can expand the affected
@@ -36,6 +53,10 @@ Judge with the actual applicable instruction-map paths and the relevant routed
 rule, reference, exemplar, and required-check paths or commands. Include accepted
 source/revision, exact candidate and owned scope alongside them. Do not send only
 "follow the repo standards" or a summary of what the owner remembers.
+
+Include the selected installation entrypoint, target checkout, and exact selected
+loop path. Apply [native assignment defaults](runtime.md#model-selection) before
+dispatch and carry their resolved fields and sources in the existing packet.
 
 The receiving agent reads those actual sources before work or judgment, follows
 new relevant links when its trace crosses a boundary, and reports unavailable or

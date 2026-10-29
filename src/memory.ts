@@ -26,6 +26,7 @@ import {
   check_identity,
   contained_path,
   document_path,
+  with_document_lock,
   input_path,
   isIsoDateTime,
   parse_document,
@@ -174,7 +175,7 @@ export function record_kb_decision(
   bodyFile: string,
   options: { title?: string; supersedes?: string; loop?: string } = {},
 ): JsonObject {
-  return withMutationLock(repo, () => {
+  return with_document_lock(repo, loopPath ?? "docs/knowledge/decisions", loopPath ? options.loop : undefined, () => {
     const root = realRepo(repo);
     const context = authorization_context(root, authorizationFile, options.loop);
     const body = read_utf8(input_path(root, bodyFile, options.loop)).trim();

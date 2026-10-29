@@ -35,9 +35,11 @@ not a human artifact approval; do not fabricate protected decision records. Resu
 reuses current choices and actual agent IDs without another Launch ceremony.
 
 Use the selected loop directory returned by `forge init`: new loops default to
-home `.forge`, grouped by target repository and loop; root `forge.yml` can choose
-another location. Existing explicit `.forge/loops/<loop-id>/` history stays in
-place. The selected artifact directory is distinct from the target repository:
+the target application's gitignored `.forge/loops/<loop-id>/`; its optional root
+`forge.yml` can choose another location through `storage.path` and
+`storage.loops.path`. Existing local, former home, and explicitly selected custom
+history stays in place under the [discovery rules](cli.md#configuration-and-storage).
+The selected artifact directory is distinct from the target repository:
 source, harness, Git candidate, and canonical Spec/KB writes remain in that target.
 A managed loop contains:
 
@@ -94,14 +96,16 @@ Give each accountable owner or helper the smallest complete packet:
 
 ```text
 OUTCOME: bounded result and stopping boundary
-WORKFLOW: selected workflow, depth, control, assignment, and applicable staffing triggers
+WORKFLOW: selected workflow, depth, control, assignment, applicable staffing triggers,
+active engine and resolved model/effort with field sources and host capability/gaps
 AUTHORITY: accepted sources, decisions, scenarios, project rules, and shared Forge
 standards/returns (load their actual files; helper shorthand cannot redefine them)
 CANDIDATE: exact candidate/base or not applicable
 SEAMS: affected behavior, shared ownership, and integration obligations
 IMPACT: signals -> affected obligations -> selected checks -> gaps, when existing
 behavior can be affected
-SOURCES: verified repository or external anchors
+SOURCES: verified repository or external anchors, selected Forge entrypoint/resources,
+target checkout, and selected loop path
 WRITES: owned paths or read-only
 PROOF: runnable setup, checks, and expected observations
 GAPS: unavailable evidence and unresolved facts

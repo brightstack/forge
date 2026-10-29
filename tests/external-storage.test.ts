@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, expect, test } from 'bun:test'
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { basename, dirname, join, relative } from 'node:path'
+import { former_home_loops_path, resolve_configuration } from '../src/roots.ts'
 import { randomUUID } from 'node:crypto'
 import { spawn, spawnSync } from 'node:child_process'
 import { create_document, init_loop, loops_path, read_document, register_document, resolve_loop, serialize_document } from '../src/records.ts'
@@ -55,24 +56,145 @@ afterEach(() => {
   rmSync(work, { recursive: true, force: true })
 })
 
-test('default groups repositories under home without creating storage; override accepts relative, home and absolute paths', () => {
+test('default is target local; optional storage paths resolve without creating directories', () => {
   rmSync(join(repo, 'forge.yml'))
   const home = join(work, 'unused-home')
-  const target = loops_path(repo, home)
-  expect(target.startsWith(join(home, '.forge/repos', `${basename(repo)}-`))).toBeTrue()
-  expect(target.endsWith('/loops')).toBeTrue()
-  expect(existsSync(home)).toBeFalse()
+  const target = join(realpathSync(repo), '.forge/loops')
+  expect(loops_path(repo, home)).toBe(target)
+  expect(existsSync(join(repo, '.forge'))).toBeFalse()
   const second = join(work, 'other', 'repo')
   mkdirSync(second, { recursive: true })
   expect(loops_path(second, home)).not.toBe(target)
-  for (const [configured, expected] of [['artifacts/loops', join(realpathSync(repo), 'artifacts/loops')], ['~/loops', join(home, 'loops')], [storage, storage]]) {
-    write(join(repo, 'forge.yml'), `loopsPath: ${JSON.stringify(configured)}\n`)
-    expect(loops_path(repo, home)).toBe(expected!)
+  const cases: Array<[string, string]> = [
+    ['{}', target], ['storage: {}', target], ['storage: {loops: {}}', target],
+    ['storage: {path: records}', join(realpathSync(repo), 'records/loops')],
+    ['storage: {loops: {path: runs}}', join(realpathSync(repo), '.forge/runs')],
+    ['storage: {path: records, loops: {path: runs}}', join(realpathSync(repo), 'records/runs')],
+    [`storage: {path: unused, loops: {path: ${JSON.stringify(storage)}}}`, storage],
+    ['storage: {path: "~/records"}', join(home, 'records/loops')],
+    ['loopsPath: "~/loops"', join(home, 'loops')],
+    ['loopsPath: artifacts/loops', join(realpathSync(repo), 'artifacts/loops')],
+  ]
+  for (const [config, expected] of cases) {
+    write(join(repo, 'forge.yml'), config + '\n')
+    expect(loops_path(repo, home)).toBe(expected)
   }
-  write(join(repo, 'forge.yml'), 'loopsPath: ../loops\n')
-  expect((init_loop(repo, 'relative', 'Relative') as { root: string }).root).toBe(realpathSync(join(storage, 'relative')))
-  write(join(repo, 'forge.yml'), 'loopsPath: [bad]\n')
-  expect(() => loops_path(repo, home)).toThrow('loopsPath')
+  expect(existsSync(home)).toBeFalse()
+  expect(existsSync(storage)).toBeFalse()
+  for (const config of ['storage: null', 'storage: []', 'storage: {path: ""}', 'storage: {loops: false}', 'storage: {loops: {path: 42}}', 'loopsPath: [bad]']) {
+    write(join(repo, 'forge.yml'), config + '\n')
+    expect(() => loops_path(repo, home)).toThrow('forge.yml')
+  }
+})
+
+test('legacy alias equality normalizes existing realpaths; conflicts fail before mutation', () => {
+  mkdirSync(storage)
+  symlinkSync(storage, join(work, 'alias'))
+  write(join(repo, 'forge.yml'), `loopsPath: ${JSON.stringify(join(work, 'alias'))}\nstorage: {loops: {path: ${JSON.stringify(storage)}}}\n`)
+  expect(resolve_configuration(repo).warnings).toHaveLength(1)
+  write(join(repo, 'forge.yml'), 'loopsPath: elsewhere\nstorage: {}\n')
+  expect(() => init_loop(repo, 'blocked', 'Blocked')).toThrow('conflicts with storage')
+  expect(existsSync(join(repo, '.forge'))).toBeFalse()
+  expect(existsSync(join(repo, 'elsewhere'))).toBeFalse()
+})
+
+test('new default records are ignored narrowly without untracking history or ignoring canonical identity', () => {
+  rmSync(join(repo, 'forge.yml'))
+  const git = (...args: string[]) => spawnSync('git', ['-C', repo, ...args], { encoding: 'utf8' })
+  expect(git('init', '-q').status).toBe(0)
+  write(join(repo, '.gitignore'), '# existing\n')
+  init_loop(repo, 'local', 'Local')
+  expect(readFileSync(join(repo, '.gitignore'), 'utf8')).toBe('# existing\n/.forge/loops/\n')
+  expect(git('check-ignore', '-q', '.forge/loops/local/index.md').status).toBe(0)
+  expect(git('check-ignore', '-q', '.forge/identities.json').status).toBe(1)
+  expect(existsSync(join(repo, '.forge/identities.json'))).toBeFalse()
+  expect(git('add', '-f', '.forge/loops/local/index.md').status).toBe(0)
+  init_loop(repo, 'second', 'Second')
+  expect(readFileSync(join(repo, '.gitignore'), 'utf8').match(/\/\.forge\/loops\//g)).toHaveLength(1)
+  expect(git('ls-files', '.forge/loops/local/index.md').stdout.trim()).toBe('.forge/loops/local/index.md')
+  write(join(repo, '.gitignore'), '.forge/\n')
+  init_loop(repo, 'third', 'Third')
+  expect(readFileSync(join(repo, '.gitignore'), 'utf8')).toBe('.forge/\n')
+})
+
+test('former home history is discovered in place and duplicate loop codes require qualified selection', () => {
+  const historical = former_home_loops_path(repo)
+  try {
+    write(join(repo, 'forge.yml'), `loopsPath: ${JSON.stringify(historical)}\n`)
+    const old = (init_loop(repo, 'retained', 'Retained') as { root: string }).root
+    const before = readFileSync(join(old, 'index.md'))
+    const identity = read_document(join(old, 'index.md'))[0]
+    rmSync(join(repo, 'forge.yml'))
+    expect(resolve_loop(repo, 'retained')).toBe(old)
+    expect(() => init_loop(repo, 'retained', 'Shadow')).toThrow('already exists')
+    expect(validate_documents(repo).checked).toHaveLength(4)
+    expect(readFileSync(join(old, 'index.md'))).toEqual(before)
+    expect(read_document(join(old, 'index.md'))[0]).toEqual(identity)
+    // Retained local bytes can coexist; selection must never prefer one silently.
+    const local = join(realpathSync(repo), '.forge/loops/retained')
+    mkdirSync(local, { recursive: true })
+    write(join(local, 'index.md'), before.toString())
+    expect(() => resolve_loop(repo, 'retained')).toThrow('ambiguous loop')
+    expect(resolve_loop(repo, old)).toBe(old)
+    expect(resolve_loop(repo, '.forge/loops/retained')).toBe(local)
+    expect(() => init_loop(repo, 'retained', 'Shadow')).toThrow('ambiguous loop')
+  } finally {
+    rmSync(dirname(historical), { recursive: true, force: true })
+  }
+})
+
+test('engine defaults resolve fields independently and expose explicit sources without leaking engines', () => {
+  write(join(repo, 'forge.yml'), `engines:
+  codex:
+    models:
+      main: {model: host-main, effort: high}
+      worker: {model: host-worker}
+      reviewer: {effort: medium}
+  other:
+    models: {main: {model: foreign, effort: low}}
+`)
+  const worker = resolve_configuration(repo, { engine: 'codex', role: 'worker' })
+  expect([worker.model, worker.effort]).toEqual(['host-worker', 'high'])
+  expect(worker.sources).toEqual({ model: 'engines.codex.models.worker.model', effort: 'engines.codex.models.main.effort' })
+  const reviewer = cli(['config', 'resolve', '--engine', 'codex', '--role', 'reviewer', '--model', 'explicit']) as Record<string, unknown>
+  expect([reviewer.model, reviewer.effort]).toEqual(['explicit', 'medium'])
+  expect(reviewer.sources).toEqual({ model: 'user', effort: 'engines.codex.models.reviewer.effort' })
+  expect(resolve_configuration(repo, { engine: 'codex', role: 'worker', effort: 'low' }).effort).toBe('low')
+  const absent = resolve_configuration(repo, { engine: 'unconfigured', role: 'judge' })
+  expect([absent.model, absent.effort]).toEqual([undefined, undefined])
+  expect(absent.sources).toEqual({ model: 'discretion', effort: 'discretion' })
+  expect(existsSync(join(repo, '.forge'))).toBeFalse()
+  for (const config of ['{}', 'engines: {}', 'engines: {codex: {}}', 'engines: {codex: {models: {main: {}}}}']) {
+    write(join(repo, 'forge.yml'), config)
+    expect(resolve_configuration(repo, { engine: 'codex' }).sources).toEqual({ model: 'discretion', effort: 'discretion' })
+  }
+  for (const config of ['engines: null', 'engines: {codex: []}', 'engines: {codex: {models: []}}', 'engines: {codex: {models: {reviewer: scalar}}}', 'engines: {codex: {models: {main: {model: ""}}}}', 'engines: {codex: {models: {main: {effort: 42}}}}']) {
+    write(join(repo, 'forge.yml'), config)
+    expect(() => resolve_configuration(repo)).toThrow('forge.yml')
+  }
+})
+
+test('absolute loops override creates only its records owner; target canonical state stays local', () => {
+  write(join(repo, 'forge.yml'), `storage: {path: never-created, loops: {path: ${JSON.stringify(storage)}}}\n`)
+  const result = cli(['init', 'absolute', '--title', 'Absolute']) as { root: string }
+  expect(result.root).toBe(realpathSync(join(storage, 'absolute')))
+  expect(existsSync(join(repo, 'never-created'))).toBeFalse()
+  expect(existsSync(join(storage, '.mutation.lock'))).toBeTrue()
+  expect(existsSync(join(repo, '.forge/mutation.lock'))).toBeTrue()
+  expect(existsSync(join(storage, 'identities.json'))).toBeFalse()
+  expect(existsSync(join(storage, '.forge'))).toBeFalse()
+})
+
+test('changed checkout recovers known old storage only by explicit configured path', () => {
+  const previous = (init_loop(repo, 'recover', 'Recover') as { root: string }).root
+  const before = readFileSync(join(previous, 'index.md'))
+  const relocated = join(work, 'new-home', 'repo')
+  mkdirSync(relocated, { recursive: true })
+  expect(resolve_loop(relocated, 'recover')).toBe(join(realpathSync(relocated), '.forge/loops/recover'))
+  write(join(relocated, 'forge.yml'), `storage: {loops: {path: ${JSON.stringify(storage)}}}\n`)
+  expect(resolve_loop(relocated, 'recover')).toBe(previous)
+  expect(validate_documents(relocated, undefined, 'recover').checked).toHaveLength(4)
+  expect(readFileSync(join(previous, 'index.md'))).toEqual(before)
 })
 
 test('external loop records use Markdown identities, local codes, qualified links, and no JSON registry', async () => {
@@ -120,6 +242,27 @@ test('legacy history and registry bytes remain in place when a new parent is con
   cli(['docs', 'validate', '--loop', 'legacy'])
   expect(readFileSync(index)).toEqual(before)
   expect(readFileSync(join(repo, '.forge/identities.json'), 'utf8')).toBe(registry)
+})
+
+test('broader current storage preserves direct-child historical selection and rejects nested artifacts', () => {
+  rmSync(join(repo, 'forge.yml'))
+  const historical = (init_loop(repo, 'historical', 'Historical') as { root: string }).root
+  const before = readFileSync(join(historical, 'index.md'))
+  write(join(repo, 'forge.yml'), 'storage: {loops: {path: .}}\n')
+  expect(resolve_loop(repo, 'historical')).toBe(historical)
+  expect(resolve_loop(repo, '.forge/loops/historical')).toBe(historical)
+  expect(resolve_loop(repo, historical)).toBe(historical)
+  expect(validate_documents(repo, undefined, 'historical').checked).toHaveLength(4)
+  expect(validate_documents(repo, undefined, '.forge/loops/historical').checked).toHaveLength(4)
+  const current = (init_loop(repo, 'current', 'Current') as { root: string }).root
+  expect(current).toBe(join(realpathSync(repo), '.forge/current'))
+  create_document(repo, 'issue', 'issues/current.md', 'Current issue', undefined, undefined, { loop: 'current' })
+  expect(validate_documents(repo).checked).toHaveLength(9)
+  expect(validate_documents(repo, undefined, historical).checked).toHaveLength(4)
+  expect(readFileSync(join(historical, 'index.md'))).toEqual(before)
+  for (const nested of ['.forge/loops/historical/index.md', join(historical, 'build/log.md'), '.forge/current/issues/current.md']) {
+    expect(() => resolve_loop(repo, nested)).toThrow('select a loop directory, not a nested artifact')
+  }
 })
 
 test('decision record reads selected external authority and appends a qualified canonical reference', () => {
@@ -218,6 +361,26 @@ test('broad or canonical storage configuration cannot bypass canonical identitie
   expect(candidate_snapshot(repo).candidate).not.toBe(baseline)
   expect(validate_documents(repo).checked).toHaveLength(5)
   expect(readFileSync(join(repo, '.forge/identities.json'))).toEqual(registry)
+})
+
+test('candidate excludes the canonical shared lock when configured through a broad realpath alias', () => {
+  const alias = join(work, 'app-alias')
+  symlinkSync(realpathSync(repo), alias)
+  write(join(repo, 'forge.yml'), `storage: {loops: {path: ${JSON.stringify(alias)}}}\n`)
+  write(join(repo, 'main.ts'), 'first\n')
+  const git = (...args: string[]) => {
+    const result = spawnSync('git', ['-C', repo, ...args], { encoding: 'utf8' })
+    expect(result.status, result.stderr).toBe(0)
+  }
+  git('init', '-q')
+  git('add', 'forge.yml', 'main.ts')
+  git('-c', 'user.name=Test', '-c', 'user.email=test@example.com', 'commit', '-qm', 'baseline')
+  const baseline = candidate_snapshot(repo).candidate
+  init_loop(repo, 'aliased', 'Aliased')
+  expect(existsSync(join(repo, '.mutation.lock'))).toBeTrue()
+  expect(candidate_snapshot(repo).candidate).toBe(baseline)
+  write(join(repo, 'main.ts'), 'changed\n')
+  expect(candidate_snapshot(repo).candidate).not.toBe(baseline)
 })
 
 test('candidate keeps repository code root and includes only explicitly selected external loop inputs', () => {

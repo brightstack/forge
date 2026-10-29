@@ -5,6 +5,7 @@
 ## Review Boundary
 
 - Candidate: TODO
+- Review target: TODO: PR URL, selected local loop, or standalone code/branch/diff
 - Comparison base: TODO
 - Reviewer: TODO
 - Accepted authority: TODO
@@ -12,6 +13,7 @@
   is a draft the loop record shows was routed under a standing grant
 - Inspected scope: TODO
 - Staffing and reason: TODO: Reviewer alone or focused delegated judges
+- Shared check/resource owner: TODO or `Not applicable.`
 - Known evidence or source gaps: TODO
 
 ## Dimension Coverage
@@ -51,7 +53,8 @@ owner persists read-only judges' returns. -->
 ## Integration
 
 - Candidate/authority binding and required coverage: TODO
-- Duplicate findings and conflicts, with evidence-backed dispositions: TODO or `None.`
+- Duplicate findings and conflicts: TODO or `None.` Map original report + finding
+  IDs to integrated IDs; preserve original claims and explain dispositions.
 - Accompanying software-record contract: TODO or `Not applicable.`
 - Actual returned reports and new relevant log entries inspected: TODO
 - Rubric/template adherence and supporting evidence checked; missing information/disposition: TODO
@@ -75,19 +78,24 @@ owner persists read-only judges' returns. -->
 <!--
 Apply shared severity by demonstrated impact. Spec mismatch is not automatically
 P0. Assess remedy authority separately. P2 is advisory; no quota or manufactured
-nits. Write `None.` when no finding survives admission.
+nits. Write `None.` when there are no findings to record. On reassessment, retain
+prior IDs and disposition history, including resolved, rejected, and optional
+findings. Keep IDs stable across candidates; preserve original source report/ID
+mappings and claims.
 -->
 
-### TODO: Finding title
+### TODO: R1 - Finding title
 
+- Source finding(s): TODO: original report + ID and claim reference, or first reported here
 - Severity: TODO: P0, P1, or P2
 - Rubric: TODO
 - Authority: TODO
 - Observed evidence: TODO
 - Trigger and consequence: TODO
 - Proportionate remedy boundary and authority: TODO: in scope, or material human decision required
-- Disposition: open; distinguish supported defect from optional proposal and give
-  reasons for rejected or optional received feedback; assess the remedy separately
+- Disposition history: TODO: round + exact candidate -> open, resolved, rejected,
+  or optional -> evidence or reason. Append each reassessment; retain earlier
+  entries. Assess severity and the proposed remedy separately.
 
 ## Verdict Basis
 

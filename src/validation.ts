@@ -3,6 +3,7 @@ import {
   existsSync,
   lstatSync,
   readFileSync,
+  realpathSync,
   readdirSync,
   readlinkSync,
   statSync,
@@ -18,11 +19,11 @@ import {
   input_path,
   loop_documents,
   loop_root,
-  loops_path,
   resolve_loop,
   read_utf8,
   validate_document_content,
 } from './records.ts'
+import { known_loop_paths } from './roots.ts'
 
 function repoRelative(repo: string, path: string): string {
   return relative(repo, path).split(sep).join('/') || '.'
@@ -44,7 +45,7 @@ export function validate_documents(
   const registry = loop || explicit?.every((path) => loop_root(repo, path)) ? {} : _registry(repo)
   let selected = explicit
   if (!selected) {
-    const loops = loop ? [resolve_loop(repo, loop)] : [resolve(repo, '.forge/loops'), loops_path(repo)]
+    const loops = loop ? [resolve_loop(repo, loop)] : known_loop_paths(repo)
       .flatMap((parent) => existsSync(parent) ? readdirSync(parent, { withFileTypes: true })
         .filter((entry) => entry.isDirectory()).flatMap((entry) => {
           const selected = loop_root(repo, resolve(parent, entry.name, 'index.md'))
@@ -203,12 +204,13 @@ export function candidate_snapshot(repoInput: string, paths?: string[], loop?: s
     walk(repo, selectedPath, names)
   })
 
+  const loopLocks = known_loop_paths(repo).map((parent) => resolve(existsSync(parent) ? realpathSync(parent) : parent, '.mutation.lock'))
   const digest = createHash('sha256')
   const sorted = [...names.values()].sort(Buffer.compare)
   for (const raw of sorted) {
     const name = raw.toString()
     if (
-      (name === '.forge' || name.startsWith('.forge/') || loop_root(repo, resolve(repo, name))) &&
+      (loopLocks.includes(resolve(repo, name)) || name === '.forge' || name.startsWith('.forge/') || loop_root(repo, resolve(repo, name))) &&
       !relativePaths?.some((selected) => contains(selected, name))
     ) {
       continue

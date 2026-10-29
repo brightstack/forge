@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
 import { Argument, Command, CommanderError } from "commander";
+import { resolve_configuration } from "./roots.ts";
 import { ForgeError } from "./errors.ts";
 import { KINDS, append_record, create_document, init_loop, update_document } from "./records.ts";
 import { candidate_snapshot, validate_documents } from "./validation.ts";
@@ -43,6 +44,12 @@ export async function main(argv = process.argv.slice(2)): Promise<void> {
         if (options.json) output(ready);
         else console.log(`Serving ${root}\n${ready.url}\nPress Ctrl+C to stop.`);
       });
+    repo(program.command("config").command("resolve").description("Inspect target storage and field-wise engine role defaults without changing files")
+      .option("--engine <engine>", "Actual host engine identifier")
+      .option("--role <role>", "main, worker, reviewer, or judge")
+      .option("--model <model>", "Explicit current user model choice")
+      .option("--effort <effort>", "Explicit current user effort choice"))
+      .action((options: { repo: string; engine?: string; role?: string; model?: string; effort?: string }) => output(resolve_configuration(options.repo, options)));
     repo(program.command("setup").description("Install Forge skills into this repository from GitHub or --pack").option("--tools <list>", "Comma-separated hosts: agents, claude, cursor", "agents").option("--pack <path>", "Copy skills from this package directory instead of GitHub"))
       .action((options: { repo: string; tools: string; pack?: string }) => output(setup_project(options.repo, parse_setup_tools(options.tools), options.pack)));
     repo(program.command("init <loop_id>").description("Initialize a loop; this is not approval").requiredOption("--title <title>"))

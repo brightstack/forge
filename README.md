@@ -148,9 +148,13 @@ Guided is the default: Forge waits before dispatch, then at a new Spec and a
 consequential Plan. Asking for full delivery does not pre-approve unseen work.
 
 Depth lives in [Launch](skills/forge-shared/references/workflows.md). New loop
-records live under `~/.forge/repos/<repository-key>/loops/<loop>/`.
-Root `forge.yml` can set `loopsPath` to another loop parent; relative values
-resolve from the target repository. Existing `.forge/loops/` records stay usable
+records live in the application's gitignored `.forge/loops/<loop>/`.
+One optional application-root `forge.yml` can set `storage.path` and
+`storage.loops.path`, plus separate model/effort defaults under the active
+`engines.<engine>.models` role mappings. Legacy `loopsPath` remains an alias.
+See [configuration](skills/forge-shared/references/cli.md#configuration-and-storage)
+and [external installation](install.md#select-an-installation-outside-the-application).
+Existing local and known former home records stay usable
 in place. Source and canonical memory stay in the target repository. See the
 [record contract](skills/forge-shared/references/protocol.md) and
 [CLI guide](skills/forge-shared/references/cli.md).

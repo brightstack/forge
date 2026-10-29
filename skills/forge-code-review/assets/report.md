@@ -21,16 +21,23 @@
 
 ## Findings
 
-<!-- Write `None.` when no finding survives admission. -->
+<!-- Write `None.` when there are no findings to record. On reassessment, retain
+prior IDs and disposition history, including resolved, rejected, and optional
+findings. Keep IDs stable across candidates; preserve original source report/ID
+mappings and claims. -->
 
-### TODO: Finding title
+### TODO: R1 - Finding title
 
+- Source finding(s): TODO: original report + ID and claim reference, or first reported here
 - Severity: TODO: P0, P1, or P2
 - Authority: TODO
 - Reachable trigger: TODO
 - Observed evidence: TODO
 - Consequence: TODO
 - Proportionate remedy boundary: TODO
+- Disposition history: TODO: round + exact candidate -> open, resolved, rejected,
+  or optional -> evidence or reason. Append each reassessment; retain earlier
+  entries. Assess severity and the proposed remedy separately.
 
 ## Gaps and verdict basis
 

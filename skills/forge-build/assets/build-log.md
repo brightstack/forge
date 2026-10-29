@@ -37,7 +37,8 @@
 - Reviewer: TODO - role name only
 - Reviewed actual candidate, retained baseline, approved delta, and canonical result: TODO or `None.`
 - Lenses and evidence: TODO
-- Findings and dispositions: TODO or none
+- Findings and dispositions: TODO or none; retain stable finding IDs and original
+  report/ID mappings, and link the disposition history
 - Verdict: TODO: PASS, REVISE, RETHINK, READY_FOR_USER, or BLOCKED
 
 ### Post-Review Simplification
@@ -61,5 +62,8 @@
 - Preserved commitments: TODO
 - Invalidated and reused proof: TODO
 - New candidate: TODO
+- Finding dispositions for this round and exact candidate: TODO: carry every prior
+  ID forward as open, resolved, rejected, or optional, with evidence or reason;
+  assess severity and remedy separately; preserve earlier entries
 - Reassessment: TODO
 - Stop reason or next discriminating proof: TODO

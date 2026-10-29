@@ -36,6 +36,9 @@ and do not repeat the table in a mandatory paragraph. Keep Quick concise and add
 Full detail only when earned. For Auto, cite the actual granting instruction in
 plain language before proceeding. List roles before dispatch and record actual host
 agent IDs afterward; show models/effort only when selected or exposed by the host.
+Resolve optional active-engine defaults through the
+[native assignment procedure](runtime.md#model-selection) before each dispatch,
+and retain resolved fields, sources, and host capability gaps in existing records.
 Spawn Spec specialists in [sequence](#specialist-sequence), not together.
 Future Worker counts depend on Plan. State the delegation rule at Launch, then
 show actual ownership and the integrating Engineer before dispatching Workers.
@@ -46,6 +49,13 @@ in the user's words, then the Launch table and clear next ask. An explicit curre
 already displayed Launch satisfies this gate. Launch approval does not approve an
 unseen Spec or consequential Plan. Resume retains accepted choices without a new
 ceremony. Routine follow-ups inside the accepted assignment do not relaunch.
+
+A direct bounded read-only Review request, such as `/forge:review <PR URL>`,
+already authorizes inspection and the prepared report. Brief the review scope,
+team and stopping boundary, then proceed without another Launch acceptance ask.
+This does not select Auto or authorize repairs, Verify or publication. Return to
+the user for a consequential unresolved intent/authority choice or work outside
+that bounded review; do not invent a gate merely because the PR has no Forge Spec.
 
 **Auto requires an explicit instruction for this run**, such as “full auto” or
 “run autonomously through Verify.” Show Launch, then proceed through ordinary

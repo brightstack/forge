@@ -20,19 +20,17 @@ from `--pack` when you pass a local package directory. `init` creates loop
 records and returns their absolute root. Do not run these from `~/.local/bin`;
 that directory is not a pack root.
 
-`--repo` identifies the target repository/worktree. New loops default to
-`~/.forge/repos/<repo-basename>-<realpath-hash>/loops/<loop-id>/`. Root `forge.yml`
-can set `loopsPath: <parent>`: a relative parent resolves from the target repo;
-absolute and `~` parents are supported. The loop ID is appended beneath that
-parent. Existing explicit legacy `.forge/loops/<id>/` history is not migrated;
-a bare ID resumes an existing legacy loop first.
+`--repo` identifies the target application repository/worktree. New loops default
+to its gitignored `.forge/loops/<loop-id>/`; init adds the narrow ignore rule
+when needed without untracking existing history. Installation location and shell
+directory do not change that target. See configuration below for explicit storage.
 
 Use `--loop <id|path>` on loop-aware operations. Relative document paths and
 prepared memory inputs resolve inside that selected loop. Source/Git/canonical
 paths remain in `--repo`; canonical manifest `change.path` and `from_path` always
 refer to that target. Absolute prepared refs are allowed only in the target repo
-or selected loop. An explicit loop path must be inside the configured or legacy
-loop parent. Never assume the artifact root is a source repository.
+or selected loop. An explicit loop path must be inside a known loop parent.
+Never assume the artifact root is a source repository.
 
 ```bash
 forge init task --repo /path/to/repo --title Task
@@ -40,6 +38,81 @@ forge docs create issue spec/issue.md --repo /path/to/repo --loop task --title T
 forge docs update spec/issue.md --repo /path/to/repo --loop task --set status=ready
 forge docs validate --repo /path/to/repo --loop task
 ```
+
+## Configuration and storage
+
+One optional `forge.yml` at the application root supplies storage and active-engine
+model defaults. The file, sections, mappings, roles, and individual model/effort
+fields are optional. Empty mappings use defaults; invalid values fail clearly.
+There is no shared-config inheritance or installation-pointer setting.
+
+```yaml
+storage:
+  path: .forge
+  loops:
+    path: loops
+engines:
+  codex:
+    models:
+      main: {model: <host-native-id>, effort: high}
+      worker: {effort: low}
+      reviewer: {effort: medium}
+      judge: {}
+```
+
+Model IDs and efforts here are illustrative; use values and combinations the
+active host exposes. Each role uses separate optional `model` and `effort`
+strings. Only the actual active engine's section applies. The
+[native assignment procedure](runtime.md#model-selection) consumes defaults and
+validates host capability; configuration does not launch agents or switch the
+already-running main model.
+
+`storage.path` defaults to `<target>/.forge`; a relative value resolves from the
+application checkout. `storage.loops.path` defaults to `loops`; a relative value
+resolves from `storage.path`, while an absolute value selects a loop parent
+directly. Existing home-path expansion works for either path. For example,
+`storage.path: /records/orchid` with `storage.loops.path: runs` selects
+`/records/orchid/runs/<loop-id>/`. This base covers working loop records only.
+Canonical Spec/KB files, identities, receipts, and the target mutation lock stay
+with the application. Shared loop mutation uses the resolved loop parent's lock;
+remote/distributed filesystem locking is not promised.
+
+Legacy `loopsPath` remains a deprecated alias with target-relative, absolute, and
+home-path semantics. With both spellings, identical normalized destinations are
+accepted with a warning; conflicting destinations fail before mutation. Forge
+does not rewrite configuration or move history.
+
+Read-only inspection creates no directories:
+
+```bash
+forge config resolve --repo /path/to/app
+forge config resolve --repo /path/to/app --engine codex --role reviewer
+forge config resolve --repo /path/to/app --engine codex --role worker --effort high
+```
+
+The JSON reports `repo`, `storage_path`, `loops_path`, `known_loop_paths`, and
+`warnings`. With `--engine`, it also reports `engine`, `role` (default `main`),
+resolved `model`/`effort` when present, and `sources` for each field. Explicit
+current user fields supplied with `--model` or `--effort` win independently;
+otherwise role fields fall back to that engine's `main` fields, then discretion.
+The output identifies each configured source or `user`/`discretion`.
+
+Discovery checks the current configured/default parent, local `.forge/loops`, and
+the former `~/.forge/repos/<repo-basename>-<realpath-hash>/loops` parent for this
+target realpath. A unique existing loop resumes in place; duplicate codes require
+an explicit qualified path and show the actual choices. Init refuses to shadow
+existing historical codes. No discovery operation migrates, deletes, or merges
+records. A moved/deleted checkout's old home key or a previous custom folder needs
+an explicit known absolute `storage.loops.path` (or legacy `loopsPath`) to recover
+it; Forge does not scan home or guess ownership from names. Retain that location
+in handoffs. Use a separate shared parent per application.
+
+Placement does not establish durability. Git does not persist ignored/external
+records merely because the surrounding repository was pushed. Retain required
+evidence in an authorized durable destination and prove restore before claiming
+recovery. Automation-host integration and remote storage are deferred.
+
+## Host setup
 
 Default `--tools` is `agents` (Cursor, Codex, and Muse Code). Claude Code users must pass
 `--tools claude`, or pipe the curl installer into `FORGE_TOOLS=claude sh` (the
@@ -58,6 +131,7 @@ The checked-out contract is:
 
 ```text
 forge setup [--repo REPO] [--tools LIST] [--pack PATH]
+forge config resolve --repo REPO [--engine ENGINE] [--role main|worker|reviewer|judge] [--model MODEL] [--effort EFFORT]
 forge init LOOP_ID --repo REPO --title TITLE
 forge serve DIRECTORY [--port NUMBER] [--json]
 forge docs create KIND PATH --repo REPO [--loop LOOP] --title TITLE [--code CODE] [--body-file FILE]

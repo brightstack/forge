@@ -29,7 +29,8 @@ import { randomUUID } from 'node:crypto'
 import { ForgeError } from './errors.ts'
 import { withMutationLock } from './lock.ts'
 import { TEMPLATES } from './templates.ts'
-import { loops_path } from './roots.ts'
+import { known_loop_paths, loops_path } from './roots.ts'
+import { spawnSync } from 'node:child_process'
 export { loops_path } from './roots.ts'
 
 export type Metadata = Record<string, unknown>
@@ -133,23 +134,25 @@ function loop_location(repo: string, path: string): string {
 /** Select one loop without changing the target repository. Existing history stays in place. */
 export function resolve_loop(repo: string, selector: string): string {
   const root = realpathSync(repo)
-  const legacy = join(root, '.forge/loops')
-  const parent = loops_path(root)
+  const parents = known_loop_paths(root)
   if (CODE.test(selector)) {
-    // ponytail: select the parent once, preserving existing legacy loops.
-    const base = existsSync(join(legacy, selector)) ? legacy : parent
-    return loop_location(root, storage_path(base, join(base, selector)))
+    const matches = parents.map((base) => join(base, selector)).filter(existsSync)
+    if (matches.length > 1) throw new ForgeError(`ambiguous loop ${selector}; select one qualified path: ${matches.join(', ')}`)
+    const selected = matches[0] ?? join(parents[0]!, selector)
+    return loop_location(root, storage_path(dirname(selected), selected))
   }
   const raw = resolve(root, expandUser(selector))
-  for (const base of [legacy, parent]) {
+  let nested = false
+  for (const base of parents) {
     let selected: string
     try { selected = storage_path(base, raw) } catch { continue }
     const normalizedBase = storage_path(base, base)
     if (!isWithin(normalizedBase, selected) || selected === normalizedBase) continue
-    if (relative(normalizedBase, selected).split(sep).length !== 1) throw new ForgeError('select a loop directory, not a nested artifact')
+    if (relative(normalizedBase, selected).split(sep).length !== 1) { nested = true; continue }
     return loop_location(root, selected)
   }
-  throw new ForgeError('selected loop must be inside the configured loopsPath or legacy .forge/loops')
+  if (nested) throw new ForgeError('select a loop directory, not a nested artifact')
+  throw new ForgeError('selected loop must be inside a known loops directory (configured, local, or former home)')
 }
 
 export function loop_root(repo: string, path: string): string | null {
@@ -159,7 +162,7 @@ export function loop_root(repo: string, path: string): string | null {
     const canonical = contained_path(root, absolute)
     if ([join(root, 'docs/specs'), join(root, 'docs/knowledge')].some((base) => isWithin(base, canonical))) return null
   } catch { /* An external loop is checked against its own configured parent below. */ }
-  for (const parent of [join(root, '.forge/loops'), loops_path(root)]) {
+  for (const parent of known_loop_paths(root)) {
     let candidate: string
     try { candidate = storage_path(parent, absolute) } catch { continue }
     const normalizedParent = storage_path(parent, parent)
@@ -179,6 +182,11 @@ export function loop_root(repo: string, path: string): string | null {
     return selected
   }
   return null
+}
+
+export function with_document_lock<T>(repo: string, path: string, loop: string | undefined, mutate: () => T): T {
+  const selected = loop ? resolve_loop(repo, loop) : loop_root(repo, path)
+  return withMutationLock(repo, mutate, selected ? [dirname(selected)] : [])
 }
 
 export function document_path(repo: string, path: string, loop?: string, must_exist = false): string {
@@ -511,7 +519,7 @@ export function check_identity(repo: string, path: string, metadata: Metadata, s
 }
 
 export function register_document(repo: string, path: string, content: string, loop?: string): Metadata {
-  return withMutationLock(repo, () => {
+  return with_document_lock(repo, path, loop, () => {
     const metadata = validate_document_content(content)
     check_identity(repo, path, metadata, loop)
     if (loop || loop_root(repo, path)) return metadata
@@ -595,7 +603,7 @@ export function create_document(
   body_file?: string,
   options: { _guarded?: boolean; _status?: string; _body?: string; loop?: string } = {},
 ): Record<string, unknown> {
-  return withMutationLock(repo, () => {
+  return with_document_lock(repo, path, options.loop, () => {
     if (!KINDS.has(kind)) throw new ForgeError(`unknown template kind: ${kind}`)
     const target = document_path(repo, path, options.loop)
     if (protectedTarget(repo, target, kind) && !options._guarded) {
@@ -673,7 +681,7 @@ export function update_document(
   fields?: Metadata,
   loop?: string,
 ): Record<string, unknown> {
-  return withMutationLock(repo, () => {
+  return with_document_lock(repo, path, loop, () => {
     const target = document_path(repo, path, loop, true)
     const old = read_utf8(target)
     const metadata = validate_document_content(old)
@@ -730,11 +738,29 @@ export function authorization_context(repo: string, path: string, loop?: string)
   return metadata
 }
 
+function ignore_default_loops(repo: string, parent: string): void {
+  const root = realpathSync(repo)
+  if (parent !== join(root, '.forge/loops')) return
+  const ignored = spawnSync('git', ['-C', root, 'check-ignore', '-q', '--no-index', '.forge/loops/.forge-ignore-probe'])
+  if (ignored.status === 0) return
+  const path = contained_path(root, '.gitignore')
+  const previous = existsSync(path) ? read_utf8(path) : ''
+  if (previous.split(/\r?\n/).includes('/.forge/loops/')) return
+  _write_atomic(path, `${previous}${previous && !previous.endsWith('\n') ? '\n' : ''}/.forge/loops/\n`)
+}
+
 export function init_loop(repo: string, loop_id: string, title: string): Record<string, unknown> {
+  if (!CODE.test(loop_id)) throw new ForgeError('loop id must be a readable path-safe code')
+  const selected = resolve_loop(repo, loop_id)
+  if (existsSync(selected)) throw new ForgeError('loop already exists')
+  const parent = storage_path(loops_path(repo), loops_path(repo))
+  loop_location(realpathSync(repo), join(parent, loop_id))
   return withMutationLock(repo, () => {
-    if (!CODE.test(loop_id)) throw new ForgeError('loop id must be a readable path-safe code')
+    // Recheck under the shared parent lock before choosing a new loop identity.
     const root = resolve_loop(repo, loop_id)
+    if (root !== selected) throw new ForgeError('loop selection changed while preparing')
     if (existsSync(root)) throw new ForgeError('loop already exists')
+    ignore_default_loops(repo, parent)
     mkdirSync(root, { recursive: true })
     const created = [
       create_document(repo, 'index', join(root, 'index.md'), title, undefined, undefined, {
@@ -760,7 +786,7 @@ export function init_loop(repo: string, loop_id: string, title: string): Record<
       }),
     ]
     return { root, created, phase: 'Spec', verification: 'NOT RUN' }
-  })
+  }, [parent])
 }
 
 export function append_record(
@@ -770,7 +796,7 @@ export function append_record(
   body_file: string,
   loop?: string,
 ): Record<string, unknown> {
-  return withMutationLock(repo, () => {
+  return with_document_lock(repo, path, loop, () => {
     const target = document_path(repo, path, loop, true)
     const content = read_utf8(target)
     const metadata = validate_document_content(content)

@@ -34,6 +34,9 @@ waits before dispatch and at new Spec/consequential Plan gates; an existing acce
 Launch is reused. Auto proceeds only within its cited grant, retaining protected
 Spec and publication restrictions. A clear direct bounded Build request supplies
 Build authority; faithful tactical Plan notes create no second approval gate.
+The shared direct read-only Review exception also applies: a bounded review
+request authorizes inspection and its report after a brief scope/team/boundary
+update, without an additional Launch acceptance ask.
 </launch>
 
 <routing>
