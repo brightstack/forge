@@ -39,6 +39,9 @@ and contracts; a present trust, data-loss, accessibility, or recovery boundary c
 earn a guard on its first demonstrated failure. An apparently dead code path does
 not erase its accepted scenario. If a simpler scope supersedes planned machinery,
 drop its dependent side quests and reassess depth and staffing.
+When a thin end-to-end probe cheaply tests the main integration uncertainty, run
+it early before filling in the surrounding implementation. Keep proof focused on
+the accepted outcome rather than every imaginable scenario.
 
 Before implementation, the Builder proposes a preservation scope using
 [knowledge guidance](../../forge-shared/references/knowledge.md): signals, affected accepted obligations,

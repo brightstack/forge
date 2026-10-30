@@ -20,8 +20,10 @@ block the requested Craft cleanup and cannot be presented as passing evidence.
 Neither path starts a broader Build, QA, or Ship lifecycle.
 
 Compare material promises and restrictions to independently retained intent,
-decisions, and the actual grant. A generated Spec or prior Review cannot make an
-unsupported addition binding. Return unresolved scope to its owner; do not ratify
+decisions, and the actual grant, including later human decisions that supersede
+older Spec. Challenge an inflated premise before optimizing the machinery built
+for it. A generated Spec or prior Review cannot make an unsupported addition
+binding. Return unresolved scope to its owner; do not ratify
 it or silently remove behavior the human actually accepted.
 
 Trace the primary flow. Ask whether each new mechanism exists for the current

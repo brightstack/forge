@@ -50,8 +50,12 @@ change can affect existing behavior.
 ## Authoring
 
 Retrieve relevant standing Spec, decisions, domain concepts, processes,
-interfaces, repository facts, and existing solutions. Missing coverage is a
-visible gap rather than a reason to block incremental adoption. Ask only
+interfaces, repository facts, and existing solutions. Resolve relevant later human
+decisions before calling older Spec or absent machinery a preservation obligation.
+For added behavior, distinguish support necessary for ordinary use from a stronger
+promise; explain which requested outcome fails without it. Brief material additions,
+removals, and conflicts before dependent work under [authority](../../forge-shared/references/authority.md).
+Missing coverage is a visible gap rather than a reason to block incremental adoption. Ask only
 consequential human choices that cannot be retrieved, and include a recommendation.
 Treat a question, possibility, analogy, or agent recommendation as open, not as
 authority for a stronger guarantee. Trace each proposed addition or removal to an

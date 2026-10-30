@@ -7,6 +7,7 @@ import { candidate_snapshot, validate_documents } from "./validation.ts";
 import { apply_kb, apply_prepared, ask, knowledge_history, record_kb_decision, scaffold_okf, verify_knowledge, verify_prepared } from "./memory.ts";
 import { serve_artifacts } from "./serve.ts";
 import { parse_setup_tools, setup_project } from "./setup.ts";
+import { version } from "../package.json";
 
 function sorted(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(sorted);
@@ -27,6 +28,7 @@ function loop(command: Command) {
 export async function main(argv = process.argv.slice(2)): Promise<void> {
   try {
     const program = new Command("forge")
+      .version(version)
       .description("Local file mechanics and artifact previews. Invoke the Forge agent skill for semantic Explore/Spec/Plan/Build/Review/Simplify/Verify/Ship.")
       .enablePositionalOptions()
       .exitOverride()

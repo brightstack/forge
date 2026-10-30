@@ -19,10 +19,10 @@ function stage(...args: string[]) {
 fixtures("RC1 fixture inventory includes the approval-gated lifecycle", () => {
   expect(readdirSync(behavioral).filter(name => /^rc1-.*-v1$/.test(name)).sort()).toEqual([
     "rc1-bounded-work-v1", "rc1-bug-hypothesis-v1", "rc1-design-study-v1",
-    "rc1-findings-authority-v1", "rc1-findings-feedback-v1", "rc1-findings-remedies-v1", "rc1-findings-tactics-v1",
+    "rc1-findings-authority-v1", "rc1-findings-evidence-v1", "rc1-findings-feedback-v1", "rc1-findings-remedies-v1", "rc1-findings-tactics-v1",
     "rc1-lifecycle-approval-v1",
-    "rc1-memory-reconcile-v1", "rc1-project-ui-v1", "rc1-review-repair-v1", "rc1-small-issue-v1",
-    "rc1-spec-stop-resume-v1",
+    "rc1-memory-reconcile-v1", "rc1-pragmatic-scope-v1", "rc1-project-ui-v1", "rc1-review-repair-v1", "rc1-small-issue-v1",
+    "rc1-spec-stop-resume-v1", "rc1-verify-proof-v1",
   ]);
 });
 

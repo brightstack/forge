@@ -1,7 +1,10 @@
 # Pragmatism
 
-Choose the smallest sound mechanism for the accepted outcome and present operating
-conditions. Apply the target repository's [actual standards](target-harness.md).
+Use one fixed bar: the smallest well-designed outcome that satisfies explicit
+human intent, the happy path, day-to-day use, normal failures, and real security,
+accessibility, trust, and data-loss boundaries. Stricter human requirements and
+the target repository's [actual standards](target-harness.md) remain binding.
+Phase rubrics apply this bar to their own decisions; they do not add guarantees.
 
 Resolve available facts and understand the request, changed owners, and relevant
 callers before choosing a change. Surface material assumptions, competing meanings,
@@ -10,13 +13,15 @@ work. Routine reversible tactics stay with the Builder.
 
 Understand the actual flow, then stop at the first sound route: no change,
 existing owner/pattern, standard library, native platform, installed dependency,
-then the smallest new mechanism. Cover the happy path, expected scenarios, and
-reasonable edge cases and failures in normal use. Extra machinery needs evidence
+then the smallest new mechanism. Extra machinery needs evidence
 of exposure and consequence in current expected operation, failure of the simpler
 route, and benefit worth its concepts. A merely imaginable or reachable trigger
 is insufficient. Defer speculative scale, coincident independent failures, and
 contrived conditions by default; record a relevant limitation and revisit it when
 evidence warrants. Future flexibility and a reviewer's preference do not earn it.
+Ask which essential outcome needs the addition and why the simpler existing route
+cannot deliver it. Singleton, once-only, cross-device, and other strengthened
+guarantees need their own authority; ordinary reuse or recovery does not imply them.
 
 New layers, state, parsers, configuration, contracts, or dependencies earn their
 cost when removing them breaks the asked outcome or a present boundary, collapses

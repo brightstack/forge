@@ -22,9 +22,15 @@ Generic autonomy does not authorize new capabilities, restrictions, or guarantee
 Feedback gains no authority merely by being incorporated into a draft; genuine
 later human acceptance does count.
 
+When standing Spec conflicts with a later human decision, retrieve that decision
+before treating restoration of old behavior or absent machinery as preservation.
+Keep unaffected accepted obligations; return only a genuinely unresolved conflict.
+
 Brief the important outcome, additions/removals, behavior, scope, material data/API
-impacts, and consequential choices before dependent work. Retrieve available facts
-and ask only necessary unresolved questions, with a recommendation. Builders choose
+impacts, and consequential choices before dependent work. Make material proposals
+visible in that brief; general approval cannot adopt an undisclosed consequential
+addition. Retrieve available facts and ask only necessary unresolved questions,
+with a recommendation. Builders choose
 reversible tactics inside the approved outcome and harness. A remedy requiring a
 new requirement, database table/schema change, consumer-facing API contract, or
 other material deviation returns to the human before dependent implementation.

@@ -49,6 +49,9 @@ observed evidence, and material consequence before declaring a failure. No findi
 quota, manufactured nits, personal taste, speculative scale, or unrelated debt.
 Material accepted standards remain binding; missing proof stays NOT RUN rather
 than an invented runtime failure.
+Separate an exercised product failure from environment blockage or absent required
+proof. Required proof that cannot run leaves its outcome unproved and withholds
+acceptance; optional exploratory scenarios cannot enlarge the accepted outcome.
 
 ## Complete outcome
 

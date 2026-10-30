@@ -104,8 +104,9 @@ fixed agent counts, file-by-file instructions, and duplicated Spec prose. Builde
 would require a semantic change, return the decision before dependent work.
 Trace the actual flow first and use the existing owner or sound reusable pattern
 when it meets accepted intent. If a new cache, parser, class, configuration, or
-durable contract is proposed, state the current boundary or demonstrated cost it
-solves and why the simpler route fails; use [shared pragmatism](../../forge-shared/references/pragmatism.md) to
+durable contract or stronger guarantee is proposed, state the essential outcome
+it enables, the current boundary or demonstrated cost it solves, and why the
+simpler existing route fails; use [shared pragmatism](../../forge-shared/references/pragmatism.md) to
 judge whether it is earned. Do not plan away accepted scenarios because code now
 appears unreachable. Preserve them as obligations or seek a scoped change.
 

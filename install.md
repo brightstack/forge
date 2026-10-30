@@ -38,6 +38,11 @@ Public URLs:
 
 Checksum mismatch fails closed.
 
+Run `forge --version` to see the installed CLI's Forge package version. The
+version is embedded from `package.json` when the executable is built. Skills are
+fetched separately from the public repository by setup; a matching version number
+alone does not prove that their files match a source checkout.
+
 ## Setup versus init
 
 `forge setup` installs skills into the project. `forge init` creates a loop.

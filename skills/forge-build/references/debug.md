@@ -14,7 +14,10 @@ story.
 Trace the behavior through real callers and shared state owners. Fix the common
 cause and inspect affected siblings rather than patching one visible symptom.
 Remove temporary probes after diagnosis. Preserve the original reproduction as
-acceptance proof and add focused regression evidence at the correct seam.
+acceptance proof and retain focused regression evidence at the correct seam.
+Where feasible, demonstrate failure before the fix and success after it. An
+existing check counts when it reaches the trigger and detects that failure;
+otherwise state what remains unproved instead of inventing a mandatory new test.
 
 If the behavior, expected result, environment, or required access cannot be
 established, report the exact gap instead of guessing. Hotfix urgency can narrow

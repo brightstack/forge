@@ -6,6 +6,15 @@ import { spawnSync } from "node:child_process";
 
 const suppliedBinary = process.env.FORGE_TEST_BINARY;
 const pack = resolve(import.meta.dir, "..");
+const version = JSON.parse(readFileSync(join(pack, "package.json"), "utf8")).version as string;
+
+test("CLI reports the Forge package version", () => {
+  for (const flag of ["--version", "-V"]) {
+    const result = spawnSync(process.execPath, [join(pack, "src/cli.ts"), flag], { encoding: "utf8" });
+    expect(result.status, result.stderr).toBe(0);
+    expect(result.stdout.trim()).toBe(version);
+  }
+});
 
 function gitBinaryDir(): string {
   const result = spawnSync("/bin/sh", ["-c", "command -v git"], { encoding: "utf8" });
@@ -23,6 +32,9 @@ function gitBinaryDir(): string {
     return JSON.parse(result.stdout);
   }
   try {
+    const reported = spawnSync(binary, ["--version"], { cwd: root, env: { ...process.env, PATH: "/nonexistent" }, encoding: "utf8" });
+    expect(reported.status, reported.stderr).toBe(0);
+    expect(reported.stdout.trim()).toBe(version);
     writeFileSync(join(root, "forge.yml"), "loopsPath: ./work-records\n");
     const removedAgentCommand = spawnSync(binary, ["agent", "status", "missing"], {
       cwd: root,

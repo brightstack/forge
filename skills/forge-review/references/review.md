@@ -1,6 +1,7 @@
 # Independent Review
 
-Apply [authority](../../forge-shared/references/authority.md), [severity](../../forge-shared/references/severity.md)
+Apply [authority](../../forge-shared/references/authority.md), [severity](../../forge-shared/references/severity.md),
+[pragmatism](../../forge-shared/references/pragmatism.md)
 and [returns with owner inspection](../../forge-shared/references/returns.md).
 
 Review is independently callable and normally composed inside Build. One separate
@@ -90,6 +91,13 @@ material consequence, and severity. No quota, manufactured nits, personal taste,
 speculative scale, unrelated debt, or unsupported redesign. Explicit material
 standards remain binding. Required proof gaps stay visible and are not invented
 defects or inferred success.
+
+Inspect relevant tests early alongside the actual flow: do they reach the claimed
+trigger and discriminate the failure? Passing tests that miss it do not settle the
+claim, and a failing assertion for an unasked guarantee creates no obligation.
+Investigate uncertain allegations and caller safeguards before reporting them.
+Use the smallest useful reproduction or causal trace under [finding admission](../../forge-shared/references/severity.md),
+keeping experiments isolated from the active candidate.
 
 Before integration, read each actual returned report and relevant new loop/Build
 log entries. Check the selected rubric/template, candidate binding, and cited

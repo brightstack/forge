@@ -17,9 +17,17 @@ authorize a new requirement or material data/API change.
 Before reporting a defect, locate the affected source or artifact, name the input
 or state and bad outcome, inspect relevant callers and existing safeguards, and
 support the smallest honest severity with evidence or a causal trace. Every
-finding identifies that context, controlling obligation, consequence, and remedy
-boundary. A theoretically reachable trigger alone does not justify machinery;
-apply [normal-use proportionality](pragmatism.md).
+finding identifies that context, controlling obligation, consequence, and a
+practical correction direction with its scope limits. Prefer the smallest runnable
+failing reproduction when feasible and useful; otherwise give an actual browser
+trace or a specific causal trace through inputs, callers, and safeguards, with
+limits. Explain why safeguards do not prevent the claimed failure. A trace must
+establish exposure and consequence; theoretical reachability alone does not
+justify machinery. Real boundaries require neither a live exploit nor repeat
+incidents. There is no new-test quota per finding. Safe isolated reproductions
+stay within existing authority and host permissions; never mutate the active
+candidate or shared services/data to manufacture failure. Apply
+[normal-use proportionality](pragmatism.md).
 
 Distinguish the allegation, its assessed status, and its suggested remedy in the
 existing report:

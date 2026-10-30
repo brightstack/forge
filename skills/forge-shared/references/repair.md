@@ -3,8 +3,11 @@
 Repair the complete affected outcome within [accepted authority](authority.md),
 using [impact-based severity](severity.md) and [sound simplicity](pragmatism.md).
 
-Before dispatching repair, the accountable owner checks the supported defect and
-the proposed correction separately in the existing report or Build log. Only
+Before dispatching repair, the accountable owner assesses the allegation, its
+severity, and the proposed correction separately in the existing report or Build
+log. The Builder can refute any allegation, including P0, with candidate evidence
+and a reason. A supported P1 in accepted normal use or at a real boundary stays
+actionable; severity alone neither proves a claim nor excuses it. Only
 authorized defect correction enters automatic repair; proposals stay optional and
 rejected material feedback gets a concise reason. Inspect the current owner and
 available correction proportionately, without an exhaustive alternatives search.
@@ -13,6 +16,12 @@ can reject that mechanism, retain the defect, and choose a sound in-scope fix
 without another permission gate. If the necessary correction exceeds authority,
 hold the affected boundary and return the consequential decision; severity stays
 visible and unaffected work can continue. Do not turn each finding into an Issue.
+
+For a material dispute, exchange the specific evidence and controlling obligation
+once. If disagreement remains and an independent read can settle it, use one
+qualified uninvolved reader within the existing review arrangement. The
+accountable owner records the supported disposition or returns the unresolved
+human choice. Do not repeat the argument or add a standing panel or approval gate.
 
 Give each finding a stable local ID, such as `R1`, and retain it across candidate
 revisions. Never reassign an ID to a different defect. Preserve delegated reports'
