@@ -18,7 +18,7 @@ load only the relevant phase references, professional instructions, and template
 
 Forge Review is the ordinary integrated review route. It selects applicable
 dimensions from the [judge selection and rubrics](skills/forge-review/references/judges.md).
-Use [workflow staffing](skills/forge-shared/references/workflows.md#concrete-staffing)
+Use [workflow staffing](references/workflows.md#concrete-staffing)
 to assign Reviewer and required Judges, and preserve their reports. The sibling
 [forge-code-review](skills/forge-code-review/SKILL.md) skill is the portable
 standalone leaf for an explicitly requested code-only review; it ends at its own
@@ -38,7 +38,7 @@ authorized. Explore, Review, Explain, Finish, Spec apply, the
 legacy natural wording Spec merge, and KB maintenance are direct operations
 without implied full-delivery status.
 
-Start with [Launch](skills/forge-shared/references/workflows.md): Workflow is Project,
+Start with [Launch](references/workflows.md): Workflow is Project,
 Issue, Bug, or Work; Depth is Quick or Full; Control is Guided or explicitly Auto.
 Guided waits before dispatch, then at new Spec/consequential Plan gates, except the
 direct bounded read-only Review exception in Launch: brief scope/team/boundary and
@@ -89,13 +89,16 @@ failure recurs after independent challenge.
   direct-review boundary.
 - `skills/forge-review/references/judges.md`: applicable judge dimensions, selection,
   replacement, disable, waiver, and report integration guidance.
-- `skills/forge-shared/`: focused `authority.md`, `pragmatism.md`, `severity.md`,
+- `references/`: focused `authority.md`, `pragmatism.md`, `severity.md`,
   `repair.md`, and `target-harness.md` contracts, plus returns, workflows, runtime,
-  records, and memory support; it is not a discoverable skill or one combined
-  standards manual. Target harness routing supplies actual applicable app standards
-  and check paths to every assigned agent.
-- Phase-owned `assets/` plus `skills/forge-shared/assets/`: managed-document
+  records, memory, and OKF (`okf.md`) support; it is shared material, not a skill
+  or one combined standards manual. Target harness routing supplies actual
+  applicable app standards and check paths to every assigned agent.
+- Phase-owned `assets/` plus package-root `templates/`: managed-document
   templates with stable CLI keys.
+- `forge setup` installs `references/`, `templates/`, and `agents/` once into the
+  project's `.forge/`, and only skill folders (plus Claude's `commands/forge/`) into
+  each host.
 - `skills/forge-spec/references/design-studies.md` and
   `skills/forge-spec/assets/design-study.html`:
   codebase-grounded single-page studies; HTML is an ordinary linked visual asset,
@@ -108,7 +111,7 @@ failure recurs after independent challenge.
 - `evals/`: semantic routing, authority, judgment, and lifecycle behavior.
 
 The CLI may initialize records; create, update, append, and validate documents;
-record canonical D-number decisions from disclosed local authorization context;
+record canonical UUID-identified decisions from disclosed local authorization context;
 calculate candidate identity; apply approved prepared Spec changes; verify/apply
 generic memory changes; query,
 validate, update, and read receipt-derived history for the canonical KB. It never
@@ -120,23 +123,24 @@ legacy `loopsPath` remains an alias. `--repo` identifies the application and
 `--loop` selects its records. Installation, application, and loop storage are
 separate locations; explicit external installation does not replace application
 authority. Existing local and known former home history stays in place under
-the [configuration/discovery contract](skills/forge-shared/references/cli.md#configuration-and-storage).
+the [configuration/discovery contract](references/cli.md#configuration-and-storage).
 Native assignments consume optional active-engine role model/effort defaults
-through [runtime selection](skills/forge-shared/references/runtime.md#model-selection).
-Loop identities and loop-local codes come from readable Markdown
-frontmatter scans under the mutation lock, without a JSON Issue registry.
+through [runtime selection](references/runtime.md#model-selection).
+Loop and canonical identities come from readable Markdown frontmatter scans under
+the mutation lock: loops scan their own records; canonical Spec, KB, and decision
+identities scan `docs/specs` and `docs/knowledge`. There is no JSON identity file.
 
-Preserve Forge `id`, `code`, and record-kind fields through CLI updates. The loop
-scan does not detect a raw identity edit against original registration. Canonical
-Spec/KB identities retain their separate `.forge/identities.json` safeguards;
-report them separately from an OKF concept's path ID and open `type`.
+Preserve Forge `id`, `code`, and record-kind fields through CLI updates and moves;
+ids stay unique. A scan does not detect a raw identity edit against an earlier
+value; git history is that record. Report a Forge identity separately from an OKF
+concept's path ID and open `type`. Readable `D1`, `D2` codes exist only inside a
+loop's `decisions.md`.
 Generic document writes cannot modify protected decisions or
 canonical `docs/specs` and `docs/knowledge`. That guard binds the CLI rather
 than the filesystem: an agent with write access can edit a decision record
 directly, and `docs validate` checks structure, identity, and links rather than
 authenticity, so it will not report the edit. Git history is the authority
-record for what a human actually approved. `kb ask` does report canonical
-knowledge whose working-copy bytes diverge from their last receipt. Candidate
+record for what a human actually approved. Candidate
 checks exclude loop mechanics by default and include selected source and
 accepted authority paths. Semantic reconciliation belongs to an accountable
 specialist and independent review; mechanical success proves structure and

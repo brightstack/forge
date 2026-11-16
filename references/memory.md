@@ -9,7 +9,7 @@ level, and the bundle-root index may declare only `okf_version` frontmatter.
 This is distinct from the strict Forge record corpus: `.forge/` workflow files
 and `docs/specs/` standing specifications keep their own identities, authority,
 and metadata schemas. Knowledge paths remain protected from generic `forge docs`
-writes. See the [OKF compatibility boundary](../../../OKF.md) for the supported
+writes. See the [OKF compatibility boundary](okf.md) for the supported
 consumer and producer claims.
 
 When the proposal lives in an external loop, select it explicitly with
@@ -50,10 +50,12 @@ Review, durable report protocol, or whole-corpus review.
 
 Human decisions use the guarded command
 `forge decision record [LOOP_DECISIONS_PATH] --repo REPO --authorization-file FILE
---body-file FILE [--title TITLE] [--supersedes Dn-or-existing-legacy-id]`. It
-assigns the next canonical `D1`, `D2`, or later code, updates the numeric
-decisions index, retains a receipt, and optionally links the canonical decision
-from the loop record. Omit the loop path for a standalone decision. It never
+--body-file FILE [--title TITLE] [--supersedes DECISION-UUID]`. It identifies
+the canonical decision by a new UUID `id` in its frontmatter (no global D-number),
+appends it to the decisions index, retains a receipt, and optionally links it
+from the loop record under the next loop-local `D1`, `D2`, or later heading.
+`--supersedes` also accepts a legacy canonical `decision.code` or a code heading
+in the selected loop's `decisions.md`. Omit the loop path for a standalone decision. It never
 silently rewrites a prior decision.
 
 ## Prepared manifest
@@ -135,13 +137,13 @@ Each change uses one of these exact Forge mutation kinds and canonical homes:
 
 | Kind | Canonical path |
 | --- | --- |
-| [`standing-spec`](../assets/standing-spec.md) | `docs/specs/<capability>/SPEC.md` |
-| [`concept`](../assets/concept.md) | Any non-reserved `docs/knowledge/**/*.md` |
-| [`kb-index`](../assets/kb-index.md) | Any `docs/knowledge/**/index.md` |
-| [`kb-log`](../assets/kb-log.md) | Any `docs/knowledge/**/log.md` |
-| [`kb-decision`](../assets/kb-decision.md) | Legacy alias for `docs/knowledge/decisions/<name>.md` |
-| [`process`](../assets/process.md) | Legacy alias for `docs/knowledge/processes/<name>.md` |
-| [`interface`](../assets/interface.md) | Legacy alias for `docs/knowledge/interfaces/<name>.md` |
+| [`standing-spec`](../templates/standing-spec.md) | `docs/specs/<capability>/SPEC.md` |
+| [`concept`](../templates/concept.md) | Any non-reserved `docs/knowledge/**/*.md` |
+| [`kb-index`](../templates/kb-index.md) | Any `docs/knowledge/**/index.md` |
+| [`kb-log`](../templates/kb-log.md) | Any `docs/knowledge/**/log.md` |
+| [`kb-decision`](../templates/kb-decision.md) | Legacy alias for `docs/knowledge/decisions/<name>.md` |
+| [`process`](../templates/process.md) | Legacy alias for `docs/knowledge/processes/<name>.md` |
+| [`interface`](../templates/interface.md) | Legacy alias for `docs/knowledge/interfaces/<name>.md` |
 
 The generic `concept` mutation kind is independent of the document's open OKF
 `type`. Legacy aliases preserve existing manifests without defining a type registry.
@@ -153,8 +155,9 @@ uses the exact current SHA-256 and null proposed file/hash. A Spec manifest requ
 write. Compatible generic memory manifests may omit it. Updates list every changed
 frontmatter field in
 `metadata_changes`. Standing-Spec identity and creation metadata remain immutable;
-native OKF metadata can change under the same authorization and stale-base checks
-while the separate Forge record identity remains stable. Forge writes
+native OKF metadata, including the open concept `type`, can change under the same
+authorization and stale-base checks, but a concept's frontmatter `id` and `code`
+cannot. Forge writes
 the proposed bytes without reserializing unknown YAML or Markdown, including
 frontmatter fields it does not interpret.
 
@@ -162,8 +165,8 @@ An explicit identity-preserving rename is one `move` change with `path` naming
 the new canonical path, `from_path` naming the old canonical path,
 `base_sha256` and `proposed_sha256` both pinning the unchanged bytes,
 `proposed_file: null`, and `metadata_changes: []`. The old and new path must have
-the same kind, the target must be unused, and the registry identity moves with the
-file. Only an `application: spec` manifest accepts moves. Never infer a rename
+the same kind, the target must be unused, and the frontmatter identity moves with
+the file. Only an `application: spec` manifest accepts moves. Never infer a rename
 from headings or content, and do not encode it as a same-ID remove/add pair.
 
 Validation rejects stale bases, repeated operation IDs, no-op updates, duplicate
@@ -171,8 +174,8 @@ targets or Forge identities, unsafe paths, and changes that break protected
 standing-Spec links. An `application: spec` manifest additionally requires at
 least one standing-Spec change and `proof.status: document-only`; it can never
 claim integrated delivery. The complete set validates before mutation. Apply
-stages files, transfers a registered prepared draft identity
-to its canonical home, and records the manifest, human context, hashes, and
+stages files, installs each prepared draft with its frontmatter identity, and
+records the manifest, human context, hashes, and
 prior/removed bytes under `.forge/memory/<operation_id>.json`.
 
 The immutable receipt records `application: spec`, the copied manifest and
@@ -184,35 +187,28 @@ own candidate-bound evidence instead of rewriting historical provenance.
 Participating local CLI mutations share one advisory lock through checks, writes,
 and rollback. On failure, rollback undoes only completed writes whose installed
 bytes and mode still match; it preserves intervening changes and reports an
-incomplete rollback for reconciliation. Registry undo restores only owned entries.
-Raw filesystem writers can bypass the advisory lock; this is not an atomic
+incomplete rollback for reconciliation. Raw filesystem writers can bypass the advisory lock; this is not an atomic
 transaction against external editors or recovery after process termination.
 
 ## Focused knowledge commands
 
 `forge kb scaffold PATH --repo REPO --type TYPE --title TITLE --code CODE`
-creates a Forge-identified OKF concept draft under `.forge/prepared/`. It cannot
-write canonical memory. Applying the reviewed draft transfers its stable identity;
-applying an external draft creates a sidecar identity without rewriting its bytes.
-Reserved OKF files always keep identity in `.forge/identities.json` rather than
-forbidden frontmatter. Forge reports the bundle-relative OKF concept ID separately
-from this Forge UUID and readable code.
+creates a Forge-identified OKF concept draft under `.forge/prepared/`, with its
+UUID `id` and readable `code` in frontmatter. It cannot write canonical memory.
+Applying the reviewed draft keeps that identity at its canonical path. An external
+draft without a UUID `id` is installed byte for byte with no Forge identity, and
+`kb verify` reports a `missing-forge-identity` gap. Reserved OKF `index.md` and
+`log.md` files carry no identity, because OKF forbids that frontmatter. Forge
+reports the bundle-relative OKF concept ID separately from the Forge UUID and code.
 
-Identity transfer is limited to a registered `.forge/prepared/` source. Reusing
-bytes from a standing Spec, canonical knowledge document, or other registered file
-does not move that source's identity; the new record receives its own. Registered
-legacy Forge indexes/logs remain inspectable as `forge-legacy` and nonconformant
-until an explicit prepared update converts their bytes to native OKF while keeping
-their sidecar identity.
+Identity is read from frontmatter scans of `docs/specs/` and `docs/knowledge/`
+under the mutation lock, and ids and codes stay unique across them. Proposing the
+bytes of an existing identified document as a new add fails as a duplicate.
+Legacy Forge-frontmatter indexes/logs remain inspectable as `forge-legacy` and
+nonconformant until an explicit prepared update converts their bytes to native
+OKF, which drops their Forge identity.
 
-`forge kb ask QUERY --repo REPO [--scope KIND ...]` returns lexical references
-and explicit unmatched-term or unreadable-corpus gaps. Every retrieved file is a
-`working-copy` observation with authority and implementation explicitly not
-inferred. When a valid applicable receipt exists, the result includes its receipt,
-operation ID, application, document-only proof status, recorded/current hashes,
-and `matching` or `diverged` state. Malformed or diverged provenance is an explicit
-gap. It does not synthesize a requirement or turn an old receipt into current
-delivery truth. `forge kb verify --repo REPO [--scope KIND ...]` consumes the
+`forge kb verify --repo REPO [--scope KIND ...]` consumes the
 native OKF bundle, checks required structure and Forge-owned identities, and
 reports optional metadata-family, trust, staleness, and local-link conditions as
 health output. Missing optional fields, unknown types or keys, and broken links

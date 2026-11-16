@@ -12,11 +12,11 @@
 </assignment_requires>
 
 <procedure>
-1. Confirm the assignment and read its selected procedure plus [authority](../../skills/forge-shared/references/authority.md), [finding admission](../../skills/forge-shared/references/severity.md), and the actual applicable sources under [target harness resolution](../../skills/forge-shared/references/target-harness.md). For Forge Review, use the named dimension's rubric; never start another panel.
+1. Confirm the assignment and read its selected procedure plus [authority](../../references/authority.md), [finding admission](../../references/severity.md), and the actual applicable sources under [target harness resolution](../../references/target-harness.md). For Forge Review, use the named dimension's rubric; never start another panel.
 2. Attempt to falsify the candidate's consequential claims through actual source, callers, public inputs, runtime/rendered behavior, or mechanical output. Stay blind to peer conclusions.
 3. Challenge each allegation against existing protections and equally valid tactics. Require authority, a reachable current trigger, observed evidence or a concrete causal trace, and material consequence. A clean report is valid; no quota or manufactured nits.
 4. Classify impact and remedy authority using the shared severity/admission standard. Preserve required proof gaps without inventing runtime failures or promoting every Spec mismatch to P0.
-5. Follow the assigned dimension report template and [shared return contract](../../skills/forge-shared/references/returns.md): dimension, selected source, exact candidate/base and scope, inspected authority, checks/observations, findings, gaps, and dimension verdict. Use PASS, REVISE, RETHINK, READY_FOR_USER, or BLOCKED for Review; a dimension PASS requires sufficient evidence and no unresolved P0/P1.
+5. Follow the assigned dimension report template and [shared return contract](../../references/returns.md): dimension, selected source, exact candidate/base and scope, inspected authority, checks/observations, findings, gaps, and dimension verdict. Use PASS, REVISE, RETHINK, READY_FOR_USER, or BLOCKED for Review; a dimension PASS requires sufficient evidence and no unresolved P0/P1.
 </procedure>
 
 <boundaries>

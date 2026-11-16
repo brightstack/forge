@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 400" width="1280" height="400" role="img" aria-labelledby="t">
+<title id="t">Forge. Stop arguing with your coding agent.</title>
+<defs>
+<clipPath id="c"><rect width="1280" height="400" rx="18"/></clipPath>
+<pattern id="g" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0V32" fill="none" stroke="#f5f3ec" stroke-opacity=".045"/></pattern>
+<linearGradient id="fade" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity=".15"/><stop offset=".55" stop-color="#fff" stop-opacity=".6"/><stop offset="1" stop-color="#fff"/></linearGradient>
+<mask id="m"><rect width="1280" height="400" fill="url(#fade)"/></mask>
+<radialGradient id="glow" cx="1090" cy="170" r="330" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fee685" stop-opacity=".16"/><stop offset=".45" stop-color="#fee685" stop-opacity=".05"/><stop offset="1" stop-color="#fee685" stop-opacity="0"/></radialGradient>
+<radialGradient id="ember" cx="116" cy="111" r="120" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fee685" stop-opacity=".14"/><stop offset="1" stop-color="#fee685" stop-opacity="0"/></radialGradient>
+</defs>
+<g clip-path="url(#c)">
+<rect width="1280" height="400" fill="#0b0a08"/>
+<rect width="1280" height="400" fill="url(#g)" mask="url(#m)"/>
+<rect width="1280" height="400" fill="url(#glow)"/>
+<rect width="1280" height="400" fill="url(#ember)"/>
+<g transform="translate(1090 170) scale(26) translate(-12 -12)" fill="none" stroke="#fee685" stroke-linejoin="round">
+<path d="M12 2.5 20.2 7.25v9.5L12 21.5 3.8 16.75v-9.5L12 2.5Z" stroke-width=".09" stroke-opacity=".22"/>
+<path d="M12 5 18 8.5v7L12 19 6 15.5v-7L12 5Z" stroke-width=".05" stroke-opacity=".13"/>
+<path d="M12 7.5 15.9 9.75v4.5L12 16.5 8.1 14.25v-4.5L12 7.5Z" fill="#fee685" fill-opacity=".06" stroke-width=".07" stroke-opacity=".28"/>
+</g>
+</g>
+<rect x=".5" y=".5" width="1279" height="399" rx="17.5" fill="none" stroke="#2a2923"/>
+<g transform="translate(80 72) scale(3.2)"><path d="M12 2.5 20.2 7.25v9.5L12 21.5 3.8 16.75v-9.5L12 2.5Z" fill="none" stroke="#fee685" stroke-width="2.4" stroke-linejoin="round"/><path d="M12 7.5 15.9 9.75v4.5L12 16.5 8.1 14.25v-4.5L12 7.5Z" fill="#fee685"/></g>
+<text x="176" y="134" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="64" font-weight="700" letter-spacing="-1.5" fill="#f5f3ec">Forge</text>
+<text x="80" y="252" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="60" font-weight="600" letter-spacing="-1.8" fill="#f5f3ec">Stop arguing with your coding agent.</text>
+<path d="M80 302H1200" stroke="#2a2923"/>
+<text x="80" y="342" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16" letter-spacing="2" fill="#a7a59a">SPEC <tspan fill="#828078">→</tspan> [ BUILD <tspan fill="#828078">⇄</tspan> REVIEW ] <tspan fill="#828078">→</tspan> SIMPLIFY <tspan fill="#828078">→</tspan> VERIFY <tspan fill="#828078">→</tspan> SHIP</text>
+<text x="1200" y="342" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16" letter-spacing="1" fill="#a7a59a">forge.brightstack.ai</text>
+</svg>

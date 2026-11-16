@@ -2,7 +2,7 @@
 
 Load [Designer judgment](../../../../../agents/designer/instructions.md), accepted
 visual revision/states, target UI standards, and
-[design direction](../../../../forge-shared/references/design-direction.md) unless
+[design direction](../../../../../references/design-direction.md) unless
 the target selects a replacement.
 
 ## Check
@@ -26,10 +26,10 @@ is not a defect.
 
 ## Common contract
 
-Read [authority](../../../../forge-shared/references/authority.md),
-[finding admission](../../../../forge-shared/references/severity.md),
-[actual target harness sources](../../../../forge-shared/references/target-harness.md),
-[returns](../../../../forge-shared/references/returns.md), and the assigned exact
+Read [authority](../../../../../references/authority.md),
+[finding admission](../../../../../references/severity.md),
+[actual target harness sources](../../../../../references/target-harness.md),
+[returns](../../../../../references/returns.md), and the assigned exact
 candidate/base, authority packet, target harness, and allowed tools. Remain
 read-only. Judge current obligations and present risks; no finding quota,
 new requirements, or automatic repair authority. Severity follows actual impact;

@@ -1,12 +1,16 @@
 # Copying Spec or Review
 
-Preserve the relative layout `skills/<folder>/` beside `agents/<role>/`. Copy
-ordinary files and package-level `OKF.md` beside `skills/` and `agents/`; no dependency manifest, selective installer, or unrelated phase
-is required. Full setup installs the complete pack.
+Preserve the relative layout: `skills/<folder>/` beside the package-root
+`references/`, `templates/`, and `agents/<role>/`. Copy ordinary files; no
+dependency manifest, selective installer, or unrelated phase is required. Full
+setup installs the complete pack, placing `references/`, `templates/`, and
+`agents/` once in the project's `.forge/` and only skill folders in each host,
+and rewrites links to match. A hand copy can mirror that layout or keep the
+package layout; keep the relative links resolving either way.
 
 ## Spec only
 
-Copy `skills/forge-spec/` and `skills/forge-shared/`, then these professional
+Copy `skills/forge-spec/`, `references/`, and `templates/`, then these professional
 folders: `product-manager`, `designer`, `architect`, `engineer`, `researcher`, and
 `reviewer`. Copy the `explorer` and `worker` helpers only when delegating those
 jobs. Each folder retains `instructions.md`. Spec's boundary rubric and return
@@ -19,8 +23,8 @@ recognition nor behavioral success. Direct Spec stops at its proposal/check.
 
 ## Review only
 
-Copy `skills/forge-review/`, `skills/forge-shared/`, and
-`skills/forge-code-review/`. Copy professional folders `reviewer` and `designer`, plus the `judge` helper. Read `skills/forge-review/SKILL.md` as the
+Copy `skills/forge-review/`, `skills/forge-code-review/`, `references/`, and
+`templates/`. Copy professional folders `reviewer` and `designer`, plus the `judge` helper. Read `skills/forge-review/SKILL.md` as the
 direct entrypoint. Its rubrics and selected Code Review leaf are included; Build,
 Spec, Verify, and Ship phase folders are unnecessary. A repository-selected
 replacement may have its own explicitly declared support.
@@ -36,6 +40,6 @@ rule/reference paths; copying the bundle alone is not evidence they did so.
 
 Shared canonical-memory guidance documents approved Spec apply and KB operations.
 Direct Spec and Review do not run them. If explicitly invoking those mechanics,
-use an installed Forge executable and its package-level `OKF.md` compatibility
-reference; retain protected canonical-write and exact approval checks. The copy
+use an installed Forge executable and the [OKF compatibility
+reference](okf.md); retain protected canonical-write and exact approval checks. The copy
 sets above need no CLI to inspect plain artifacts and return a bounded result.

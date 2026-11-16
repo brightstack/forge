@@ -1,8 +1,8 @@
 # Independent Review
 
-Apply [authority](../../forge-shared/references/authority.md), [severity](../../forge-shared/references/severity.md),
-[pragmatism](../../forge-shared/references/pragmatism.md)
-and [returns with owner inspection](../../forge-shared/references/returns.md).
+Apply [authority](../../../references/authority.md), [severity](../../../references/severity.md),
+[pragmatism](../../../references/pragmatism.md)
+and [returns with owner inspection](../../../references/returns.md).
 
 Review is independently callable and normally composed inside Build. One separate
 Reviewer stays read-only, pins the exact candidate/base, covers applicable
@@ -26,8 +26,8 @@ Check the exact source and scope of each material addition, removal, or stronger
 guarantee. A question, edited Spec, green check, or earlier Review is not approval.
 If an accepted scenario disappeared because its code path appears dead, retain it
 as unresolved until a scoped human decision or valid grant covers the removal.
-Use [target harness resolution](../../forge-shared/references/target-harness.md) to
-read the actual root/nested maps and relevant routed app rules, references,
+Use [target harness resolution](../../../references/target-harness.md) to
+read the actual maps the `forge context` rule selects and relevant routed app rules, references,
 canonical exemplars, and checks. Capture their actual paths for the assignment.
 Re-resolve the harness when a trace enters another subtree or standards domain.
 
@@ -41,7 +41,7 @@ each dimension, not additional judges.
 
 ## Inspect, delegate, and preserve reports
 
-Choose staffing using [concrete workflow triggers](../../forge-shared/references/workflows.md#concrete-staffing).
+Choose staffing using [concrete workflow triggers](../../../references/workflows.md#concrete-staffing).
 The Reviewer inspects undelegated dimensions directly with their selected rubrics.
 When Code Review applies, including Quick Review without Judges, read and execute
 the selected leaf procedure: by default
@@ -50,10 +50,10 @@ replacement under [selection](judges.md#selection-replacement-and-disable) first
 The dimension rubric is the route to that leaf, not a substitute for reading it.
 For each delegated dimension, use a clean-context read-only native subagent,
 blind to peer conclusions. Give it the [Judge contract](../../../agents/judge/instructions.md),
-[authority](../../forge-shared/references/authority.md),
-[finding admission](../../forge-shared/references/severity.md),
-[actual target harness paths](../../forge-shared/references/target-harness.md),
-[return/owner inspection contract](../../forge-shared/references/returns.md),
+[authority](../../../references/authority.md),
+[finding admission](../../../references/severity.md),
+[actual target harness paths](../../../references/target-harness.md),
+[return/owner inspection contract](../../../references/returns.md),
 selected skill or rubric, exact candidate/base and paths, accepted authority,
 verified anchors, allowed commands/tools, supplied proof, gaps, and stopping boundary.
 A delegated Code Review packet names the exact selected leaf path and actual
@@ -96,7 +96,7 @@ Inspect relevant tests early alongside the actual flow: do they reach the claime
 trigger and discriminate the failure? Passing tests that miss it do not settle the
 claim, and a failing assertion for an unasked guarantee creates no obligation.
 Investigate uncertain allegations and caller safeguards before reporting them.
-Use the smallest useful reproduction or causal trace under [finding admission](../../forge-shared/references/severity.md),
+Use the smallest useful reproduction or causal trace under [finding admission](../../../references/severity.md),
 keeping experiments isolated from the active candidate.
 
 Before integration, read each actual returned report and relevant new loop/Build
@@ -120,7 +120,7 @@ an order to add another layer. Judge whether the existing owner can meet the
 accepted result and why a proposed new mechanism is necessary. After a narrowed
 scope, reject Review work that serves only the superseded design.
 
-Challenge the Builder's preservation scope using [knowledge guidance](../../forge-shared/references/knowledge.md).
+Challenge the Builder's preservation scope using [knowledge guidance](../../../references/knowledge.md).
 Check signals against real consumers and semantics, name affected and preserved
 obligations, and require selected checks plus explicit gaps. Expand beyond paths
 for exported contracts or actual behavior; do not demand full-product replay for
@@ -130,7 +130,7 @@ matching, and structural validation cannot prove compliance.
 
 ## Verdict and boundary
 
-Use [shared impact-based severity and admission](../../forge-shared/references/severity.md).
+Use [shared impact-based severity and admission](../../../references/severity.md).
 A Spec mismatch is not automatically P0; a finding's remedy authority is separate
 from its severity. Required missing evidence remains an explicit gap.
 

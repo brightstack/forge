@@ -18,16 +18,22 @@ Use the installed host documentation for verified invocation and gaps.
 </activation>
 
 <setup>
-Read [authority](../forge-shared/references/authority.md) and
-[target harness resolution](../forge-shared/references/target-harness.md), then the
+Run `forge context --engine <actual-engine>` from where you started, without `--repo`
+and without changing directory; read every file it lists, follow its printed rule,
+and use the Target it prints as `--repo` for later forge commands.
+If `forge` is missing or doesn't know `context`, follow the fallback in
+[target harness resolution](../../references/target-harness.md#resolve-applicable-authority-progressively).
+Read
+[authority](../../references/authority.md) and
+[target harness resolution](../../references/target-harness.md), then the
 actual applicable repository sources they route to. The Coordinator owns conversation, authority,
 Launch, routing, and owner inspection. Load only the selected phase's professional
 instructions. Identity belongs to those professionals; procedure belongs here.
 </setup>
 
 <launch>
-Show or reuse [Launch](../forge-shared/references/workflows.md). For a new Launch,
-read and fill the shared [chat template](../forge-shared/assets/launch.md): the
+Show or reuse [Launch](../../references/workflows.md). For a new Launch,
+read and fill the shared [chat template](../../templates/launch.md): the
 task and stopping point, a compact Flow/Team table, and the actual approval ask or
 authorized next action in plain language. Keep routing taxonomy internal. Guided
 waits before dispatch and at new Spec/consequential Plan gates; an existing accepted
@@ -47,12 +53,12 @@ update, without an additional Launch acceptance ask.
 - Verify or browser QA: [Forge Verify](../forge-verify/SKILL.md).
 - Ship: [Forge Ship](../forge-ship/SKILL.md).
 - Explicit standalone code-only review: [Forge Code Review](../forge-code-review/SKILL.md).
-- Explore: [bounded research](../forge-shared/references/research.md).
-- Explain an artifact/change: [read-only Explain](../forge-shared/references/reporting.md#explain).
+- Explore: [bounded research](../../references/research.md).
+- Explain an artifact/change: [read-only Explain](../../references/reporting.md#explain).
 - Simplify: [Forge Simplify](../forge-simplify/SKILL.md), a bounded post-Review operation.
-- Finish: [actual-completion reconciliation](../forge-shared/references/finish.md).
-- Spec apply, legacy natural wording Spec merge, or KB ask/add/update/remove/verify/history:
-  [guarded memory operations](../forge-shared/references/memory.md).
+- Finish: [actual-completion reconciliation](../../references/finish.md).
+- Spec apply, legacy natural wording Spec merge, or KB add/update/remove/verify/history:
+  [guarded memory operations](../../references/memory.md).
 - Evaluate Forge behavior: use the separately supplied `forge-eval` development
   skill. Its evaluation corpus is not part of a runtime-only installation.
 </routing>
@@ -60,8 +66,8 @@ update, without an additional Launch acceptance ask.
 <workflow>
 <step n="1" name="Establish scope and authority">
 Identify the requested boundary, accepted sources and revision, actual state, and
-remaining material choices. Follow the [workflow assignments and gates](../forge-shared/references/workflows.md).
-Use [record mechanics](../forge-shared/references/protocol.md) only as needed.
+remaining material choices. Follow the [workflow assignments and gates](../../references/workflows.md).
+Use [record mechanics](../../references/protocol.md) only as needed.
 </step>
 <step n="2" name="Run only authorized phases">
 Full delivery follows `Spec -> [Build <-> Review] -> Simplify -> Verify -> Ship`.
@@ -77,7 +83,7 @@ before QA.
 <step n="3" name="Inspect handoffs and repair">
 Use one accountable owner and disjoint or serialized writes. Required specialists
 are actual native assignments, not personas loaded into the Coordinator. Read each
-return and new relevant log evidence under [the return contract](../forge-shared/references/returns.md)
+return and new relevant log evidence under [the return contract](../../references/returns.md)
 before advancing. Apply shared severity, remedy authority, and finite repair limits.
 </step>
 <step n="4" name="Close the requested work">
@@ -90,8 +96,8 @@ claim follows from a local PASS.
 
 <output>
 Use the selected phase's owning artifact template and shared returns. Launch uses
-the shared [chat template](../forge-shared/assets/launch.md), not a saved report.
-Other human gates use [brief reporting](../forge-shared/references/reporting.md), with a plain-language
+the shared [chat template](../../templates/launch.md), not a saved report.
+Other human gates use [brief reporting](../../references/reporting.md), with a plain-language
 decision brief followed by links to the exact revision.
 </output>
 <checklist>

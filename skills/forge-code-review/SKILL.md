@@ -6,16 +6,21 @@ description: "Independently review an exact code candidate, including UI markup 
 # Forge Code Review
 
 <setup>
-Load [authority](../forge-shared/references/authority.md),
-[impact-based admission](../forge-shared/references/severity.md),
-[target harness resolution](../forge-shared/references/target-harness.md), and
-[returns](../forge-shared/references/returns.md); these provide the common judgment
+Run `forge context` from where you started, without `--repo` and without changing
+directory, and read every file it lists before anything else. Use the Target it
+prints as `--repo` for later forge commands.
+If `forge` is missing or doesn't know `context`, follow the fallback in
+[target harness resolution](../../references/target-harness.md#resolve-applicable-authority-progressively).
+Then load [authority](../../references/authority.md),
+[impact-based admission](../../references/severity.md),
+[target harness resolution](../../references/target-harness.md), and
+[returns](../../references/returns.md); these provide the common judgment
 and evidence contract without starting a lifecycle or Launch.
 Adopt the bundled [Reviewer](../../agents/reviewer/instructions.md) as the senior
 engineering lens. Stay adversarial in investigation, conservative in findings,
 and read-only throughout.
 
-Read the target repository's root and applicable nested instruction maps before
+Follow the `forge context` rule for nested maps on each inspected path before
 judging code. Follow only the standards links relevant to the candidate, and
 re-resolve that authority when investigation enters another subtree or standards
 domain. The target's accepted intent and harness govern; this skill supplies the

@@ -31,11 +31,12 @@ import { withMutationLock } from './lock.ts'
 import { TEMPLATES } from './templates.ts'
 import { known_loop_paths, loops_path } from './roots.ts'
 import { spawnSync } from 'node:child_process'
+import { parse as parseYaml } from 'yaml'
 export { loops_path } from './roots.ts'
 
 export type Metadata = Record<string, unknown>
-export type Identity = Record<'id' | 'code' | 'type', string>
-export type Registry = Record<string, Identity>
+/** Forge identity: a UUID `id` and record `type`, plus a readable `code` where the record has one. */
+export type Identity = { id: string; type: string; code?: string }
 
 export const KINDS = new Set(
   'index decisions log build-log product design tech work issue bug plan spec-change standing-spec visual acceptance review ship concept kb-decision process interface kb-index kb-log'.split(
@@ -281,7 +282,7 @@ function stringField(metadata: Metadata, field: string): string {
   return value
 }
 
-function isUuid(value: string): boolean {
+export function isUuid(value: string): boolean {
   const normalized = value
     .replace(/^urn:uuid:/i, '')
     .replace(/^\{([\s\S]*)\}$/, '$1')
@@ -321,10 +322,15 @@ function acceptance_criteria(body: string): string {
 }
 
 function check_scenarios(body: string, required: boolean): void {
-  const scenarios = body.split(/^#{1,6}\s+.*$/m).flatMap((section) => {
+  const scenarios = body.split(/(?=^#{1,6}\s+.*$)/m).flatMap((section) => {
+    // Bare title-case "When ..." prose is not a scenario without Given or a Scenario heading.
     const fields = new Set(
-      [...section.matchAll(/^\s*(?:[-*]\s*)?(?:\*\*)?(GIVEN|WHEN|THEN)\b/gim)].map(
-        (match) => match[1]?.toUpperCase(),
+      [
+        ...section.matchAll(/^[ \t]*(GIVEN|WHEN|THEN)\b/gm),
+        ...section.matchAll(/^[ \t]*(?:[-*][ \t]+(?:\*\*)?|\*\*)(GIVEN|WHEN|THEN)\b|^[ \t]*(GIVEN|WHEN|THEN):/gim),
+        ...(/(?:^#{1,6}\s+Scenario\b|^[ \t]*GIVEN\b)/im.test(section) ? section.matchAll(/^[ \t]*(GIVEN|WHEN|THEN)\b/gim) : []),
+      ].map(
+        (match) => (match[1] ?? match[2])?.toUpperCase(),
       ),
     )
     return fields.size ? [fields] : []
@@ -376,32 +382,6 @@ export function validate_document_content(content: string, expected_kind?: strin
   return metadata
 }
 
-export function _registry(repo: string): Registry {
-  const path = contained_path(repo, '.forge/identities.json')
-  if (!existsSync(path)) return {}
-  try {
-    const value: unknown = JSON.parse(read_utf8(path))
-    if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('expected object')
-    for (const [path, identity] of Object.entries(value)) {
-      if (
-        typeof path !== 'string' ||
-        !identity ||
-        typeof identity !== 'object' ||
-        Array.isArray(identity) ||
-        Object.keys(identity).sort().join(',') !== 'code,id,type'
-      ) {
-        throw new Error('expected path to id/code/type records')
-      }
-      if (Object.values(identity).some((item) => typeof item !== 'string' || !item)) {
-        throw new Error('identity values must be nonempty strings')
-      }
-    }
-    return value as Registry
-  } catch (error) {
-    throw new ForgeError(`invalid identity registry: ${error instanceof Error ? error.message : String(error)}`)
-  }
-}
-
 export function _write_atomic(path: string, content: string | Uint8Array): void {
   mkdirSync(dirname(path), { recursive: true })
   const temporary = join(dirname(path), `.${basename(path)}-${randomUUID()}`)
@@ -423,7 +403,7 @@ export function _write_atomic(path: string, content: string | Uint8Array): void 
   }
 }
 
-function identity(metadata: Metadata): Identity {
+function identity(metadata: Metadata): Required<Identity> {
   return {
     id: stringField(metadata, 'id'),
     code: stringField(metadata, 'code'),
@@ -431,60 +411,62 @@ function identity(metadata: Metadata): Identity {
   }
 }
 
-function sameIdentity(left: Identity | undefined, right: Identity): boolean {
-  return !!left && [...IDENTITY_FIELDS].every((key) => left[key] === right[key])
-}
-
 function relativePath(repo: string, path: string): string {
   return relative(realpathSync(repo), contained_path(repo, path)).split(sep).join('/')
 }
 
-function sortedRegistry(registry: Registry): Registry {
-  return Object.fromEntries(
-    Object.entries(registry).sort(([left], [right]) => Buffer.compare(Buffer.from(left), Buffer.from(right))),
-  )
+/** Canonical Spec and knowledge documents, read from their folders; identity lives in each file's frontmatter. */
+export function canonical_documents(repo: string): string[] {
+  const root = realpathSync(repo)
+  const documents: string[] = []
+  function walk(directory: string): void {
+    if (!lstatSync(directory, { throwIfNoEntry: false })?.isDirectory()) return
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      const path = join(directory, entry.name)
+      if (entry.isDirectory()) walk(path)
+      else if (entry.isFile() && extname(entry.name) === '.md') documents.push(path)
+    }
+  }
+  const specs = join(root, 'docs/specs')
+  if (lstatSync(specs, { throwIfNoEntry: false })?.isDirectory()) {
+    for (const entry of readdirSync(specs, { withFileTypes: true })) {
+      const path = join(specs, entry.name, 'SPEC.md')
+      if (entry.isDirectory() && lstatSync(path, { throwIfNoEntry: false })?.isFile()) documents.push(path)
+    }
+  }
+  walk(join(root, 'docs/knowledge'))
+  return documents.sort()
 }
 
-function writeRegistry(repo: string, registry: Registry): void {
-  _write_atomic(
-    contained_path(repo, '.forge/identities.json'),
-    `${JSON.stringify(sortedRegistry(registry), null, 2)}\n`,
-  )
+/** The frontmatter `id`, `code`, and `type` of a document; null when it has no UUID `id`. */
+export function frontmatter_identity(content: string): Identity | null {
+  const match = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/.exec(content)
+  if (!match) return null
+  let metadata: unknown
+  try {
+    metadata = parseYaml(match[1] ?? '')
+  } catch {
+    return null
+  }
+  if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) return null
+  const { id, code, type } = metadata as Metadata
+  if (typeof id !== 'string' || !isUuid(id)) return null
+  return { id, type: typeof type === 'string' ? type : '', ...(typeof code === 'string' ? { code } : {}) }
 }
 
-export function set_registered_identity(
-  repo: string,
-  path: string,
-  next: Identity | null,
-  options: { transfer_from?: string } = {},
-): void {
-  withMutationLock(repo, () => {
-    const target = relativePath(repo, path)
-    const source = options.transfer_from ? relativePath(repo, options.transfer_from) : null
-    const registry = _registry(repo)
-    if (source && source !== target) {
-      if (next === null || !sameIdentity(registry[source], next)) {
-        throw new ForgeError('registered transfer source identity changed')
-      }
-      delete registry[source]
+/** Reject an id, or a code, that another canonical document already carries. */
+export function assert_unique_identity(repo: string, path: string, current: Pick<Identity, 'id' | 'code'>, ignore: string[] = []): void {
+  const target = relativePath(repo, path)
+  const skipped = new Set([target, ...ignore.map((other) => relativePath(repo, other))])
+  for (const other of canonical_documents(repo)) {
+    const name = relativePath(repo, other)
+    if (skipped.has(name)) continue
+    let existing: Identity | null
+    try { existing = frontmatter_identity(read_utf8(other)) } catch { continue }
+    if (existing && (existing.id === current.id || (current.code !== undefined && existing.code === current.code))) {
+      throw new ForgeError(`duplicate id/code with ${name}`)
     }
-    if (next === null) {
-      delete registry[target]
-      writeRegistry(repo, registry)
-      return
-    }
-    if (!isUuid(next.id)) throw new ForgeError('registered identity id must be a UUID')
-    if (!CODE.test(next.code)) throw new ForgeError('registered identity code is invalid')
-    if (!next.type.trim()) throw new ForgeError('registered identity type is required')
-    for (const [other, existing] of Object.entries(registry)) {
-      if (loop_root(repo, other)) continue
-      if (other !== target && (existing.id === next.id || existing.code === next.code)) {
-        throw new ForgeError(`duplicate id/code with ${other}`)
-      }
-    }
-    registry[target] = next
-    writeRegistry(repo, registry)
-  })
+  }
 }
 
 export function check_identity(repo: string, path: string, metadata: Metadata, selected_loop?: string): Metadata {
@@ -492,7 +474,7 @@ export function check_identity(repo: string, path: string, metadata: Metadata, s
   if (loop) {
     const target = selected_loop ? contained_path(loop, path) : document_path(repo, path)
     const current = identity(metadata)
-    // ponytail: Markdown is the loop identity source; raw edits have no historical registry comparison.
+    // ponytail: Markdown is the identity source; raw edits have no historical comparison.
     for (const other of loop_documents(repo, loop)) {
       if (other === target) continue
       const existing = identity(validate_document_content(read_utf8(other)))
@@ -502,86 +484,14 @@ export function check_identity(repo: string, path: string, metadata: Metadata, s
     }
     return metadata
   }
-  const relative = relativePath(repo, path)
-  const registry = _registry(repo)
+  const target = contained_path(repo, path)
   const current = identity(metadata)
-  const previous = registry[relative]
-  if (previous && [...IDENTITY_FIELDS].some((key) => previous[key] !== current[key])) {
-    throw new ForgeError(`immutable identity changed: ${relative}`)
+  const previous = existsSync(target) && statSync(target).isFile() ? frontmatter_identity(read_utf8(target)) : null
+  if (previous && (previous.id !== current.id || previous.code !== current.code || previous.type !== current.type)) {
+    throw new ForgeError(`immutable identity changed: ${relativePath(repo, target)}`)
   }
-  for (const [other, existing] of Object.entries(registry)) {
-    if (loop_root(repo, other)) continue
-    if (other !== relative && (existing.id === current.id || existing.code === current.code)) {
-      throw new ForgeError(`duplicate id/code with ${other}`)
-    }
-  }
+  assert_unique_identity(repo, target, current)
   return metadata
-}
-
-export function register_document(repo: string, path: string, content: string, loop?: string): Metadata {
-  return with_document_lock(repo, path, loop, () => {
-    const metadata = validate_document_content(content)
-    check_identity(repo, path, metadata, loop)
-    if (loop || loop_root(repo, path)) return metadata
-    const registry = _registry(repo)
-    registry[relativePath(repo, path)] = identity(metadata)
-    writeRegistry(repo, registry)
-    return metadata
-  })
-}
-
-export function unregister_identity(
-  repo: string,
-  path: string,
-  content: string,
-  options: { dry_run?: boolean } = {},
-): Metadata {
-  return withMutationLock(repo, () => {
-    const relative = relativePath(repo, path)
-    const metadata = validate_document_content(content)
-    const registry = _registry(repo)
-    const previous = registry[relative]
-    const current = identity(metadata)
-    if (previous && !sameIdentity(previous, current)) {
-      throw new ForgeError('removed document does not match its registered identity')
-    }
-    if (!options.dry_run && previous) {
-      delete registry[relative]
-      writeRegistry(repo, registry)
-    }
-    return metadata
-  })
-}
-
-export function transfer_identity(
-  repo: string,
-  source_path: string,
-  target_path: string,
-  content: string,
-  options: { dry_run?: boolean } = {},
-): Metadata {
-  return withMutationLock(repo, () => {
-    const source = relativePath(repo, contained_path(repo, source_path, { must_exist: true }))
-    const target = relativePath(repo, target_path)
-    const metadata = validate_document_content(content)
-    const registry = _registry(repo)
-    const current = identity(metadata)
-    if (!sameIdentity(registry[source], current) || Object.hasOwn(registry, target)) {
-      throw new ForgeError('identity transfer needs its registered draft and an unused target')
-    }
-    for (const [other, existing] of Object.entries(registry)) {
-      if (loop_root(repo, other)) continue
-      if (other !== source && (existing.id === current.id || existing.code === current.code)) {
-        throw new ForgeError(`duplicate id/code with ${other}`)
-      }
-    }
-    if (!options.dry_run) {
-      registry[target] = registry[source] as Identity
-      delete registry[source]
-      writeRegistry(repo, registry)
-    }
-    return metadata
-  })
 }
 
 function protectedTarget(repo: string, path: string, kind: string): boolean {
@@ -636,12 +546,6 @@ export function create_document(
     const descriptor = openSync(target, 'wx')
     writeFileSync(descriptor, content)
     closeSync(descriptor)
-    try {
-      register_document(repo, target, content, options.loop)
-    } catch (error) {
-      unlinkSync(target)
-      throw error
-    }
     return { path: target, id, code: metadata.code, status }
   })
 }
@@ -738,15 +642,17 @@ export function authorization_context(repo: string, path: string, loop?: string)
   return metadata
 }
 
+/** Ignore new default loop records and the persistent target lock narrowly, without untracking history. */
 function ignore_default_loops(repo: string, parent: string): void {
   const root = realpathSync(repo)
   if (parent !== join(root, '.forge/loops')) return
-  const ignored = spawnSync('git', ['-C', root, 'check-ignore', '-q', '--no-index', '.forge/loops/.forge-ignore-probe'])
-  if (ignored.status === 0) return
   const path = contained_path(root, '.gitignore')
-  const previous = existsSync(path) ? read_utf8(path) : ''
-  if (previous.split(/\r?\n/).includes('/.forge/loops/')) return
-  _write_atomic(path, `${previous}${previous && !previous.endsWith('\n') ? '\n' : ''}/.forge/loops/\n`)
+  for (const [rule, probe] of [['/.forge/loops/', '.forge/loops/.forge-ignore-probe'], ['/.forge/mutation.lock', '.forge/mutation.lock']] as const) {
+    if (spawnSync('git', ['-C', root, 'check-ignore', '-q', '--no-index', probe]).status === 0) continue
+    const previous = existsSync(path) ? read_utf8(path) : ''
+    if (previous.split(/\r?\n/).includes(rule)) continue
+    _write_atomic(path, `${previous}${previous && !previous.endsWith('\n') ? '\n' : ''}${rule}\n`)
+  }
 }
 
 export function init_loop(repo: string, loop_id: string, title: string): Record<string, unknown> {

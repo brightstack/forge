@@ -11,12 +11,12 @@ are suggestions, not a registry.
 
 | Topic | Questions it answers | Suggested type and template |
 | --- | --- | --- |
-| Domain | What terms, entities, and relationships mean | `Domain Concept`, [concept](../assets/concept.md) |
-| Data | What models, schema, persistence lifecycle, constraints, tenancy, and reads/writes require | `Data Model` or `Persistence Contract`, [concept](../assets/concept.md) or [interface](../assets/interface.md) |
-| Runtime | What services, workers, events, and runtime boundaries do | `Runtime Component` or `Runtime Contract`, [concept](../assets/concept.md) or [interface](../assets/interface.md) |
-| Core processes | How business flows, actors, inputs, outputs, and recovery work | `Core Process`, [process](../assets/process.md) |
-| Operations | How deployment, infrastructure, observability, and operating procedures work | `Operational Practice` or `Operations Contract`, [process](../assets/process.md) or [interface](../assets/interface.md) |
-| Shared foundations | Which auth, routing, library, and design-system primitives other work relies on | `Shared Foundation` or `Foundation Contract`, [concept](../assets/concept.md) or [interface](../assets/interface.md) |
+| Domain | What terms, entities, and relationships mean | `Domain Concept`, [concept](../templates/concept.md) |
+| Data | What models, schema, persistence lifecycle, constraints, tenancy, and reads/writes require | `Data Model` or `Persistence Contract`, [concept](../templates/concept.md) or [interface](../templates/interface.md) |
+| Runtime | What services, workers, events, and runtime boundaries do | `Runtime Component` or `Runtime Contract`, [concept](../templates/concept.md) or [interface](../templates/interface.md) |
+| Core processes | How business flows, actors, inputs, outputs, and recovery work | `Core Process`, [process](../templates/process.md) |
+| Operations | How deployment, infrastructure, observability, and operating procedures work | `Operational Practice` or `Operations Contract`, [process](../templates/process.md) or [interface](../templates/interface.md) |
+| Shared foundations | Which auth, routing, library, and design-system primitives other work relies on | `Shared Foundation` or `Foundation Contract`, [concept](../templates/concept.md) or [interface](../templates/interface.md) |
 
 Use the repository's existing hierarchy and link maintained sources. Do not copy
 standing requirements or code that will drift into a competing record.
@@ -54,6 +54,6 @@ proposes the preservation scope. The Reviewer challenges it. Verify exercises
 affected unchanged and changed or new outcomes. Ship checks the complete candidate
 once and records concise closure.
 
-Use `forge kb ask` to retrieve authority. Use `forge kb history` to inspect
-successful receipt-derived changes. KB search and structural verification never
+Start from `docs/knowledge/index.md` and search `docs/knowledge` and `docs/specs` with your own tools to retrieve authority. Use `forge kb history` to inspect
+successful receipt-derived changes. Search and structural verification never
 establish implementation compliance.

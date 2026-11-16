@@ -39,14 +39,13 @@ readable concept unusable.
 
 Forge offers six optional reading topics: Domain, Data, Runtime, Core processes,
 Operations, and Shared foundations. Use the open OKF `type` field and the concise
-[knowledge templates](skills/forge-shared/references/knowledge.md); these labels are
+[knowledge templates](knowledge.md); these labels are
 retrieval guidance, not a type registry. Create only topics earned by the work.
 An empty corpus, placeholder concept, or exhaustive source copy is unnecessary.
 
 ## Consumer boundary
 
-`forge kb ask` searches the native bundle and returns lexical references plus
-unmatched or unreadable gaps. `forge kb verify` checks the required envelope,
+`forge kb verify` checks the required envelope,
 reserved files, identities owned by Forge, optional metadata families, trust and
 staleness signals, and local links. It reports health separately from structural
 issues. It does not establish semantic truth, source authenticity, human
@@ -61,19 +60,19 @@ the retained envelope; it does not revalidate stale bases against current files.
 
 The reader accepts a concept with only `type`, preserves arbitrary frontmatter
 fields, and does not require a Forge `id`, `code`, status, timestamp, or one of
-Forge's semantic directories for OKF consumption. Registered legacy KB files
-remain readable and identity-protected where Forge manages them.
+Forge's semantic directories for OKF consumption. Legacy KB files remain
+readable, and a frontmatter `id` stays immutable through prepared updates.
 
-Every result record exposes the OKF path ID and the authoritative Forge
-sidecar identity separately. Unregistered external bundles remain consumable and
-receive a `missing-forge-identity` health gap; reading never adopts or mutates
-them. External `id` and `code` keys are preserved as extensions but do not become
-authoritative merely because their names resemble Forge fields.
+Every result record exposes the OKF path ID and the Forge identity separately.
+The Forge identity is the frontmatter `id` when it is a UUID, plus `code` when
+present; there is no separate identity file. A document without a UUID `id`
+remains consumable and receives a `missing-forge-identity` health gap; reading
+never adopts or mutates it.
 
-Registered pre-OKF Forge `index.md` and `log.md` records remain searchable and
-identify themselves as `forge-legacy`. Verification reports that their reserved
-frontmatter is not OKF-conformant. An authorized update can replace those exact
-bytes with native reserved-file structure while preserving the sidecar identity;
+Pre-OKF Forge `index.md` and `log.md` records with Forge frontmatter remain
+searchable and identify themselves as `forge-legacy`. Verification reports that
+their reserved frontmatter is not OKF-conformant. An authorized update can replace
+those exact bytes with native reserved-file structure, which carries no identity;
 Forge never rewrites them during reading.
 
 ## Producer and authority boundary
@@ -90,34 +89,29 @@ hashes are checked before Spec apply writes anything. The apply path preserves
 unknown YAML and Markdown bytes and records document-only provenance for recovery.
 It is a controlled writer for the repository's canonical bundle, not an OKF
 import/export implementation. Applying a new native
-document transfers its registered draft identity or creates an authoritative
-sidecar identity for an external draft. Reserved files keep identity only in the
-sidecar because OKF forbids that frontmatter. Same-path updates preserve the
-sidecar identity even when the open concept `type` changes.
+document keeps the identity in its own frontmatter; ids and codes must be unused
+across `docs/specs/` and `docs/knowledge/`. Reserved files carry no identity
+because OKF forbids that frontmatter. Same-path updates keep the frontmatter `id`
+and `code` even when the open concept `type` changes.
 
-Human decisions use the guarded decision operation. It assigns stable readable
-`D1`, `D2`, and later codes, keeps descriptive filenames, updates the numeric
+Human decisions use the guarded decision operation. It gives each canonical
+decision a UUID `id` in frontmatter and a descriptive filename, appends it to the
 decisions index, records the human source and authorization, and retains a
-receipt. Supersession creates a new decision and preserves the prior record. A
-loop decisions record can link the canonical decision; standalone recording can
-omit that path.
+receipt. Canonical decisions have no global D-number; a loop's `decisions.md`
+entry carries a loop-local `D1`, `D2` heading. Supersession creates a new
+decision and preserves the prior record. Standalone recording can omit the loop
+path.
 
-Only a registered source owned under `.forge/prepared/` is an identity-transfer
-draft. A protected standing Spec, canonical knowledge file, or other registered
-source may supply exact proposed bytes, but the new target receives a new identity
-and the source registration remains intact. Native update manifests declare
+Copying the bytes of an existing identified document into a new add fails as a
+duplicate id. Native update manifests declare
 semantic top-level YAML field changes; standing Specs retain their stricter raw
 frontmatter and immutable-identity checks.
 
-Adoption is explicit and non-destructive: existing registered documents are not
+Adoption is explicit and non-destructive: existing documents are not
 rewritten, moved, or retyped automatically. There is no bootstrap or `init`
 operation for creating a KB corpus. Standing Specs and loop workflow files
 continue to use Forge's strict schemas and authority rules rather than becoming
 OKF concepts by implication.
-
-`forge kb ask` labels every retrieved file as a working-copy observation. Matching
-or diverged Spec-apply provenance can aid recovery, but never establishes accepted
-authority, implementation, Verify, or current delivery truth.
 
 The producer does not fetch or export a corpus and never executes a referenced
 resource, computation, executor, or attester. A prepared apply proves authorized

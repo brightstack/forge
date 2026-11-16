@@ -1,7 +1,7 @@
-# Dn - TODO durable decision
+# TODO durable decision
 
-<!-- Use the next available D-number and a descriptive filename. Keep the stable
-Forge identity in managed frontmatter or the reserved-file sidecar. -->
+<!-- Use a descriptive filename. The stable Forge identity is the UUID `id` in
+frontmatter; canonical decisions have no D-number. -->
 
 ## Decision
 
@@ -9,7 +9,6 @@ TODO: State the accepted choice precisely.
 
 ## Scope and Status
 
-- Decision code: Dn: replace with the next available number
 - Scope: TODO
 - Status: TODO: accepted or superseded
 - Effective date: TODO
@@ -30,7 +29,7 @@ TODO: Record the decision-relevant context and why this choice was accepted.
 
 ## Index and History
 
-- Numeric decisions index entry: TODO: `docs/knowledge/decisions/index.md`
+- Decisions index entry: TODO: `docs/knowledge/decisions/index.md`
 - Receipt-derived history: TODO: `forge kb history` operation or `None.`
 
 <!-- Preserve history. Supersession creates a new authorized record and updates references; it does not rewrite the source decision. -->

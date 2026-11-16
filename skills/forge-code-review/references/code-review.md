@@ -4,9 +4,9 @@ Pin one change, attack its most consequential current risks, and report only
 high-confidence problems the author should act on now. Search broadly enough to
 falsify the candidate; admit findings conservatively.
 
-Use [authority](../../forge-shared/references/authority.md),
-[finding admission](../../forge-shared/references/severity.md), and
-[return evidence](../../forge-shared/references/returns.md). Grade actual impact;
+Use [authority](../../../references/authority.md),
+[finding admission](../../../references/severity.md), and
+[return evidence](../../../references/returns.md). Grade actual impact;
 separate current defect severity from authority to implement its remedy.
 
 ## 1. Pin the candidate
@@ -34,19 +34,20 @@ before treating an accepted document as a completion requirement. Reviewing
 existing code does not implicitly submit it as the implementation of nearby
 future work; an actual completion claim remains accountable to its approved scope.
 
-Read progressively, including `AGENTS.md`, `CLAUDE.md` when present, and relevant
-`.cursor/` project instructions:
+Read progressively from the selected harness root (see
+[target harness](../../../references/target-harness.md)), including its
+`AGENTS.md`, `CLAUDE.md` when present, and relevant `.cursor/` project instructions:
 
 1. Current system, developer, and user instructions.
 2. Supplied Issue, acceptance criteria, NFRs, decisions, and non-goals.
-3. Root and applicable nested repository instruction maps.
+3. Selected harness maps and the nested instruction maps its `forge context` rule applies to each inspected path.
 4. Only the rules, references, and exemplars those maps route to for the changed behavior.
 
 Accepted artifacts own intent. Applicable repository instructions own standards
 routing and direct constraints. Named canonical exemplars and mechanical checks
 inherit only the authority that routes to them. A sibling pattern is evidence about the code; it does not create a
 standard. If the applicable route resolves no engineering authority, record `NOT_FOUND`
-rather than inventing one. Use [target harness resolution](../../forge-shared/references/target-harness.md)
+rather than inventing one. Use [target harness resolution](../../../references/target-harness.md)
 for actual source paths, delegated handoffs, and explicit procedure replacements.
 Read the assigned source contents even when the caller supplies a summary; add
 newly applicable paths when tracing crosses a subtree. Report the actual relevant

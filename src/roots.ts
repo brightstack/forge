@@ -37,6 +37,7 @@ function configuration(root: string): Mapping {
   const loops = optionalMapping(storage, 'loops', 'forge.yml storage.loops')
   optionalString(loops, 'path', 'forge.yml storage.loops.path')
   optionalString(config, 'loopsPath', 'forge.yml loopsPath')
+  optionalString(optionalMapping(config, 'harness', 'forge.yml harness'), 'path', 'forge.yml harness.path')
   const engines = optionalMapping(config, 'engines', 'forge.yml engines')
   for (const [engine, value] of Object.entries(engines)) {
     const models = optionalMapping(mapping(value, `forge.yml engines.${engine}`), 'models', `forge.yml engines.${engine}.models`)
@@ -86,6 +87,7 @@ export function resolve_configuration(repo: string, options: { home?: string; en
     throw new ForgeError(`forge.yml loopsPath conflicts with storage: ${alias} != ${selected}`)
   }
   const loopsPath = alias ?? selected
+  const harnessPath = pathFrom(root, (optionalMapping(config, 'harness', 'forge.yml harness').path as string | undefined) ?? '.', home)
   const known = [loopsPath, join(root, '.forge/loops'), former_home_loops_path(root, home)]
   const seen = new Set<string>()
   const knownPaths = known.filter((path) => {
@@ -95,12 +97,13 @@ export function resolve_configuration(repo: string, options: { home?: string; en
     return true
   })
   const result: {
-    repo: string; storage_path: string; loops_path: string; known_loop_paths: string[]; warnings: string[];
+    repo: string; harness_path: string; storage_path: string; loops_path: string; known_loop_paths: string[]; warnings: string[];
     engine?: string; role?: ModelRole; model?: string; effort?: string; sources?: Record<string, string>
   } = {
-    repo: root, storage_path: storagePath, loops_path: loopsPath, known_loop_paths: knownPaths,
+    repo: root, harness_path: harnessPath, storage_path: storagePath, loops_path: loopsPath, known_loop_paths: knownPaths,
     warnings: alias === undefined ? [] : ['forge.yml loopsPath is deprecated; use storage.loops.path'],
   }
+  if (!existsSync(harnessPath)) result.warnings.push(`forge.yml harness.path does not exist: ${harnessPath}`)
   if (options.engine !== undefined) {
     if (!options.engine.trim()) throw new ForgeError('engine must be nonempty')
     const role = options.role ?? 'main'
@@ -128,7 +131,8 @@ export function resolve_configuration(repo: string, options: { home?: string; en
 export function loops_path(repo: string, home = homedir()): string {
   const result = resolve_configuration(repo, { home })
   for (const warning of result.warnings) {
-    if (!notices.has(result.repo)) { console.error(`forge: ${warning}`); notices.add(result.repo) }
+    const notice = `${result.repo}\0${warning}`
+    if (!notices.has(notice)) { console.error(`forge: ${warning}`); notices.add(notice) }
   }
   return result.loops_path
 }

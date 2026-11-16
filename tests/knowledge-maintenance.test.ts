@@ -203,7 +203,7 @@ afterEach(() => {
 });
 
 describe("knowledge maintenance CLI", () => {
-  test("records a standalone native decision with provenance, sidecar identity, and numeric index", () => {
+  test("records a standalone native decision with provenance and a frontmatter UUID identity", () => {
     repo = mkdtempSync(join(tmpdir(), "forge-knowledge-decision-"));
     const body = write("decision.md", "# Workspace auth\n\nRequire a human decision before access changes.\n");
     const badAuthorization = writeJson("bad-authorization.json", {
@@ -240,25 +240,30 @@ describe("knowledge maintenance CLI", () => {
       "Workspace Auth",
     ]);
 
-    const relativePath = "docs/knowledge/decisions/D1-workspace-auth.md";
+    const relativePath = "docs/knowledge/decisions/workspace-auth.md";
+    const id = String(decisionResult.decision);
+    expect(id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
     expect(decisionResult).toMatchObject({
-      decision: "D1",
       canonical_decision: {
         path: relativePath,
         title: "Workspace Auth",
+        forge_identity: { id, type: "okf-concept" },
         accepted_on: "2001-09-09",
         supersedes: null,
       },
       index: "docs/knowledge/decisions/index.md",
       loop_reference: null,
-      history: ".forge/memory/decision-D1.json",
+      history: `.forge/memory/decision-${id}.json`,
     });
     const canonical = read(relativePath);
     const metadata = frontmatter(canonical);
+    expect(metadata.id).toBe(id);
+    expect(metadata.code).toBeUndefined();
     expect(metadata.type).toBe("Decision");
     expect(metadata.title).toBe("Workspace Auth");
     expect(metadata.status).toBe("stable");
     const decisionMetadata = metadata.decision as Record<string, unknown>;
+    expect(decisionMetadata.code).toBeUndefined();
     expect(String(decisionMetadata.created_at)).not.toBe("");
     expect(String(decisionMetadata.accepted_on)).toBe(authority.date);
     expect(String(decisionMetadata.created_at)).not.toBe(String(decisionMetadata.accepted_on));
@@ -266,24 +271,16 @@ describe("knowledge maintenance CLI", () => {
       expect(canonical).toContain(evidence);
     }
     expect(canonical).toContain("# Workspace auth");
-
-    const identity = readJson(".forge/identities.json")[relativePath] as Record<string, unknown>;
-    expect(identity).toMatchObject({ code: "D1" });
-    expect(String(identity.id)).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
-    );
-    expect(typeof identity.type).toBe("string");
+    expect(existsSync(join(repo, ".forge/identities.json"))).toBeFalse();
 
     const index = read("docs/knowledge/decisions/index.md");
-    expect(index).toMatch(/\bD1\b/);
-    expect(index).toMatch(/\]\(D1-workspace-auth\.md\)/);
-    const asked = ok(["kb", "ask", "Workspace Auth", "--scope", "kb-decision"]);
-    expect(asked.references).toEqual([
-      expect.objectContaining({ path: relativePath, forge_identity: identity, kind: "kb-decision" }),
-    ]);
+    expect(index).not.toMatch(/\bD\d+\b/);
+    expect(index).toMatch(/\]\(workspace-auth\.md\)/);
+    const verified = ok(["kb", "verify"]);
+    expect((verified.gaps as Array<Record<string, unknown>>).filter((gap) => gap.code === "missing-forge-identity")).toEqual([]);
   });
 
-  test("supersession preserves prior decision bytes and appends a canonical loop reference after legacy entries", () => {
+  test("supersession by UUID preserves prior decision bytes and appends a loop-local D code after legacy entries", () => {
     repo = mkdtempSync(join(tmpdir(), "forge-knowledge-supersession-"));
     const firstAuthority = authorization("2001-09-09", "first");
     const firstBody = write("first.md", "# Workspace auth\n\nRequire explicit authorization.\n");
@@ -297,9 +294,9 @@ describe("knowledge maintenance CLI", () => {
       "--title",
       "Workspace Auth",
     ]);
-    const firstPath = join(repo, "docs/knowledge/decisions/D1-workspace-auth.md");
+    const firstId = String(firstResult.decision);
+    const firstPath = join(repo, "docs/knowledge/decisions/workspace-auth.md");
     const firstBytes = readFileSync(firstPath);
-    expect(firstResult).toMatchObject({ decision: "D1" });
 
     write("forge.yml", "loopsPath: .forge/loops\n");
     ok(["init", "review", "--title", "Review loop"]);
@@ -321,58 +318,61 @@ describe("knowledge maintenance CLI", () => {
       "--title",
       "Workspace Auth Replacement",
       "--supersedes",
-      "D1",
+      firstId,
     ]);
-
+    const secondId = String(secondResult.decision);
+    expect(secondId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+    expect(secondId).not.toBe(firstId);
+    const secondPath = "docs/knowledge/decisions/workspace-auth-replacement.md";
     expect(secondResult).toMatchObject({
-      decision: "D2",
+      loop_code: "D1",
       canonical_decision: {
-        path: "docs/knowledge/decisions/D2-workspace-auth-replacement.md",
+        path: secondPath,
         title: "Workspace Auth Replacement",
         accepted_on: "2001-10-10",
-        supersedes: "D1",
+        supersedes: firstId,
       },
       index: "docs/knowledge/decisions/index.md",
       loop_reference: ".forge/loops/review/decisions.md",
-      history: ".forge/memory/decision-D2.json",
+      history: `.forge/memory/decision-${secondId}.json`,
     });
     expect(readFileSync(firstPath)).toEqual(firstBytes);
-    const secondPath = "docs/knowledge/decisions/D2-workspace-auth-replacement.md";
     const index = read("docs/knowledge/decisions/index.md");
-    expect(index.indexOf("D1")).toBeGreaterThanOrEqual(0);
-    expect(index.indexOf("D2")).toBeGreaterThan(index.indexOf("D1"));
-    const d2Entry = index.slice(index.indexOf("D2"), index.indexOf("D2") + 240);
-    expect(d2Entry).toContain("D1");
-    expect(d2Entry).toContain("D2-workspace-auth-replacement.md");
+    expect(index.indexOf("workspace-auth.md")).toBeGreaterThanOrEqual(0);
+    expect(index.indexOf("workspace-auth-replacement.md")).toBeGreaterThan(index.indexOf("workspace-auth.md"));
+    expect(index).toContain(`supersedes ${firstId}`);
 
     const loopAfter = readFileSync(loopPath, "utf8");
     expect(loopAfter).toContain("LEGACY-ENTRY");
     expect(loopAfter).toContain("Keep this legacy loop decision readable.");
-    expect(loopAfter).toContain("docs/knowledge/decisions");
-    expect(loopAfter).toContain("D2-workspace-auth-replacement.md");
-    expect(loopAfter.indexOf("LEGACY-ENTRY")).toBeLessThan(loopAfter.indexOf("D2-workspace-auth-replacement.md"));
+    expect(loopAfter).toContain("## D1 — 2001-10-10");
+    expect(loopAfter).toContain(`Decision id: ${secondId}`);
+    expect(loopAfter).toContain("workspace-auth-replacement.md");
+    expect(loopAfter.indexOf("LEGACY-ENTRY")).toBeLessThan(loopAfter.indexOf("workspace-auth-replacement.md"));
     expect(ok(["docs", "validate", ".forge/loops/review/decisions.md"])).toMatchObject({
       checked: [".forge/loops/review/decisions.md"],
     });
 
     const beforeRejectedSupersession = snapshot(repo);
-    expect(
-      failed([
-        "decision",
-        "record",
-        ".forge/loops/review/decisions.md",
-        "--authorization-file",
-        secondAuthority.path,
-        "--body-file",
-        secondBody,
-        "--title",
-        "Invalid Replacement",
-        "--supersedes",
-        "D99",
-      ]),
-    ).toMatch(/supersed|absent|unknown/i);
+    for (const unknown of ["D99", randomUUID()]) {
+      expect(
+        failed([
+          "decision",
+          "record",
+          ".forge/loops/review/decisions.md",
+          "--authorization-file",
+          secondAuthority.path,
+          "--body-file",
+          secondBody,
+          "--title",
+          "Invalid Replacement",
+          "--supersedes",
+          unknown,
+        ]),
+      ).toMatch(/supersed|absent|unknown/i);
+    }
     expect(snapshot(repo)).toEqual(beforeRejectedSupersession);
-    expect(existsSync(join(repo, "docs/knowledge/decisions/D3-invalid-replacement.md"))).toBeFalse();
+    expect(existsSync(join(repo, "docs/knowledge/decisions/invalid-replacement.md"))).toBeFalse();
     expect(existsSync(join(repo, secondPath))).toBeTrue();
     expect(loopAfter).toContain(loopBefore.trimEnd());
 
@@ -391,97 +391,35 @@ describe("knowledge maintenance CLI", () => {
       "LEGACY-ENTRY",
     ]);
     expect(legacyResult).toMatchObject({
-      decision: "D3",
+      loop_code: "D2",
       canonical_decision: { supersedes: "LEGACY-ENTRY" },
     });
     expect(read("docs/knowledge/decisions/index.md")).toContain("supersedes LEGACY-ENTRY");
   });
 
-  test("allocates decision codes monotonically across receipts, current registry entries, and files", () => {
+  test("decision paths come from titles, legacy D-number decisions stay supersedable, and identities.json is ignored", () => {
     repo = mkdtempSync(join(tmpdir(), "forge-knowledge-allocation-"));
-    const firstAuthority = authorization("2001-09-09", "allocated-first");
-    const firstBody = write("first.md", "# Allocated first\n\nFirst decision.\n");
-    ok([
-      "decision",
-      "record",
-      "--authorization-file",
-      firstAuthority.path,
-      "--body-file",
-      firstBody,
-      "--title",
-      "Allocated First",
-    ]);
-
-    const firstRelative = "docs/knowledge/decisions/D1-allocated-first.md";
-    unlinkSync(join(repo, firstRelative));
-    const registry = readJson(".forge/identities.json");
-    delete registry[firstRelative];
-    registry[".forge/occupied.md"] = {
-      id: randomUUID(),
-      code: "D3",
-      type: "okf-concept",
-    };
-    writeJson(".forge/identities.json", registry);
-    const indexWithoutD1 = read("docs/knowledge/decisions/index.md")
-      .split("\n")
-      .filter((line) => !line.includes("D1"))
-      .join("\n");
-    write("docs/knowledge/decisions/index.md", indexWithoutD1);
+    write(".forge/identities.json", "deliberately invalid legacy registry");
     write(
       "docs/knowledge/decisions/D4-existing.md",
-      "---\ntype: Decision\ncode: D4\ntitle: Existing\nstatus: stable\n---\n# Existing\n",
+      "---\ntype: Decision\ntitle: Existing\nstatus: stable\ndecision:\n  code: D4\n---\n# Existing\n",
     );
+    const firstAuthority = authorization("2001-09-09", "same-first");
+    const firstBody = write("first.md", "# Same title\n\nFirst decision.\n");
+    const first = ok(["decision", "record", "--authorization-file", firstAuthority.path, "--body-file", firstBody, "--title", "Same Title", "--supersedes", "D4"]);
+    expect(first.canonical_decision).toMatchObject({ path: "docs/knowledge/decisions/same-title.md", supersedes: "D4" });
 
-    const secondAuthority = authorization("2001-10-10", "allocated-fifth");
-    const secondBody = write("second.md", "# Allocated fifth\n\nFifth decision.\n");
-    const conflictingPath = "docs/knowledge/decisions/D3-conflict.md";
-    write(conflictingPath, "---\ntype: Decision\ntitle: Conflict\nstatus: stable\n---\n# Conflict\n");
-    const beforeConflict = snapshot(repo);
-    expect(
-      failed([
-        "decision",
-        "record",
-        "--authorization-file",
-        secondAuthority.path,
-        "--body-file",
-        secondBody,
-        "--title",
-        "Conflict",
-      ]),
-    ).toMatch(/duplicate decision code D3/i);
-    expect(withoutMutationLock(snapshot(repo))).toEqual(withoutMutationLock(beforeConflict));
-    unlinkSync(join(repo, conflictingPath));
-    ok([
-      "decision",
-      "record",
-      "--authorization-file",
-      secondAuthority.path,
-      "--body-file",
-      secondBody,
-      "--title",
-      "Allocated Fifth",
-    ]);
-    expect(existsSync(join(repo, "docs/knowledge/decisions/D5-allocated-fifth.md"))).toBeTrue();
-
-    const thirdAuthority = authorization("2001-11-11", "allocated-sixth");
-    const thirdBody = write("third.md", "# Allocated sixth\n\nSixth decision.\n");
-    ok([
-      "decision",
-      "record",
-      "--authorization-file",
-      thirdAuthority.path,
-      "--body-file",
-      thirdBody,
-      "--title",
-      "Allocated Sixth",
-    ]);
-    expect(existsSync(join(repo, "docs/knowledge/decisions/D6-allocated-sixth.md"))).toBeTrue();
-    expect(existsSync(join(repo, "docs/knowledge/decisions/D1-allocated-first.md"))).toBeFalse();
-    expect(existsSync(join(repo, "docs/knowledge/decisions/D3-allocated-third.md"))).toBeFalse();
-    expect(existsSync(join(repo, "docs/knowledge/decisions/D4-allocated-fourth.md"))).toBeFalse();
+    const secondAuthority = authorization("2001-10-10", "same-second");
+    const secondBody = write("second.md", "# Same title\n\nSecond decision.\n");
+    const second = ok(["decision", "record", "--authorization-file", secondAuthority.path, "--body-file", secondBody, "--title", "Same Title"]);
+    const secondId = String(second.decision);
+    expect(second.canonical_decision).toMatchObject({ path: `docs/knowledge/decisions/same-title-${secondId.slice(0, 8)}.md` });
+    expect(frontmatter(read(`docs/knowledge/decisions/same-title-${secondId.slice(0, 8)}.md`)).id).toBe(secondId);
+    expect(read(".forge/identities.json")).toBe("deliberately invalid legacy registry");
+    expect(ok(["kb", "verify", "--scope", "kb-decision"]).valid).toBeTrue();
   });
 
-  test("serializes concurrent standalone records as unique ordered D codes", async () => {
+  test("serializes concurrent standalone records as unique UUID decisions", async () => {
     repo = mkdtempSync(join(tmpdir(), "forge-knowledge-concurrent-"));
     const authority = authorization("2001-09-09", "concurrent");
     const requests = Array.from({ length: 8 }, (_, index) => {
@@ -506,26 +444,21 @@ describe("knowledge maintenance CLI", () => {
 
     const index = read("docs/knowledge/decisions/index.md");
     const decisionNames = readdirSync(join(repo, "docs/knowledge/decisions"))
-      .filter((name) => /^D[1-8]-concurrent-decision-\d+\.md$/.test(name));
+      .filter((name) => /^concurrent-decision-\d+\.md$/.test(name));
     expect(decisionNames).toHaveLength(requests.length);
-    const codes = decisionNames
-      .map((name) => Number(name.match(/^D(\d+)-/)?.[1]))
-      .sort((left, right) => left - right);
-    expect(codes).toEqual(Array.from({ length: requests.length }, (_, index) => index + 1));
     for (const name of decisionNames) expect(index).toContain(name);
-    const identities = Object.values(readJson(".forge/identities.json")) as Array<Record<string, unknown>>;
-    const identityCodes = identities
-      .map((identity) => identity.code)
-      .filter((code): code is string => typeof code === "string");
-    expect(identityCodes.filter((code) => /^D[1-8]$/.test(code))).toHaveLength(requests.length);
-    expect(new Set(identityCodes).size).toBe(identityCodes.length);
+    const ids = decisionNames.map((name) => String(frontmatter(read(`docs/knowledge/decisions/${name}`)).id));
+    for (const id of ids) expect(id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+    expect(new Set(ids).size).toBe(requests.length);
+    expect(new Set(results.map((result) => JSON.parse(result.stdout).decision))).toEqual(new Set(ids));
+    expect(existsSync(join(repo, ".forge/identities.json"))).toBeFalse();
   });
 
   test("history derives successful decision, Spec, and KB receipts without mutating or claiming deployment", () => {
     repo = mkdtempSync(join(tmpdir(), "forge-knowledge-history-"));
     const authority = authorization("2001-09-09");
     const decisionBody = write("decision.md", "# History decision\n\nKeep the decision discoverable.\n");
-    ok([
+    const decisionId = String(ok([
       "decision",
       "record",
       "--authorization-file",
@@ -534,7 +467,7 @@ describe("knowledge maintenance CLI", () => {
       decisionBody,
       "--title",
       "History Decision",
-    ]);
+    ]).decision);
 
     const evidence = write("evidence.txt", "Acceptance evidence for the integrated knowledge update.\n");
     const acceptance = write("acceptance.txt", "Clean acceptance record for the integrated knowledge update.\n");
@@ -601,7 +534,7 @@ describe("knowledge maintenance CLI", () => {
     const entries = history.entries as unknown[];
     expect(entries.length).toBeGreaterThanOrEqual(3);
     const entryText = entries.map((entry) => JSON.stringify(entry)).join("\n");
-    expect(entryText).toContain("D1-history-decision.md");
+    expect(entryText).toContain("history-decision.md");
     expect(entryText).toContain("OP-spec-document-only");
     expect(entryText).toContain("docs/specs/tasks/SPEC.md");
     expect(entryText).toContain("OP-kb-integrated");
@@ -625,7 +558,7 @@ describe("knowledge maintenance CLI", () => {
       "evidenced-system-delivery",
       "knowledge-maintenance",
     ]);
-    expect((byOperation["decision-D1"]?.categories as string[])).toContain("decision-maintenance");
+    expect((byOperation[`decision-${decisionId}`]?.categories as string[])).toContain("decision-maintenance");
     const claim = String(history.claim ?? "").toLowerCase();
     expect(claim).toMatch(/deploy/);
     expect(claim).not.toMatch(/\b(deployed|published)\b/);

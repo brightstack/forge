@@ -10,7 +10,7 @@ Engineer, Reviewer, QA, Researcher. Never first names.
 | Role | Primary judgment |
 | --- | --- |
 | [Product Manager](product-manager/instructions.md) | User outcome, scope, Product artifacts, and plain observable Issue acceptance |
-| [Designer](designer/instructions.md) | Complete journeys, actual visual intent, identified design revisions, material states, accessibility, and responsiveness |
+| [Designer](designer/instructions.md) | The journeys the request needs, actual visual intent, identified design revisions, material states, accessibility, and responsiveness |
 | [Architect](architect/instructions.md) | Earned technical authority: load-bearing contracts, ownership, data, trust, migration, and operability |
 | [Engineer](engineer/instructions.md) | Planning tactics, Build, integration, simplification, root-cause repair, and end-to-end technical proof |
 | [Reviewer](reviewer/instructions.md) | Independent engineering Review of one exact integrated candidate and its evidence |
@@ -35,13 +35,13 @@ The persona supplies professional priorities and ways of thinking. The selected
 skill supplies workflow, templates, staffing, stopping conditions, and verdict
 formats. Load the relevant phase procedure with the professional rather than
 asking the persona to reproduce it. Phases and helpers use shared
-[authority](../skills/forge-shared/references/authority.md) and
-[target harness resolution](../skills/forge-shared/references/target-harness.md).
-Load [pragmatism](../skills/forge-shared/references/pragmatism.md) for mechanism
-choices, [severity](../skills/forge-shared/references/severity.md) for findings,
-[repair](../skills/forge-shared/references/repair.md) when correction is needed, and
-[evidence and returns](../skills/forge-shared/references/returns.md) for handoffs.
-The [workflow guide](../skills/forge-shared/references/workflows.md) owns Launch,
+[authority](../references/authority.md) and
+[target harness resolution](../references/target-harness.md).
+Load [pragmatism](../references/pragmatism.md) for mechanism
+choices, [severity](../references/severity.md) for findings,
+[repair](../references/repair.md) when correction is needed, and
+[evidence and returns](../references/returns.md) for handoffs.
+The [workflow guide](../references/workflows.md) owns Launch,
 gates, and concrete staffing.
 
 | Work | Procedure |
@@ -55,7 +55,7 @@ gates, and concrete staffing.
 | Explicit standalone code-only judgment | [Code Review](../skills/forge-code-review/SKILL.md) |
 
 For visual work, use the shared
-[design direction and craft guidance](../skills/forge-shared/references/design-direction.md)
+[design direction and craft guidance](../references/design-direction.md)
 unless the target selects a replacement. The Spec-owned
 [design study guidance](../skills/forge-spec/references/design-studies.md) supplies
 the study procedure and companion asset. For research, knowledge maintenance,

@@ -12,7 +12,7 @@ import {
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { spawnSync } from 'node:child_process'
-import { KINDS, read_document } from '../src/records.ts'
+import { KINDS, read_document, validate_document_content } from '../src/records.ts'
 import { TEMPLATES } from '../src/templates.ts'
 
 const APP = join(import.meta.dir, '..')
@@ -182,12 +182,11 @@ describe('document CLI', () => {
       expect(readFileSync(path)).toEqual(bytes)
       writeFileSync(path, before)
     }
-    const registry = join(repo, '.forge/identities.json')
+    const legacyRegistry = join(repo, '.forge/identities.json')
     const invalidRegistry = Buffer.from('{"other.md":{"id":"11111111-1111-4111-8111-111111111111","code":"Jos\xe9","type":"issue"}}', 'latin1')
-    writeFileSync(registry, invalidRegistry)
-    cli(['docs', 'create', 'issue', 'new.md', '--title', 'New'], { success: false })
-    expect(readFileSync(registry)).toEqual(invalidRegistry)
-    expect(existsSync(join(repo, 'new.md'))).toBe(false)
+    writeFileSync(legacyRegistry, invalidRegistry)
+    cli(['docs', 'create', 'issue', 'new.md', '--title', 'New'])
+    expect(readFileSync(legacyRegistry)).toEqual(invalidRegistry)
   })
 
   test('valid UTF-8 body bytes including a leading BOM are preserved', () => {
@@ -242,19 +241,22 @@ describe('document CLI', () => {
 
   test('identity edits and duplicate codes are rejected', () => {
     setup()
-    const first = create('issue', 'task.md', 'ISSUE-ONE')
+    cli(['init', 'demo', '--title', 'Demo'])
+    create('issue', '.forge/loops/demo/task.md', 'ISSUE-ONE')
     expect(
-      cli(['docs', 'create', 'issue', 'other.md', '--title', 'Other', '--code', 'ISSUE-ONE'], {
+      cli(['docs', 'create', 'issue', '.forge/loops/demo/other.md', '--title', 'Other', '--code', 'ISSUE-ONE'], {
         success: false,
       }),
     ).toContain('duplicate')
-    expect(existsSync(join(repo, 'other.md'))).toBeFalse()
-    expect(cli(['docs', 'update', 'task.md', '--set', 'id=abc'], { success: false })).toContain(
+    expect(existsSync(join(repo, '.forge/loops/demo/other.md'))).toBeFalse()
+    expect(cli(['docs', 'update', '.forge/loops/demo/task.md', '--set', 'id=abc'], { success: false })).toContain(
       'immutable',
     )
-    const path = join(repo, 'task.md')
-    writeFileSync(path, readFileSync(path, 'utf8').replace(first.code as string, 'ISSUE-CHANGED'))
-    expect(cli(['docs', 'validate'], { success: false })).toContain('immutable')
+    const spec = write('docs/specs/tasks/SPEC.md', `---\nid: 11111111-1111-4111-8111-111111111111\ncode: SPEC-TASKS\ntype: standing-spec\ntitle: Tasks\nstatus: accepted\ncreatedAt: 2026-09-09\nupdatedAt: 2026-09-09\n---\n# Tasks\n\n## Scenario: Kept\n\n- GIVEN a task\n- WHEN it is saved\n- THEN it stays\n`)
+    expect(cli(['docs', 'create', 'issue', 'task.md', '--title', 'Task', '--code', 'SPEC-TASKS'], { success: false })).toContain('duplicate id/code with docs/specs/tasks/SPEC.md')
+    cli(['docs', 'validate'])
+    write('docs/specs/copy/SPEC.md', readFileSync(spec, 'utf8'))
+    expect(cli(['docs', 'validate'], { success: false })).toContain('duplicate')
   })
 
   test('frontmatter accepts UUID variants and rejects duplicates and malformed dates', () => {
@@ -273,7 +275,7 @@ describe('document CLI', () => {
     create()
     const path = join(repo, 'task.md')
     writeFileSync(path, readFileSync(path, 'utf8').replace('---\n', '---\ntitle: Duplicate\n'))
-    expect(cli(['docs', 'validate'], { success: false })).toContain('duplicate')
+    expect(cli(['docs', 'validate', 'task.md'], { success: false })).toContain('duplicate')
   })
 
   test('each authored scenario requires GIVEN, WHEN, and THEN', () => {
@@ -296,6 +298,26 @@ describe('document CLI', () => {
       'status=ready',
     ])
     cli(['docs', 'validate', 'change.md'])
+  })
+
+  test('ordinary When prose is not a scenario, but explicit incomplete fields still fail', () => {
+    setup()
+    create('standing-spec', 'standing.md')
+    const template = readFileSync(join(repo, 'standing.md'), 'utf8')
+    const header = template.slice(0, template.lastIndexOf('---') + 4)
+    const complete = '# Behavior\n\n## Scenario A\nGiven a task\nWhen it runs\nThen it completes.\n'
+    expect(() => validate_document_content(header + complete + '\n## Recovery\nWhen a worker dies, it resumes.\n')).not.toThrow()
+    expect(() => validate_document_content(header + complete.replace('Scenario A', 'Task behavior'))).not.toThrow()
+    for (const incomplete of [
+      '## Scenario B\nGiven another task\nWhen it runs\n',
+      '## Task behavior\nGiven another task\nWhen it runs\n',
+      '## Recovery\nWHEN a worker dies\n',
+      '## Recovery\n- When a worker dies\n',
+      '## Recovery\n**When** a worker dies\n',
+      '## Recovery\nWhen: a worker dies\n',
+    ]) {
+      expect(() => validate_document_content(header + complete + '\n' + incomplete)).toThrow('each behavioral scenario')
+    }
   })
 
   test('a draft document is structurally checked once its body is authored', () => {
@@ -452,7 +474,7 @@ describe('document CLI', () => {
         '# Task\n\n## Context\n\n[missing](missing.md)\n\n## Acceptance Criteria\n\n- The broken link is reported.\n',
       ),
     ])
-    cli(['docs', 'validate'], { success: false })
+    cli(['docs', 'validate', 'task.md'], { success: false })
   })
 
   test('log append preserves identity and rejects duplicate headings', () => {

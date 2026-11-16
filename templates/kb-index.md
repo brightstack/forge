@@ -19,7 +19,7 @@ TODO: State the domain or product area this index covers.
 
 ## Canonical Records
 
-- Decisions index: TODO or `None.`; order canonical `D1`, `D2`, and later codes numerically.
+- Decisions index: TODO or `None.`; list canonical decisions in recorded order.
 - Standing Specs and accepted scenarios: TODO or `None.`; link them once instead of copying requirements.
 - Other earned concepts, processes, and interfaces: TODO or `None.`
 

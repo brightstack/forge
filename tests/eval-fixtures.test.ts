@@ -91,7 +91,7 @@ fixtures("Review corpus preserves sensitive seeds, controls, Git baselines, and 
   expect(report.results.filter((result: { variant: string }) => result.variant === "control")
     .every((result: { public: string; standards: string; oracle: string }) => result.public === "PASS" && result.standards === "PASS" && result.oracle === "PASS")).toBe(true);
   expect(report.routing).toBe("NOT RUN");
-});
+}, 30_000); // The validator stages eight Git workspaces and takes ~4s alone, more on a busy machine.
 
 fixtures("Review runtime packages reject evaluator material and symlinks before staging", () => {
   const root = mkdtempSync(join(tmpdir(), "forge-fixture-")), script = join(behavioral, "review-skills-v1/setup.ts");

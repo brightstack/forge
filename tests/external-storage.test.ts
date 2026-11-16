@@ -5,7 +5,7 @@ import { basename, dirname, join, relative } from 'node:path'
 import { former_home_loops_path, resolve_configuration } from '../src/roots.ts'
 import { randomUUID } from 'node:crypto'
 import { spawn, spawnSync } from 'node:child_process'
-import { create_document, init_loop, loops_path, read_document, register_document, resolve_loop, serialize_document } from '../src/records.ts'
+import { create_document, init_loop, loops_path, read_document, resolve_loop, serialize_document } from '../src/records.ts'
 import { _memory_test_hooks, apply_prepared, verify_prepared } from '../src/memory.ts'
 import { candidate_snapshot, validate_documents } from '../src/validation.ts'
 
@@ -104,13 +104,14 @@ test('new default records are ignored narrowly without untracking history or ign
   expect(git('init', '-q').status).toBe(0)
   write(join(repo, '.gitignore'), '# existing\n')
   init_loop(repo, 'local', 'Local')
-  expect(readFileSync(join(repo, '.gitignore'), 'utf8')).toBe('# existing\n/.forge/loops/\n')
+  expect(readFileSync(join(repo, '.gitignore'), 'utf8')).toBe('# existing\n/.forge/loops/\n/.forge/mutation.lock\n')
   expect(git('check-ignore', '-q', '.forge/loops/local/index.md').status).toBe(0)
+  expect(git('status', '--porcelain', '--untracked-files=all', '.forge').stdout).toBe('')
   expect(git('check-ignore', '-q', '.forge/identities.json').status).toBe(1)
   expect(existsSync(join(repo, '.forge/identities.json'))).toBeFalse()
   expect(git('add', '-f', '.forge/loops/local/index.md').status).toBe(0)
   init_loop(repo, 'second', 'Second')
-  expect(readFileSync(join(repo, '.gitignore'), 'utf8').match(/\/\.forge\/loops\//g)).toHaveLength(1)
+  expect(readFileSync(join(repo, '.gitignore'), 'utf8').match(/\/\.forge\/(loops\/|mutation\.lock)\n/g)).toHaveLength(2)
   expect(git('ls-files', '.forge/loops/local/index.md').stdout.trim()).toBe('.forge/loops/local/index.md')
   write(join(repo, '.gitignore'), '.forge/\n')
   init_loop(repo, 'third', 'Third')
@@ -270,14 +271,14 @@ test('decision record reads selected external authority and appends a qualified 
   write(join(loop, 'authority.txt'), 'Keep the accepted task identity.\n')
   write(join(loop, 'authorization.json'), JSON.stringify({ actor: 'human', source: 'authority.txt', quote: 'Keep the accepted task identity.', scope: 'Task identity', date: '2026-10-15' }))
   write(join(loop, 'body.md'), '# Task identity\n\nKeep task identity stable.\n')
-  const result = cli(['decision', 'record', 'decisions.md', '--loop', 'decision', '--authorization-file', 'authorization.json', '--body-file', 'body.md']) as { decision: string }
-  expect(result.decision).toBe('D1')
-  const canonical = readFileSync(join(repo, 'docs/knowledge/decisions/D1-task-identity.md'), 'utf8')
+  const result = cli(['decision', 'record', 'decisions.md', '--loop', 'decision', '--authorization-file', 'authorization.json', '--body-file', 'body.md']) as { decision: string; loop_code: string }
+  expect(result.loop_code).toBe('D1')
+  const canonical = readFileSync(join(repo, 'docs/knowledge/decisions/task-identity.md'), 'utf8')
   expect(canonical).toContain(join(loop, 'authority.txt'))
-  expect(readFileSync(join(loop, 'decisions.md'), 'utf8')).toContain('../../repo/docs/knowledge/decisions/D1-task-identity.md')
+  expect(canonical).toContain(`id: ${result.decision}`)
+  expect(readFileSync(join(loop, 'decisions.md'), 'utf8')).toContain('../../repo/docs/knowledge/decisions/task-identity.md')
   cli(['docs', 'validate', '--loop', 'decision'])
-  const identities = JSON.parse(readFileSync(join(repo, '.forge/identities.json'), 'utf8'))
-  expect(Object.keys(identities).every((path) => path.startsWith('docs/knowledge/'))).toBeTrue()
+  expect(existsSync(join(repo, '.forge/identities.json'))).toBeFalse()
 })
 
 test('external prepared Spec inputs stay bounded while canonical apply, stale checks, receipts and retry target the repository', () => {
@@ -325,7 +326,7 @@ test('external prepared Spec inputs stay bounded while canonical apply, stale ch
   expect(existsSync(join(loop, 'docs/specs/tasks/SPEC.md'))).toBeFalse()
   expect(existsSync(join(repo, '.forge/memory/EXTERNAL-SPEC.json'))).toBeTrue()
   expect(apply_prepared(repo, manifestPath, 'spec').already_applied).toBeTrue()
-  expect(Object.keys(JSON.parse(readFileSync(join(repo, '.forge/identities.json'), 'utf8')))).toEqual(['docs/specs/tasks/SPEC.md'])
+  expect(existsSync(join(repo, '.forge/identities.json'))).toBeFalse()
   write(manifestPath, JSON.stringify({ ...manifest, operation_id: 'EXTERNAL-UPDATE', changes: [{ ...manifest.changes[0], action: 'update', base_sha256: '0'.repeat(64) }] }))
   expect(() => apply_prepared(repo, manifestPath, 'spec')).toThrow('stale base')
   expect(readFileSync(join(repo, 'docs/specs/tasks/SPEC.md'), 'utf8')).toBe(next)
@@ -335,12 +336,11 @@ test('broad or canonical storage configuration cannot bypass canonical identitie
   write(join(repo, 'forge.yml'), 'loopsPath: .\n')
   const content = serialize_document({ id: randomUUID(), code: 'TASKS', type: 'standing-spec', title: 'Tasks', status: 'active', createdAt: '2026-10-15', updatedAt: '2026-10-15' }, '# Tasks\n\nGIVEN a task\nWHEN it is listed\nTHEN it appears.\n')
   const canonical = write(join(repo, 'docs/specs/tasks/SPEC.md'), content)
-  register_document(repo, canonical, content)
-  const registry = readFileSync(join(repo, '.forge/identities.json'))
   expect(() => init_loop(repo, 'docs', 'Unsafe')).toThrow('overlap canonical memory')
-  write(canonical, content.replace('code: "TASKS"', 'code: "CHANGED"'))
-  expect(() => validate_documents(repo, [canonical])).toThrow('immutable identity changed')
-  write(canonical, content)
+  const copy = write(join(repo, 'docs/specs/copy/SPEC.md'), content.replace('code: "TASKS"', 'code: "CHANGED"'))
+  expect(() => validate_documents(repo, [canonical])).toThrow('duplicate id/code with docs/specs/copy/SPEC.md')
+  rmSync(join(repo, 'docs/specs/copy'), { recursive: true })
+  expect(existsSync(copy)).toBeFalse()
   expect(() => create_document(repo, 'product', 'docs/specs/tasks/extra.md', 'Protected')).toThrow('dedicated decision or memory operation')
   write(join(repo, 'forge.yml'), 'loopsPath: docs/specs\n')
   expect(() => init_loop(repo, 'unsafe', 'Unsafe')).toThrow('overlap canonical memory')
@@ -360,7 +360,7 @@ test('broad or canonical storage configuration cannot bypass canonical identitie
   write(join(repo, 'src/main.ts'), 'changed\n')
   expect(candidate_snapshot(repo).candidate).not.toBe(baseline)
   expect(validate_documents(repo).checked).toHaveLength(5)
-  expect(readFileSync(join(repo, '.forge/identities.json'))).toEqual(registry)
+  expect(existsSync(join(repo, '.forge/identities.json'))).toBeFalse()
 })
 
 test('candidate excludes the canonical shared lock when configured through a broad realpath alias', () => {
@@ -404,4 +404,20 @@ test('candidate keeps repository code root and includes only explicitly selected
   const gitMetadata = write(join(loop, '.git/config'), 'metadata\n')
   expect(() => candidate_snapshot(repo, [gitMetadata], 'candidate')).toThrow('cannot select .git metadata')
   expect((cli(['candidate', '--path', 'main.ts', '--path', input, '--loop', 'candidate']) as { paths: string[] }).paths).toEqual(['main.ts', relative(realpathSync(repo), input)])
+})
+
+test('harness.path selects the curated harness root and warns when it is missing', () => {
+  const root = realpathSync(repo)
+  expect(resolve_configuration(repo).harness_path).toBe(root)
+  write(join(repo, 'docs/factory/AGENTS.md'), '# curated\n')
+  write(join(repo, 'forge.yml'), 'harness: {path: docs/factory}\n')
+  const resolved = cli(['config', 'resolve']) as Record<string, unknown>
+  expect(resolved.harness_path).toBe(join(root, 'docs/factory'))
+  expect(resolved.warnings).toEqual([])
+  write(join(repo, 'forge.yml'), 'harness: {path: docs/missing}\n')
+  expect(resolve_configuration(repo).warnings).toEqual([`forge.yml harness.path does not exist: ${join(root, 'docs/missing')}`])
+  for (const config of ['harness: docs', 'harness: {path: ""}', 'harness: {path: 7}']) {
+    write(join(repo, 'forge.yml'), config)
+    expect(() => resolve_configuration(repo)).toThrow('forge.yml harness')
+  }
 })

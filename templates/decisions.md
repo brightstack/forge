@@ -6,6 +6,6 @@ decision command records the source and authorization context. Proposals and
 routine implementation choices belong in the relevant draft or Build log.
 -->
 
-<!-- Preserve prior entries. Canonical decisions use stable Forge identities,
-descriptive filenames, and numeric D-number codes in the KB decisions index.
-Record a correction or supersession as a new entry. -->
+<!-- Preserve prior entries. Entries here use loop-local D1, D2 headings; the
+canonical decision they link is identified by its UUID id and a descriptive
+filename. Record a correction or supersession as a new entry. -->

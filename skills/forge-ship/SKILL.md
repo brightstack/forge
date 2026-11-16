@@ -14,9 +14,13 @@ Reuse accepted Launch/authority on resume. Stop at this phase's boundary; an
 installed machine name is not evidence of native slash-command support.
 </activation>
 <setup>
-Read [authority](../forge-shared/references/authority.md) and
-[target harness resolution](../forge-shared/references/target-harness.md), [Launch and gates](../forge-shared/references/workflows.md),
-and the target repository's applicable root/nested harness. Adopt
+Run `forge context` from where you started, without `--repo` and without changing
+directory, and read every file it lists before anything else. Use the Target it
+prints as `--repo` for later forge commands.
+If `forge` is missing or doesn't know `context`, follow the fallback in
+[target harness resolution](../../references/target-harness.md#resolve-applicable-authority-progressively).
+Then read [authority](../../references/authority.md),
+[target harness resolution](../../references/target-harness.md), and [Launch and gates](../../references/workflows.md). Adopt
 [Engineer](../../agents/engineer/instructions.md) as primary professional guidance.
 Engineer or the continuing responsible owner checks current complete-candidate evidence and authorized closure; no mandatory new Ship agent.
 </setup>
@@ -28,10 +32,10 @@ material unresolved choices. Show or reuse Launch before dispatch or edits.
 </step>
 <step n="2" name="Perform the phase">
 Follow the [owning procedure](references/ship.md), loading only applicable
-support and professionals. Run [Finish](../forge-shared/references/finish.md) when actual completion has approved unapplied meaning or owned processes to reconcile; preserve existing PR authority.
+support and professionals. Run [Finish](../../references/finish.md) when actual completion has approved unapplied meaning or owned processes to reconcile; preserve existing PR authority.
 </step>
 <step n="3" name="Inspect and return">
-Use the [shared return contract](../forge-shared/references/returns.md). The
+Use the [shared return contract](../../references/returns.md). The
 accountable owner opens the actual result and relevant new log entries before
 advancement, checking the selected template/rubric, candidate, actual evidence,
 and gaps. Correct incomplete handoffs; do not promote self-reports into proof.

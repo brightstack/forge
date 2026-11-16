@@ -10,7 +10,7 @@ Start with [Launch and workflow selection](workflows.md). Quick/Full depth gover
 preparation and staffing; Guided/Auto governs pauses within explicit authority.
 Launch is an opening step, not another phase. Build/Review first converges on a
 working reviewed candidate. A separate Engineer then simplifies it before QA;
-`verify` selects [Forge Verify](../../forge-verify/SKILL.md).
+`verify` selects [Forge Verify](../skills/forge-verify/SKILL.md).
 
 | Entry | Result and stopping boundary |
 | --- | --- |
@@ -31,7 +31,7 @@ before Simplify unless that operation is also authorized, without inventing broa
 acceptance. Direct Simplify honors its bounded request without a pre-edit Review
 PASS gate, records actual prior evidence or its absence, and stops before QA.
 Changed results need affected proof and independent Review bound to the whole
-result under its [owning procedure](../../forge-simplify/references/simplify.md).
+result under its [owning procedure](../skills/forge-simplify/references/simplify.md).
 An Verify failure returns to Build/Review, proportionate authorized Simplify
 reassessment, then affected Verify. Reuse unaffected evidence with its basis;
 no automatic complete restart is required. A human-owned semantic decision returns

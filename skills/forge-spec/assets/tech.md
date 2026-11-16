@@ -1,6 +1,7 @@
 # Technical end state
 
-<!-- Keep only load-bearing choices that independent work must share. -->
+<!-- Keep only load-bearing choices that independent work must share. Fill a section
+     only when the request needs it; delete it or write `None.` otherwise. -->
 
 ## Summary
 
@@ -28,11 +29,12 @@ the existing owner or simpler route cannot meet any proposed new mechanism's nee
 
 ## Data, Trust, and Lifecycle
 
-- TODO: Material invariant, authorization boundary, migration, recovery, or operating constraint
+- TODO, only when the request needs it: an invariant, authorization boundary,
+  migration, recovery, or operating constraint the asked outcome depends on; otherwise `None.`
 
 ## Technical Proof
 
-- TODO: Contract, integration, migration, failure, or NFR evidence that can falsify the design
+- TODO: Evidence that can falsify the design for what the request needs
 
 ## Builder Latitude
 

@@ -27,7 +27,7 @@ For work in progress, report `Done`, `Evidence`, `Gaps`, and `Next`. Omit
 empty sections, unchanged status, prompt transcripts, token counts, raw agent
 rosters, and speculative follow-on work.
 
-For Launch, read and fill the [shared chat template](../assets/launch.md) under the
+For Launch, read and fill the [shared chat template](../templates/launch.md) under the
 [Launch procedure](workflows.md#launch). Use its outcome line, compact table, and
 actual next ask or authorized proceed action; reuse accepted Launches without
 another ceremony. This is the single Launch presentation template, not a new

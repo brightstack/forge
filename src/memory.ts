@@ -20,8 +20,8 @@ import { ForgeError } from "./errors.ts";
 import { withMutationLock } from "./lock.ts";
 import {
   IDENTITY_FIELDS,
-  _registry,
   _write_atomic,
+  assert_unique_identity,
   authorization_context,
   check_identity,
   contained_path,
@@ -29,13 +29,11 @@ import {
   with_document_lock,
   input_path,
   isIsoDateTime,
+  isUuid,
   parse_document,
   read_utf8,
-  register_document,
-  set_registered_identity,
-  transfer_identity,
-  unregister_identity,
   validate_document_content,
+  type Identity,
   type Metadata,
 } from "./records.ts";
 import { inspect_okf_document, okf_local_links, serialize_okf_concept, validate_okf_document, type OkfDocument } from "./okf.ts";
@@ -79,7 +77,6 @@ const RETAINED_INPUT_ROLES = new Set(["accepted-baseline", "approved-change", "c
 
 type Action = "add" | "update" | "remove" | "move";
 type JsonObject = Record<string, unknown>;
-type Identity = Record<"id" | "code" | "type", string>;
 
 interface SourceSnapshot {
   role?: string;
@@ -103,8 +100,6 @@ interface PreparedChange {
   proposed_sha256: string | null;
   proposed_metadata: Metadata | null;
   forge_identity: Identity | null;
-  identity_origin: "registered" | "registered-draft" | "document" | "assigned-on-apply" | "unregistered";
-  identity_transfer: boolean;
   removed_content: string | null;
   previous_content: string | null;
   metadata_changes: string[];
@@ -141,17 +136,11 @@ interface FileState {
   mode: number | null;
 }
 
-type RegistryValue = Identity | undefined;
-type RegistryJournal = Array<{
-  target: string;
-  entries: Record<string, { before: RegistryValue; after: Identity | null }>;
-}>;
-
 // Narrow failure/interleaving seam for ownership-aware rollback regressions.
 export const _memory_test_hooks: {
   check_current_state?: (changes: PreparedChange[]) => void;
   check_one_current_state?: (change: PreparedChange) => void;
-  register_document?: typeof register_document;
+  after_install?: (change: PreparedChange) => void;
 } = {};
 
 export function verify_prepared(repo: string, manifest: string, loop?: string): JsonObject {
@@ -183,8 +172,10 @@ export function record_kb_decision(
       throw new ForgeError("decision body must be nonempty Markdown without frontmatter");
     }
     const title = decisionTitle(options.title, body);
-    const code = `D${nextDecisionNumber(root)}`;
-    const relativeTarget = `docs/knowledge/decisions/${code}-${decisionSlug(title)}.md`;
+    // The UUID is the decision's identity; readable D-numbers exist only inside a loop's decisions.md.
+    const id = randomUUID();
+    let relativeTarget = `docs/knowledge/decisions/${decisionSlug(title)}.md`;
+    if (existsSync(contained_path(root, relativeTarget))) relativeTarget = relativeTarget.replace(/\.md$/, `-${id.slice(0, 8)}.md`);
     const target = contained_path(root, relativeTarget);
     if (existsSync(target)) throw new ForgeError(`decision target already exists: ${relativeTarget}`);
     const createdAt = new Date().toISOString().replace("Z", "+00:00");
@@ -194,19 +185,19 @@ export function record_kb_decision(
       : mustString(context.source);
     const supersedes = options.supersedes;
     const loop = loopPath
-      ? prepareLoopDecisionReference(root, loopPath, code, title, relativeTarget, context, supersedes, options.loop)
+      ? prepareLoopDecisionReference(root, loopPath, id, title, relativeTarget, context, supersedes, options.loop)
       : null;
     if (supersedes) assertSupersededDecision(root, supersedes, loop?.old);
 
     const decisionContent = serialize_okf_concept(
       {
+        id,
         type: "Decision",
         title,
         status: "stable",
         sources: [{ resource: source, note: "Human authorization source" }],
         verified: { by: "human:authorization" },
         decision: {
-          code,
           created_at: createdAt,
           accepted_on: acceptedOn,
           scope: mustString(context.scope),
@@ -214,7 +205,7 @@ export function record_kb_decision(
           ...(supersedes ? { supersedes } : {}),
         },
       },
-      `# ${code} — ${title}\n\n## Decision\n\n${body}\n\n## Human authority\n\n- Accepted: ${acceptedOn}\n- Source: ${source}\n- Authorization quote: ${JSON.stringify(context.quote)}\n- Scope: ${context.scope}\n${supersedes ? `- Supersedes: ${supersedes}\n` : ""}`,
+      `# ${title}\n\n## Decision\n\n${body}\n\n## Human authority\n\n- Accepted: ${acceptedOn}\n- Source: ${source}\n- Authorization quote: ${JSON.stringify(context.quote)}\n- Scope: ${context.scope}\n${supersedes ? `- Supersedes: ${supersedes}\n` : ""}`,
     );
     validate_okf_document(relativeTarget, decisionContent);
 
@@ -222,22 +213,21 @@ export function record_kb_decision(
     const indexTarget = contained_path(root, indexRelative);
     const indexBefore = existsSync(indexTarget) ? readManaged(root, indexTarget) : null;
     if (indexBefore !== null) validate_okf_document(indexRelative, indexBefore);
-    const indexLine = `* [${code} — ${title}](${basename(relativeTarget)}) — accepted ${acceptedOn}${supersedes ? `; supersedes ${supersedes}` : ""}.`;
+    const indexLine = `* [${title}](${basename(relativeTarget)}) — accepted ${acceptedOn}${supersedes ? `; supersedes ${supersedes}` : ""}.`;
     const indexContent = indexBefore === null
-      ? `# Decisions\n\nAccepted human decisions in numeric order.\n\n${indexLine}\n`
+      ? `# Decisions\n\nAccepted human decisions in recorded order.\n\n${indexLine}\n`
       : `${indexBefore.trimEnd()}\n\n${indexLine}\n`;
     validate_okf_document(indexRelative, indexContent);
 
-    const temporaryId = randomUUID();
     const preparedRoot = contained_path(root, ".forge/prepared");
     mkdirSync(preparedRoot, { recursive: true });
-    const decisionDraft = join(preparedRoot, `.decision-${code}-${temporaryId}.md`);
-    const indexDraft = join(preparedRoot, `.decision-index-${temporaryId}.md`);
-    const manifestPath = join(preparedRoot, `.decision-${code}-${temporaryId}.json`);
-    const identity: Identity = { id: randomUUID(), code, type: "okf-concept" };
+    const decisionDraft = join(preparedRoot, `.decision-${id}.md`);
+    const indexDraft = join(preparedRoot, `.decision-index-${id}.md`);
+    const manifestPath = join(preparedRoot, `.decision-${id}.json`);
+    const identity: Identity = { id, type: "okf-concept" };
     const manifest = {
       version: 1,
-      operation_id: `decision-${code}`,
+      operation_id: `decision-${id}`,
       authorization_file: input_path(root, authorizationFile, options.loop),
       proof: {
         status: "document-only",
@@ -270,7 +260,6 @@ export function record_kb_decision(
       _write_atomic(decisionDraft, decisionContent);
       _write_atomic(indexDraft, indexContent);
       _write_atomic(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
-      set_registered_identity(root, decisionDraft, identity);
       if (loop) {
         _write_atomic(loop.target, loop.next);
         loopWritten = true;
@@ -278,7 +267,8 @@ export function record_kb_decision(
       const result = applyOwned(root, manifestPath, { loop: options.loop });
       return {
         ...result,
-        decision: code,
+        decision: id,
+        ...(loop ? { loop_code: loop.code } : {}),
         canonical_decision: { path: relativeTarget, title, forge_identity: identity, accepted_on: acceptedOn, supersedes: supersedes ?? null },
         index: indexRelative,
         loop_reference: loop ? repoRelative(root, loop.target) : null,
@@ -293,7 +283,6 @@ export function record_kb_decision(
       }
       throw error;
     } finally {
-      if (_registry(root)[repoRelative(root, decisionDraft)]) set_registered_identity(root, decisionDraft, null);
       for (const path of [decisionDraft, indexDraft, manifestPath]) {
         try {
           unlinkSync(path);
@@ -353,67 +342,6 @@ function readHistoricalReceipts(root: string): {
   return { valid, issues };
 }
 
-interface ReceiptPathProvenance {
-  receipt: string;
-  operation_id: string;
-  applied_at: string;
-  application: string;
-  proof_status: unknown;
-  recorded_sha256: string | null;
-}
-
-function receiptProvenance(root: string): {
-  byPath: Map<string, ReceiptPathProvenance>;
-  issues: Array<{ path: string; message: string }>;
-} {
-  const byPath = new Map<string, ReceiptPathProvenance>();
-  let receipts: ReturnType<typeof readHistoricalReceipts>;
-  try {
-    receipts = readHistoricalReceipts(root);
-  } catch (error) {
-    return { byPath, issues: [{ path: ".forge/memory", message: errorMessage(error) }] };
-  }
-  for (const { path: receiptPath, receipt } of receipts.valid) {
-    const record = (documentPath: string, recordedSha256: string | null): void => {
-      const next: ReceiptPathProvenance = {
-        receipt: receiptPath,
-        operation_id: receipt.operation_id,
-        applied_at: receipt.applied_at,
-        application: typeof receipt.raw.application === "string" ? receipt.raw.application : "memory",
-        proof_status: receipt.proof.status,
-        recorded_sha256: recordedSha256,
-      };
-      const previous = byPath.get(documentPath);
-      if (!previous || `${previous.applied_at}\0${previous.operation_id}` < `${next.applied_at}\0${next.operation_id}`) {
-        byPath.set(documentPath, next);
-      }
-    };
-
-    for (const change of receipt.changes) {
-      if (typeof change.path !== "string") continue;
-      if (change.action === "remove") record(change.path, null);
-      else if (typeof change.proposed_sha256 === "string") record(change.path, change.proposed_sha256);
-      if (change.action === "move" && typeof change.from_path === "string") record(change.from_path, null);
-    }
-  }
-  return { byPath, issues: receipts.issues };
-}
-
-function currentProvenance(path: string, content: string, provenance?: ReceiptPathProvenance): JsonObject | null {
-  if (!provenance) return null;
-  const current = digest(content);
-  return {
-    receipt: provenance.receipt,
-    operation_id: provenance.operation_id,
-    application: provenance.application,
-    proof_status: provenance.proof_status,
-    match: provenance.recorded_sha256 !== null && current === provenance.recorded_sha256 ? "matching" : "diverged",
-    recorded_sha256: provenance.recorded_sha256,
-    current_sha256: current,
-    claim: "receipt provenance only; proof status does not establish authority, implementation, acceptance, or current delivery truth",
-  };
-}
-
 export function scaffold_okf(
   repo: string,
   path: string,
@@ -442,13 +370,8 @@ export function scaffold_okf(
       body,
     );
     validate_okf_document("docs/knowledge/scaffold.md", content);
-    set_registered_identity(root, target, forgeIdentity);
-    try {
-      _write_atomic(target, content);
-    } catch (error) {
-      set_registered_identity(root, target, null);
-      throw error;
-    }
+    assert_unique_identity(root, target, forgeIdentity);
+    _write_atomic(target, content);
     return {
       path: relativePath,
       forge_identity: forgeIdentity,
@@ -456,89 +379,6 @@ export function scaffold_okf(
       claim: "prepared OKF concept only; canonical memory is unchanged until an authorized manifest is applied",
     };
   });
-}
-
-export function ask(repo: string, query: string, scopes?: string[]): JsonObject {
-  const root = realRepo(repo);
-  const selected = selectScopes(scopes, true);
-  if (typeof query !== "string" || !query.trim()) {
-    throw new ForgeError("KB ask requires a non-empty query");
-  }
-  const terms = [...new Set([...query.matchAll(/[A-Za-z0-9][A-Za-z0-9_-]*/g)].map((match) => match[0].toLowerCase()))];
-  if (!terms.length) throw new ForgeError("KB ask requires searchable letters or numbers");
-
-  const references: Array<{
-    path: string;
-    okf_id: string | null;
-    forge_identity: Identity | null;
-    kind: string;
-    format: "forge" | "forge-legacy" | "okf-0.2";
-    title: unknown;
-    matched_terms: string[];
-    excerpt: string;
-    observation: "working-copy";
-    authority: "not-inferred";
-    implementation: "not-inferred";
-    provenance: JsonObject | null;
-  }> = [];
-  const unreadable: Array<{ path: string; error: string }> = [];
-  const provenance = receiptProvenance(root);
-  const corpus = managedDocuments(root, selected);
-  for (const [kind, path] of corpus) {
-    try {
-      const relativePath = repoRelative(root, path);
-      const content = readManaged(root, path);
-      const registered = _registry(root)[relativePath];
-      const parsed = readCanonical(kind, relativePath, content, registered);
-      const metadata = parsed.metadata;
-      const body = parsed.body;
-      const searchable = `${relativePath}\n${String(metadata.title ?? "")}\n${body}`.toLowerCase();
-      const matched = terms.filter((term) => searchable.includes(term));
-      if (!matched.length) continue;
-      references.push({
-        path: relativePath,
-        okf_id: kind === "standing-spec" ? null : okfConceptId(relativePath),
-        forge_identity: registered ?? null,
-        kind,
-        format: parsed.legacy ? "forge-legacy" : kind === "standing-spec" ? "forge" : "okf-0.2",
-        title: parsed.title ?? metadata.title ?? basename(path, extname(path)),
-        matched_terms: matched,
-        excerpt: excerpt(body, matched),
-        observation: "working-copy",
-        authority: "not-inferred",
-        implementation: "not-inferred",
-        provenance: currentProvenance(relativePath, content, provenance.byPath.get(relativePath)),
-      });
-    } catch (error) {
-      unreadable.push({ path: repoRelative(root, path), error: errorMessage(error) });
-    }
-  }
-
-  references.sort(
-    (left, right) => right.matched_terms.length - left.matched_terms.length || left.path.localeCompare(right.path),
-  );
-  const found = new Set(references.flatMap((reference) => reference.matched_terms));
-  const gaps = terms
-    .filter((term) => !found.has(term))
-    .map((term) => `No managed reference matched query term: ${term}`);
-  if (!corpus.length) gaps.push("No managed canonical specification or knowledge documents were found.");
-  else if (!references.length) gaps.push("No managed document matched the query.");
-  if (unreadable.length) gaps.push("Some managed documents could not be read; inspect errors.");
-  for (const issue of provenance.issues) gaps.push(`Receipt provenance gap: ${issue.path}: ${issue.message}`);
-  for (const reference of references) {
-    if (reference.provenance?.match === "diverged") {
-      gaps.push(`Working-copy bytes diverge from the latest receipt for ${reference.path}.`);
-    }
-  }
-  return {
-    query: query.trim(),
-    scopes: [...selected].sort(),
-    references,
-    gaps,
-    errors: unreadable,
-    claim: "lexical references only; semantic coverage was not established",
-    observation_scope: "working-copy only; authority, implementation, acceptance, and current delivery truth were not inferred",
-  };
 }
 
 export function verify_knowledge(repo: string, scopes?: string[]): JsonObject {
@@ -558,35 +398,27 @@ export function verify_knowledge(repo: string, scopes?: string[]): JsonObject {
     let metadata: Metadata;
     try {
       content = readManaged(root, path);
-      const registered = _registry(root)[relativePath];
-      const parsed = readCanonical(kind, relativePath, content, registered);
+      const parsed = readCanonical(kind, relativePath, content);
       metadata = parsed.metadata;
-      if (kind === "standing-spec") check_identity(root, path, metadata);
-      if (parsed.legacy) check_identity(root, path, metadata);
-      if (!registered) {
-        gaps.push({ path: relativePath, code: "missing-forge-identity", message: "No authoritative Forge sidecar identity is registered." });
+      const identity = identityOf(kind, metadata);
+      if (!identity) {
+        // Reserved OKF index/log files carry no identity by design, so only concepts and Specs report the gap.
+        if (kind !== "kb-index" && kind !== "kb-log") {
+          gaps.push({ path: relativePath, code: "missing-forge-identity", message: "No Forge identity: frontmatter has no UUID id." });
+        }
       } else {
         for (const [field, seen] of [["id", seenIds], ["code", seenCodes]] as const) {
-          const value = registered[field];
+          const value = identity[field];
+          if (value === undefined) continue;
           const previous = seen.get(value);
           if (previous !== undefined) issues.push({ path: relativePath, code: `duplicate-${field}`, message: `${field} also belongs to ${previous}` });
           else seen.set(value, relativePath);
-        }
-        if (
-          (typeof metadata.id === "string" && metadata.id !== registered.id) ||
-          (typeof metadata.code === "string" && metadata.code !== registered.code)
-        ) {
-          gaps.push({
-            path: relativePath,
-            code: "non-authoritative-identity-extension",
-            message: "Document id/code extensions differ from the authoritative Forge sidecar identity.",
-          });
         }
       }
       records.push({
         path: relativePath,
         okf_id: kind === "standing-spec" ? null : okfConceptId(relativePath),
-        forge_identity: registered ?? null,
+        forge_identity: identity,
         kind,
         ...(parsed.type ? { concept_type: parsed.type } : {}),
         ...(parsed.trust_tier ? { trust_tier: parsed.trust_tier } : {}),
@@ -599,7 +431,7 @@ export function verify_knowledge(repo: string, scopes?: string[]): JsonObject {
         issues.push({
           path: relativePath,
           code: "legacy-reserved-document",
-          message: "Registered Forge index/log bytes are inspectable but require an explicit prepared conversion to conform to OKF v0.2.",
+          message: "Forge-frontmatter index/log bytes are inspectable but require an explicit prepared conversion to conform to OKF v0.2.",
         });
         okfFormatFailures += 1;
       }
@@ -762,7 +594,6 @@ function applyOwned(repo: string, manifest: string, options: ApplyOptions = {}):
   }
   const staged = new Map<string, string>();
   const installed = new Map<string, FileState>();
-  const registryJournal: RegistryJournal = [];
 
   try {
     for (const change of prepared.changes) {
@@ -793,41 +624,7 @@ function applyOwned(repo: string, manifest: string, options: ApplyOptions = {}):
       });
     }
 
-    for (const change of prepared.changes) {
-      const currentRegistry = _registry(root);
-      const targetKey = change.relative;
-      const after: Record<string, Identity | null> = {
-        [targetKey]: change.action === "remove" ? null : mustIdentity(change.forge_identity),
-      };
-      if (change.action === "move") after[mustString(change.move_from_relative)] = null;
-      if (change.action === "add" && change.identity_transfer) {
-        after[repoRelative(root, mustString(change.proposed_path))] = null;
-      }
-      const entries: Record<string, { before: RegistryValue; after: Identity | null }> = {};
-      for (const [key, value] of Object.entries(after)) entries[key] = { before: currentRegistry[key], after: value };
-      registryJournal.push({ target: change.target, entries });
-
-      const content = change.action === "remove" ? change.removed_content : decodeUtf8(readFileSync(change.target), "document");
-      if (change.action === "move") {
-        _memory_test_hooks.register_document?.(root, change.target, mustString(content));
-        set_registered_identity(root, change.target, mustIdentity(change.forge_identity), {
-          transfer_from: mustString(change.move_from),
-        });
-      } else if (change.kind === "standing-spec" && change.action === "add" && change.identity_transfer) {
-        transfer_identity(root, mustString(change.proposed_path), change.target, mustString(content));
-      } else if (change.kind === "standing-spec" && change.action === "remove") {
-        unregister_identity(root, change.target, mustString(content));
-      } else if (change.kind === "standing-spec") {
-        (_memory_test_hooks.register_document ?? register_document)(root, change.target, mustString(content));
-      } else {
-        _memory_test_hooks.register_document?.(root, change.target, mustString(content));
-        set_registered_identity(root, change.target, change.action === "remove" ? null : mustIdentity(change.forge_identity), {
-          ...(change.action === "add" && change.identity_transfer
-            ? { transfer_from: mustString(change.proposed_path) }
-            : {}),
-        });
-      }
-    }
+    for (const change of prepared.changes) _memory_test_hooks.after_install?.(change);
 
     mkdirSync(dirname(history), { recursive: true });
     const historyBytes = Buffer.from(`${JSON.stringify(sortJson(historyPayload(prepared)), null, 2)}\n`, "utf8");
@@ -838,7 +635,7 @@ function applyOwned(repo: string, manifest: string, options: ApplyOptions = {}):
     snapshots.set(history, { content: null, mode: null });
     installed.set(history, { content: historyBytes, mode: 0o644 });
   } catch (error) {
-    const rollbackErrors = rollback(root, snapshots, installed, registryJournal);
+    const rollbackErrors = rollback(snapshots, installed);
     const detail = rollbackErrors.length ? `; rollback incomplete: ${rollbackErrors.join("; ")}` : "";
     throw new ForgeError(`memory apply failed: ${errorMessage(error)}${detail}`, { cause: error });
   } finally {
@@ -852,7 +649,7 @@ function applyOwned(repo: string, manifest: string, options: ApplyOptions = {}):
   }
 
   return {
-    ...verificationResult(prepared, true),
+    ...verificationResult(prepared),
     applied: true,
     history: repoRelative(root, history),
   };
@@ -926,7 +723,7 @@ function prepare(repo: string, manifest: string, options: ApplyOptions = {}): Pr
       throw new ForgeError("KB mutations cannot change standing specifications; use memory apply");
     }
     if (specApply && change.kind === "kb-decision") {
-      throw new ForgeError("spec apply cannot create or change protected D-number decisions; use decision record");
+      throw new ForgeError("spec apply cannot create or change protected canonical decisions; use decision record");
     }
     changes.push(change);
   }
@@ -1011,7 +808,6 @@ function prepareChange(root: string, raw: unknown, index: number, specApply: boo
       throw new ForgeError(`${moveFromRelative} is not the canonical path for ${kind}`);
     }
     if (existsSync(target)) throw new ForgeError(`move target already exists: ${relativePath}`);
-    if (_registry(root)[relativePath]) throw new ForgeError(`move target identity is already registered: ${relativePath}`);
     if (!isFile(moveFrom)) throw new ForgeError(`move source does not exist: ${moveFromRelative}`);
   } else if (raw.from_path !== undefined) {
     throw new ForgeError(`from_path is only valid for moves: ${relativePath}`);
@@ -1077,7 +873,12 @@ function prepareChange(root: string, raw: unknown, index: number, specApply: boo
   if (new Set(metadataNames).size !== metadataNames.length) {
     throw new ForgeError(`metadata_changes contains duplicates: ${relativePath}`);
   }
-  const forbidden = kind === "standing-spec"
+  const currentContent = action === "update" && existsSync(target)
+    ? decodeUtf8(readFileSync(target), "current document")
+    : null;
+  const adoptingLegacySpec = specApply && kind === "standing-spec" && currentContent !== null &&
+    !currentContent.trimStart().startsWith("---");
+  const forbidden = kind === "standing-spec" && !adoptingLegacySpec
     ? metadataNames.filter((field) => IMMUTABLE_METADATA.has(field)).sort()
     : [];
   if (forbidden.length) throw new ForgeError(`immutable metadata cannot be changed: ${forbidden.join(", ")}`);
@@ -1085,41 +886,42 @@ function prepareChange(root: string, raw: unknown, index: number, specApply: boo
     throw new ForgeError(`metadata_changes is only valid for updates: ${relativePath}`);
   }
 
-  let identityTransfer = false;
   let removedContent: string | null = null;
   let previousContent: string | null = null;
   if (action === "add") {
-    if (kind === "standing-spec") {
-      try {
-        transfer_identity(root, mustString(proposedPath), target, mustString(proposedContent), { dry_run: true });
-        identityTransfer = true;
-      } catch (error) {
-        if (!(error instanceof ForgeError)) throw error;
-        check_identity(root, target, mustMetadata(proposedMetadata));
-      }
-    } else {
-      identityTransfer = Boolean(preparedDraftIdentity(root, mustString(proposedPath)));
-    }
-  } else if (action === "update" && existsSync(target)) {
-    const currentContent = decodeUtf8(readFileSync(target), "current document");
+    if (kind === "standing-spec") check_identity(root, target, mustMetadata(proposedMetadata));
+  } else if (action === "update" && currentContent !== null) {
     previousContent = currentContent;
-    const currentMetadata = kind === "standing-spec"
+    if (adoptingLegacySpec) {
+      assert_unique_identity(root, target, identityOf(kind, mustMetadata(proposedMetadata)) as Identity);
+      // Reuse the same title/scenario validation for the old plain Markdown body.
+      const [, proposedBody] = parse_document(mustString(proposedContent));
+      const header = mustString(proposedContent).slice(0, mustString(proposedContent).length - proposedBody.length);
+      validate_document_content(header + currentContent, kind);
+    }
+    const currentMetadata = adoptingLegacySpec ? {} : kind === "standing-spec"
       ? validate_document_content(currentContent, kind)
-      : readCanonical(kind, relativePath, currentContent, _registry(root)[relativePath]).metadata;
-    if (kind === "standing-spec") {
+      : readCanonical(kind, relativePath, currentContent).metadata;
+    if (kind === "standing-spec" && !adoptingLegacySpec) {
       check_identity(root, target, currentMetadata);
       if ([...IDENTITY_FIELDS].some((field) => currentMetadata[field] !== mustMetadata(proposedMetadata)[field])) {
         throw new ForgeError(`immutable identity changed: ${relativePath}`);
       }
     }
-    const rawDifferences = metadataDifferences(
+    // Reserved OKF index/log files carry no native identity, so converting a legacy one may drop it.
+    const currentIdentity = ["standing-spec", "kb-index", "kb-log"].includes(kind) ? null : identityOf(kind, currentMetadata);
+    const proposedIdentity = identityOf(kind, mustMetadata(proposedMetadata));
+    if (currentIdentity && (proposedIdentity?.id !== currentIdentity.id || proposedIdentity.code !== currentIdentity.code)) {
+      throw new ForgeError(`immutable identity changed: ${relativePath}`);
+    }
+    const rawDifferences = adoptingLegacySpec ? new Set(Object.keys(mustMetadata(proposedMetadata))) : metadataDifferences(
       currentContent,
       mustString(proposedContent),
       kind,
       currentMetadata,
       mustMetadata(proposedMetadata),
     );
-    const immutableRaw = kind === "standing-spec"
+    const immutableRaw = kind === "standing-spec" && !adoptingLegacySpec
       ? [...rawDifferences].filter((field) => IMMUTABLE_METADATA.has(field)).sort()
       : [];
     if (immutableRaw.length) {
@@ -1136,27 +938,22 @@ function prepareChange(root: string, raw: unknown, index: number, specApply: boo
     }
   } else if (action === "remove" && existsSync(target)) {
     removedContent = decodeUtf8(readFileSync(target), "removed document");
-    if (kind === "standing-spec") {
-      const currentMetadata = validate_document_content(removedContent, kind);
-      check_identity(root, target, currentMetadata);
-      unregister_identity(root, target, removedContent, { dry_run: true });
-    } else {
-      readCanonical(kind, relativePath, removedContent, _registry(root)[relativePath]);
-    }
+    if (kind === "standing-spec") check_identity(root, target, validate_document_content(removedContent, kind));
+    else readCanonical(kind, relativePath, removedContent);
   }
 
   let forgeIdentity: Identity | null;
-  let identityOrigin: PreparedChange["identity_origin"];
-  if (action === "move") {
-    const sourceIdentity = _registry(root)[mustString(moveFromRelative)];
-    if (!sourceIdentity) throw new ForgeError(`move source requires a registered Forge identity: ${moveFromRelative}`);
-    if (kind === "standing-spec") {
-      check_identity(root, mustString(moveFrom), mustMetadata(proposedMetadata));
-    }
-    forgeIdentity = sourceIdentity;
-    identityOrigin = "registered";
+  if (action === "remove") {
+    forgeIdentity = removedContent === null ? null : identityOf(kind, readCanonical(kind, relativePath, removedContent).metadata);
   } else {
-    [forgeIdentity, identityOrigin] = preparedIdentity(root, relativePath, kind, action as Action, proposedPath, proposedMetadata);
+    forgeIdentity = identityOf(kind, mustMetadata(proposedMetadata));
+    if (action === "move") {
+      if (!forgeIdentity) throw new ForgeError(`move source requires a Forge identity in frontmatter: ${moveFromRelative}`);
+      if (kind === "standing-spec") check_identity(root, mustString(moveFrom), mustMetadata(proposedMetadata));
+      else assert_unique_identity(root, target, forgeIdentity, [mustString(moveFrom)]);
+    } else if (forgeIdentity && kind !== "standing-spec") {
+      assert_unique_identity(root, target, forgeIdentity);
+    }
   }
 
   return {
@@ -1172,8 +969,6 @@ function prepareChange(root: string, raw: unknown, index: number, specApply: boo
     proposed_sha256: actualProposedHash,
     proposed_metadata: proposedMetadata,
     forge_identity: forgeIdentity,
-    identity_origin: identityOrigin,
-    identity_transfer: identityTransfer,
     removed_content: removedContent,
     previous_content: previousContent,
     metadata_changes: metadataNames,
@@ -1346,6 +1141,7 @@ function checkManifestIdentities(changes: PreparedChange[]): void {
       ["code", seenCodes],
     ] as const) {
       const value = change.forge_identity[field];
+      if (value === undefined) continue;
       const previous = seen.get(value);
       if (previous && previous !== change.relative) {
         throw new ForgeError(`duplicate proposed ${field} in ${previous} and ${change.relative}`);
@@ -1388,7 +1184,7 @@ function checkOverlayLinks(root: string, changes: PreparedChange[]): void {
   }
 }
 
-function verificationResult(prepared: Prepared, applied = false): JsonObject {
+function verificationResult(prepared: Prepared): JsonObject {
   const claim = prepared.application === "spec"
     ? "installed or validated document-only target bytes; semantic fidelity, human authenticity, implementation, Review, Verify, and publication were not established"
     : prepared.changes.length
@@ -1414,8 +1210,7 @@ function verificationResult(prepared: Prepared, applied = false): JsonObject {
       ...(change.move_from_relative ? { from_path: change.move_from_relative } : {}),
       base_sha256: change.base_sha256,
       proposed_sha256: change.proposed_sha256,
-      forge_identity: change.identity_origin === "assigned-on-apply" && !applied ? null : change.forge_identity,
-      forge_identity_status: change.identity_origin === "assigned-on-apply" && applied ? "assigned" : change.identity_origin,
+      forge_identity: change.forge_identity,
       metadata_changes: change.metadata_changes,
     })),
     claim,
@@ -1424,7 +1219,7 @@ function verificationResult(prepared: Prepared, applied = false): JsonObject {
 
 function historyPayload(prepared: Prepared): JsonObject {
   const payload = structuredClone(prepared.manifest);
-  const verifiedChanges = verificationResult(prepared, true).changes as JsonObject[];
+  const verifiedChanges = verificationResult(prepared).changes as JsonObject[];
   for (const [index, change] of prepared.changes.entries()) {
     const result = verifiedChanges[index];
     if (!result) throw new ForgeError("missing verified change");
@@ -1455,53 +1250,20 @@ function historyPayload(prepared: Prepared): JsonObject {
   };
 }
 
-function rollback(
-  root: string,
-  snapshots: Map<string, FileState>,
-  installed: Map<string, FileState>,
-  registryJournal: RegistryJournal,
-): string[] {
+function rollback(snapshots: Map<string, FileState>, installed: Map<string, FileState>): string[] {
   const errors: string[] = [];
-  const restored = new Set<string>();
   for (const [target, expected] of [...installed].reverse()) {
     const original = mustGet(snapshots, target);
     try {
-      if (matchesState(target, original)) {
-        restored.add(target);
-        continue;
-      }
+      if (matchesState(target, original)) continue;
       if (!matchesState(target, expected)) {
         errors.push(`preserved intervening change: ${target}`);
         continue;
       }
       if (original.content === null) unlinkSync(target);
       else replaceBytes(target, original.content, original.mode ?? 0o644);
-      restored.add(target);
     } catch (error) {
       errors.push(`${target}: ${errorMessage(error)}`);
-    }
-  }
-  if (registryJournal.length) {
-    try {
-      const registry = _registry(root);
-      let changed = false;
-      for (const journal of [...registryJournal].reverse()) {
-        if (!restored.has(journal.target)) continue;
-        for (const [key, { before, after }] of Object.entries(journal.entries)) {
-          const actual = registry[key];
-          if (sameRegistryValue(actual, before)) continue;
-          if (!sameRegistryValue(actual, after)) {
-            errors.push(`preserved intervening registry change: ${key}`);
-            continue;
-          }
-          if (before === undefined) delete registry[key];
-          else registry[key] = before;
-          changed = true;
-        }
-      }
-      if (changed) _write_atomic(join(root, ".forge/identities.json"), `${JSON.stringify(sortJson(registry), null, 2)}\n`);
-    } catch (error) {
-      errors.push(`registry: ${errorMessage(error)}`);
     }
   }
   return errors;
@@ -1548,36 +1310,15 @@ function writeStage(directory: string, prefix: string, content: Buffer): string 
   return path;
 }
 
-function preparedIdentity(
-  root: string,
-  relativePath: string,
-  kind: string,
-  action: Action,
-  proposedPath: string | null,
-  metadata: Metadata | null,
-): [Identity | null, PreparedChange["identity_origin"]] {
-  const registry = _registry(root);
-  const existing = registry[relativePath];
-  if (existing) return [existing, "registered"];
-  if (proposedPath) {
-    const source = preparedDraftIdentity(root, proposedPath);
-    if (source) return [source, "registered-draft"];
-  }
-  if (kind === "standing-spec") {
-    const documentMetadata = metadata ?? validate_document_content(readManaged(root, contained_path(root, relativePath)), kind);
-    return [identityOf(documentMetadata), "document"];
-  }
-  if (action === "remove") return [null, "unregistered"];
-  const base = `KB-${relativePath
-    .replace(/^docs\/knowledge\//, "")
-    .replace(/\.md$/, "")
-    .replace(/[^A-Za-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "") || "record"}`;
-  let code = base;
-  let suffix = 2;
-  const used = new Set(Object.values(registry).map((identity) => identity.code));
-  while (used.has(code)) code = `${base}-${suffix++}`;
-  return [{ id: randomUUID(), code, type: okfIdentityType(kind) }, "assigned-on-apply"];
+/** A canonical document's Forge identity comes from its own frontmatter; OKF documents without a UUID `id` have none. */
+function identityOf(kind: string, metadata: Metadata): Identity | null {
+  if (typeof metadata.id !== "string" || !isUuid(metadata.id)) return null;
+  const forge = kind === "standing-spec" || metadata.type === kind;
+  return {
+    id: metadata.id,
+    type: forge ? String(metadata.type) : okfIdentityType(kind),
+    ...(typeof metadata.code === "string" ? { code: metadata.code } : {}),
+  };
 }
 
 function okfIdentityType(kind: string): string {
@@ -1590,7 +1331,6 @@ function readCanonical(
   kind: string,
   relativePath: string,
   content: string,
-  registered?: Identity,
 ): {
   metadata: Metadata;
   body: string;
@@ -1610,8 +1350,13 @@ function readCanonical(
   try {
     return { ...inspect_okf_document(relativePath, content), legacy: false };
   } catch (error) {
-    if (!["kb-index", "kb-log"].includes(kind) || !registered || registered.type !== kind) throw error;
-    const metadata = validate_document_content(content, kind);
+    if (!["kb-index", "kb-log"].includes(kind)) throw error;
+    let metadata: Metadata;
+    try {
+      metadata = validate_document_content(content, kind);
+    } catch {
+      throw error;
+    }
     const [, body] = parse_document(content);
     return {
       metadata,
@@ -1623,17 +1368,11 @@ function readCanonical(
       stale: null,
       health: [{
         code: "legacy-reserved-format",
-        message: "Registered Forge frontmatter is preserved for inspection until an authorized OKF conversion is applied.",
+        message: "Forge frontmatter is preserved for inspection until an authorized OKF conversion is applied.",
       }],
       legacy: true,
     };
   }
-}
-
-function preparedDraftIdentity(root: string, path: string): Identity | null {
-  const relativePath = repoRelative(root, path);
-  if (!relativePath.startsWith(".forge/prepared/")) return null;
-  return _registry(root)[relativePath] ?? null;
 }
 
 function okfConceptId(relativePath: string): string | null {
@@ -1842,11 +1581,6 @@ function hasProvenance(metadata: Metadata, content: string): boolean {
   return raw.slice(raw.indexOf(":") + 1).trim().length > 0;
 }
 
-function excerpt(body: string, terms: string[]): string {
-  const lines = body.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
-  return (lines.find((line) => terms.some((term) => line.toLowerCase().includes(term))) ?? lines[0] ?? "").slice(0, 240);
-}
-
 function realRepo(repo: string): string {
   return contained_path(repo, ".", { must_exist: true });
 }
@@ -1878,114 +1612,53 @@ function decisionSlug(title: string): string {
   return slug || "decision";
 }
 
-function nextDecisionNumber(root: string): number {
-  const current = new Map<number, string>();
-  const numbers = new Set<number>();
-  const registerCurrent = (code: string, source: string) => {
-    const number = decisionNumber(code);
-    if (number === null) return;
-    const previous = current.get(number);
-    if (previous && previous !== source) {
-      throw new ForgeError(`duplicate decision code D${number}: ${previous} and ${source}`);
-    }
-    current.set(number, source);
-    numbers.add(number);
-  };
-  for (const [path, identity] of Object.entries(_registry(root))) registerCurrent(identity.code, path);
-
-  const directory = join(root, "docs/knowledge/decisions");
-  if (existsSync(directory)) {
-    if (!statSync(directory).isDirectory()) throw new ForgeError("decision knowledge path must be a directory");
-    for (const child of readdirSync(directory, { withFileTypes: true })) {
-      const match = /^D([1-9]\d*)-.*\.md$/.exec(child.name);
-      if (!match || !child.isFile()) continue;
-      registerCurrent(`D${match[1]}`, `docs/knowledge/decisions/${child.name}`);
-    }
-    const index = join(directory, "index.md");
-    if (isFile(index)) {
-      for (const match of read_utf8(index).matchAll(/\[(D([1-9]\d*))\b/g)) {
-        const number = decisionNumber(match[1] ?? "");
-        if (number !== null) numbers.add(number);
-      }
-    }
-  }
-
-  const receipts = join(root, ".forge/memory");
-  if (existsSync(receipts)) {
-    if (!statSync(receipts).isDirectory()) throw new ForgeError("memory history path must be a directory");
-    for (const child of readdirSync(receipts, { withFileTypes: true })) {
-      if (!child.isFile() || !child.name.endsWith(".json")) continue;
-      let receipt: unknown;
-      try {
-        receipt = JSON.parse(read_utf8(join(receipts, child.name)));
-      } catch (error) {
-        throw new ForgeError(`cannot allocate a decision while receipt ${child.name} is unreadable: ${errorMessage(error)}`);
-      }
-      try {
-        collectDecisionNumbers(historicalReceipt(receipt).raw, numbers);
-      } catch (error) {
-        throw new ForgeError(`cannot allocate a decision while receipt ${child.name} is invalid: ${errorMessage(error)}`);
-      }
-    }
-  }
-  const highest = numbers.size ? Math.max(...numbers) : 0;
-  if (!Number.isSafeInteger(highest) || highest >= Number.MAX_SAFE_INTEGER) {
-    throw new ForgeError("decision number range is exhausted");
-  }
-  return highest + 1;
-}
-
-function decisionNumber(code: string): number | null {
-  const match = /^D([1-9]\d*)$/.exec(code);
-  if (!match) return null;
-  const value = Number(match[1]);
-  return Number.isSafeInteger(value) ? value : null;
-}
-
-function collectDecisionNumbers(value: unknown, result: Set<number>): void {
-  if (Array.isArray(value)) {
-    for (const item of value) collectDecisionNumbers(item, result);
-    return;
-  }
-  if (!isObject(value)) return;
-  if (typeof value.code === "string") {
-    const number = decisionNumber(value.code);
-    if (number !== null) result.add(number);
-  }
-  for (const item of Object.values(value)) collectDecisionNumbers(item, result);
+/** Loop-local readable code: the next `D<n>` heading in this loop's decisions.md. */
+function nextLoopDecisionCode(content: string): string {
+  let highest = 0;
+  for (const match of content.matchAll(/^## (?:Decision: )?D([1-9]\d*)\b/gm)) highest = Math.max(highest, Number(match[1]));
+  return `D${highest + 1}`;
 }
 
 function prepareLoopDecisionReference(
   root: string,
   path: string,
-  code: string,
+  id: string,
   title: string,
   decisionPath: string,
   context: Metadata,
   supersedes?: string,
   loop?: string,
-): { target: string; old: string; next: string } {
+): { target: string; old: string; next: string; code: string } {
   const target = document_path(root, path, loop, true);
   const old = read_utf8(target);
   const metadata = validate_document_content(old, "decisions");
   check_identity(root, target, metadata);
+  const code = nextLoopDecisionCode(old);
   const link = relative(dirname(target), join(root, decisionPath)).split("\\").join("/");
   const entry = [
     `## ${code} — ${context.date}`,
     "",
-    `- Canonical decision: [${code} — ${title}](${link})`,
+    `- Canonical decision: [${title}](${link})`,
+    `- Decision id: ${id}`,
     `- Scope: ${context.scope}`,
     `- Human source: ${context.source}`,
     `- Authorization quote: ${JSON.stringify(context.quote)}`,
     ...(supersedes ? [`- Supersedes: ${supersedes}`] : []),
   ].join("\n");
-  return { target, old, next: `${old.trimEnd()}\n\n${entry}\n` };
+  return { target, old, next: `${old.trimEnd()}\n\n${entry}\n`, code };
 }
 
+/** A superseded decision is a canonical decision UUID, a legacy canonical `decision.code`, or a code in this loop's decisions.md. */
 function assertSupersededDecision(root: string, code: string, loopContent?: string): void {
-  const canonical = Object.entries(_registry(root)).some(
-    ([path, identity]) => path.startsWith("docs/knowledge/decisions/") && identity.code === code,
-  );
+  const canonical = managedDocuments(root, new Set(["kb-decision", "concept"])).some(([, path]) => {
+    if (!repoRelative(root, path).startsWith("docs/knowledge/decisions/")) return false;
+    try {
+      const { metadata } = inspect_okf_document(repoRelative(root, path), readManaged(root, path));
+      return metadata.id === code || (isObject(metadata.decision) && metadata.decision.code === code);
+    } catch {
+      return false;
+    }
+  });
   const escaped = code.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const legacy = loopContent ? new RegExp(`^## (?:Decision: )?${escaped}(?:\\s|—|$)`, "m").test(loopContent) : false;
   if (!canonical && !legacy) throw new ForgeError(`superseded decision is absent: ${code}`);
@@ -2155,10 +1828,6 @@ function validIsoDate(value: string): boolean {
   return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
 }
 
-function identityOf(metadata: Metadata): Identity {
-  return Object.fromEntries([...IDENTITY_FIELDS].map((field) => [field, String(metadata[field])])) as Identity;
-}
-
 function sortJson(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(sortJson);
   if (!isObject(value)) return value;
@@ -2167,11 +1836,6 @@ function sortJson(value: unknown): unknown {
 
 function sameJson(left: unknown, right: unknown): boolean {
   return JSON.stringify(sortJson(left)) === JSON.stringify(sortJson(right));
-}
-
-function sameRegistryValue(left: RegistryValue | null, right: RegistryValue | null): boolean {
-  if (left == null && right == null) return true;
-  return sameJson(left, right);
 }
 
 function setEqual(left: Set<string>, right: Set<string>): boolean {
@@ -2184,11 +1848,6 @@ function isObject(value: unknown): value is JsonObject {
 
 function mustMetadata(value: Metadata | null): Metadata {
   if (value === null) throw new ForgeError("missing proposed metadata");
-  return value;
-}
-
-function mustIdentity(value: Identity | null): Identity {
-  if (value === null) throw new ForgeError("missing Forge identity");
   return value;
 }
 

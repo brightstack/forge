@@ -89,7 +89,8 @@ function gitBinaryDir(): string {
     expect(setup.tools).toEqual(["agents"]);
     expect(existsSync(join(project, ".agents/skills/forge/SKILL.md"))).toBe(true);
     expect(existsSync(join(project, ".agents/skills/forge-simplify/SKILL.md"))).toBe(true);
-    expect(existsSync(resolve(project, ".agents/skills/forge/../../agents/README.md"))).toBe(true);
+    expect(existsSync(join(project, ".forge/agents/README.md"))).toBe(true);
+    expect(existsSync(join(project, ".forge/references/okf.md"))).toBe(true);
     run(["init", "standalone", "--title", "Standalone"]);
     const created = run(["docs", "create", "issue", "issue.md", "--title", "issue"]);
     expect(created.status).toBe("draft");

@@ -4,9 +4,9 @@ In delivery, a separate Engineer simplifies the working candidate after the
 initial Build/Review loop passes and before Verify. Direct "Forge simplify"
 selects only this bounded operation. Load
 [Engineer judgment](../../../agents/engineer/instructions.md), the target harness,
-[authority](../../forge-shared/references/authority.md),
-[pragmatism](../../forge-shared/references/pragmatism.md), and
-[returns](../../forge-shared/references/returns.md).
+[authority](../../../references/authority.md),
+[pragmatism](../../../references/pragmatism.md), and
+[returns](../../../references/returns.md).
 
 ## Scope and actual baseline
 
@@ -68,6 +68,6 @@ Work record, following [simplification record guidance](../assets/simplify.md).
 The accountable owner inspects the actual return and new relevant log evidence.
 Delivery advances to QA only after the resulting candidate has passing Review.
 Material failures return to the appropriate Build/Review repair boundary under
-[shared finite limits](../../forge-shared/references/repair.md); after repair, reassess simplification proportionately and
+[shared finite limits](../../../references/repair.md); after repair, reassess simplification proportionately and
 reuse unaffected proof. Direct Simplify reports its result and stops; a failure
 does not grant broader implementation or delivery authority.

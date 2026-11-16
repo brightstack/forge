@@ -2,10 +2,10 @@
 
 The Reviewer owns coverage and one integrated verdict. Dimensions are review
 responsibilities, not seven mandatory agents. Load each applicable rubric; staffing
-is proportionate under [shared triggers](../../forge-shared/references/workflows.md#concrete-staffing).
-Apply [authority](../../forge-shared/references/authority.md),
-[finding admission](../../forge-shared/references/severity.md), and
-[returns/owner inspection](../../forge-shared/references/returns.md) to every owner.
+is proportionate under [shared triggers](../../../references/workflows.md#concrete-staffing).
+Apply [authority](../../../references/authority.md),
+[finding admission](../../../references/severity.md), and
+[returns/owner inspection](../../../references/returns.md) to every owner.
 
 ## Applicability and ownership
 
@@ -14,7 +14,7 @@ Apply [authority](../../forge-shared/references/authority.md),
 | Code Review | Code, UI markup/styles, tests, executable configuration, or execution-controlling instructions change | [Code Review](judges/code-review/rubric.md): source correctness, regressions, standards, tests; uses the standalone leaf |
 | Design | UI behavior, rendered surfaces, or design artifacts change | [Design](judges/design/rubric.md): fidelity, interaction, accessibility |
 | Quality | A knowledge-work deliverable is the requested outcome | [Quality](judges/quality/rubric.md): accuracy, reasoning, usefulness, artifact quality |
-| Spec | Every candidate | [Spec](judges/spec/rubric.md): current accepted obligations, omissions, invented scope, preservation |
+| Spec | Every candidate | [Spec](judges/spec/rubric.md): request fidelity: invented scope first, then omissions and preservation |
 | Craft | Every candidate | [Craft](judges/craft/rubric.md): proportionality and sound simplicity |
 | Security | Changes affect a plausible trust, authorization, tenancy, sensitive-data, input-execution, or sandbox boundary | [Security](judges/security/rubric.md): reachable threats and existing protections |
 | Performance | Frequent paths, queries/remote calls, collection processing, rendering, or stated resource/latency obligations are affected | [Performance](judges/performance/rubric.md): present costs and measured or causally supported impact |
@@ -29,7 +29,8 @@ replace Code Review or create security/performance requirements.
 No separate Standards or Evidence judge is needed: standards belong to their
 owning dimension and each dimension supplies evidence. Route an obvious concern
 to its owner with the trace and avoid a duplicate full audit. Code Review reads
-criteria to establish correct behavior; Spec owns the exhaustive intent audit.
+criteria to establish correct behavior; Spec owns request fidelity: added and
+missing behavior, weighed equally.
 
 ## Staffing and return
 

@@ -13,10 +13,14 @@ or Review alone does not authorize this phase. Reuse accepted Launch and scope;
 an installed skill name does not prove native slash-command support.
 </activation>
 <setup>
-Read [authority](../forge-shared/references/authority.md) and
-[target harness resolution](../forge-shared/references/target-harness.md),
-[Launch and gates](../forge-shared/references/workflows.md), and the target
-repository's applicable harness. Adopt [Engineer](../../agents/engineer/instructions.md)
+Run `forge context` from where you started, without `--repo` and without changing
+directory, and read every file it lists before anything else. Use the Target it
+prints as `--repo` for later forge commands.
+If `forge` is missing or doesn't know `context`, follow the fallback in
+[target harness resolution](../../references/target-harness.md#resolve-applicable-authority-progressively).
+Then read [authority](../../references/authority.md),
+[target harness resolution](../../references/target-harness.md),
+and [Launch and gates](../../references/workflows.md). Adopt [Engineer](../../agents/engineer/instructions.md)
 for behavior-preserving simplification. In delivery, this is a separate Engineer
 assignment after the initial Build/Review loop, before QA.
 </setup>
@@ -40,7 +44,7 @@ prior evidence, explicitly reporting missing prior Review.
 </step>
 <step n="3" name="Inspect and stop or hand off">
 The accountable owner reads the actual return and relevant new log entries under
-[shared returns](../forge-shared/references/returns.md). Delivery proceeds to QA
+[shared returns](../../references/returns.md). Delivery proceeds to QA
 only with current passing Review; direct Simplify stops at its bounded result.
 </step>
 </workflow>

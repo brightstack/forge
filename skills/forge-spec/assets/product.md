@@ -14,7 +14,8 @@ boundaries from this description alone. References are for evidence and deeper b
 
 NO technical aspects: no APIs, data models, schemas, architecture, build sequence, tasks, or estimates.
 The only technical mentions allowed are inside Competitor Analysis or a capability constraint that keeps
-the change realistic. Keep it lean (1-2 pages). Delete any OPTIONAL section that does not earn its place.
+the change realistic. Size follows the request: at most 1-2 pages, a few lines for a small ask. Delete any OPTIONAL section that does not earn its place.
+Write only what the request needs: every item traces to the user's words or a necessary consequence of them.
 
 Do NOT add technical plan sections here - the plan skill adds those for complex projects only.
 -->
@@ -40,7 +41,7 @@ Do NOT add technical plan sections here - the plan skill adds those for complex 
 
 ## Non-goals (optional)
 
-<!-- What this explicitly does NOT set out to do. Keeps scope from creeping back in. Delete if none. -->
+<!-- What this explicitly does NOT set out to do. Keeps scope from creeping back in. Related ideas the user did not ask for go here as one line each, as options the user can ask for. Delete if none. -->
 
 - <Out of scope>
 
@@ -63,7 +64,6 @@ Do NOT add technical plan sections here - the plan skill adds those for complex 
 
 - <what the user can do / how it behaves>
 - <what the user can do / how it behaves>
-- <a boundary or edge behavior>
 
 **How it's used:** <where it lives in the product and how the user reaches and uses it.>
 

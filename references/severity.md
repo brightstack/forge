@@ -9,6 +9,15 @@ Grade demonstrated impact, then assess remedy authority separately under
 | P1 | Pragmatic blocker with a current reachable trigger, supported evidence/causal trace, and material consequence for a current obligation or real boundary. | Repair proportionately within authority; otherwise return the material decision and reassess affected proof. |
 | P2 | Nonblocking defect or useful optional advice without that blocker case. | Report only when useful; does not extend the loop. |
 
+One Spec-gate rule sits beside the table. In a proposed Spec, an item that
+neither the user's words nor a necessary consequence of them supports is a
+blocking P1: scope beyond the request. The draft itself is the trigger, because
+an approved Spec gets built. The checker returns REVISE listing the items; the
+author removes each one or demotes it to a one-line option, and the checker
+rechecks. A one-line option in Non-goals or Notes is not scope and does not
+block. This rule covers only a proposed Spec's own content at its gate. Everywhere else, including
+Review of a built result, the table applies as written.
+
 Severity follows demonstrated impact and evidence. A Spec mismatch is not
 automatically P0: classify its actual consequence. Requirement/standard authority
 and severity are separate from remedy eligibility; even a severe finding cannot
@@ -37,7 +46,8 @@ existing report:
   correction exceeds authority.
 - A proposal adds capability or a stronger promise without an established current
   defect. Label it optional; it cannot block, become acceptance criteria, or enter
-  automatic repair without authority.
+  automatic repair without authority. When the addition is already written into a
+  proposed Spec, the Spec-gate rule above applies instead.
 - Reject received material feedback that lacks evidence, relevance, or proportion,
   with a concise reason. Rejecting a mechanism need not reject its underlying
   defect; the owner can choose a sound authorized correction.

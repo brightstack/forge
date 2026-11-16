@@ -1,10 +1,12 @@
 #!/usr/bin/env bun
-import { Argument, Command, CommanderError } from "commander";
+import { realpathSync } from "node:fs";
+import { Argument, Command, CommanderError, Option } from "commander";
 import { resolve_configuration } from "./roots.ts";
+import { compile_context, nearest_installed, render_context } from "./context.ts";
 import { ForgeError } from "./errors.ts";
 import { KINDS, append_record, create_document, init_loop, update_document } from "./records.ts";
 import { candidate_snapshot, validate_documents } from "./validation.ts";
-import { apply_kb, apply_prepared, ask, knowledge_history, record_kb_decision, scaffold_okf, verify_knowledge, verify_prepared } from "./memory.ts";
+import { apply_kb, apply_prepared, knowledge_history, record_kb_decision, scaffold_okf, verify_knowledge, verify_prepared } from "./memory.ts";
 import { serve_artifacts } from "./serve.ts";
 import { parse_setup_tools, setup_project } from "./setup.ts";
 import { version } from "../package.json";
@@ -19,7 +21,10 @@ function sorted(value: unknown): unknown {
 function output(value: unknown) { console.log(JSON.stringify(sorted(value))); }
 const collect = (value: string, previous: string[]) => [...previous, value];
 function repo(command: Command) {
-  return command.option("--repo <path>", "Target repository containing source and canonical memory", ".");
+  // Like git: without --repo, the nearest installed or configured application at or above the working directory.
+  const nearest = nearest_installed(realpathSync(process.cwd())) ?? ".";
+  return command.addOption(new Option("--repo <path>", "Target repository containing source and canonical memory")
+    .default(nearest, "nearest directory with .forge/references/ or forge.yml, else ."));
 }
 function loop(command: Command) {
   return repo(command).option("--loop <id-or-path>", "Select the loop separately from its target repository");
@@ -52,7 +57,15 @@ export async function main(argv = process.argv.slice(2)): Promise<void> {
       .option("--model <model>", "Explicit current user model choice")
       .option("--effort <effort>", "Explicit current user effort choice"))
       .action((options: { repo: string; engine?: string; role?: string; model?: string; effort?: string }) => output(resolve_configuration(options.repo, options)));
-    repo(program.command("setup").description("Install Forge skills into this repository from GitHub or --pack").option("--tools <list>", "Comma-separated hosts: agents, claude, cursor", "agents").option("--pack <path>", "Copy skills from this package directory instead of GitHub"))
+    repo(program.command("context").description("Print the compiled harness entry, loop storage, and engine model defaults for this application; run before Forge work")
+      .option("--engine <engine>", "Actual host engine identifier; adds per-role model defaults")
+      .option("--json", "Print the compiled context as JSON"))
+      .action((options: { repo: string; engine?: string; json?: boolean }) => {
+        const context = compile_context(options.repo, { engine: options.engine });
+        if (options.json) output(context);
+        else console.log(render_context(context));
+      });
+    repo(program.command("setup").description("Install Forge skills into this repository from the GitHub tag matching this CLI version, or --pack").option("--tools <list>", "Comma-separated hosts: agents, claude, cursor", "agents").option("--pack <path>", "Copy skills from this package directory instead of GitHub"))
       .action((options: { repo: string; tools: string; pack?: string }) => output(setup_project(options.repo, parse_setup_tools(options.tools), options.pack)));
     repo(program.command("init <loop_id>").description("Initialize a loop; this is not approval").requiredOption("--title <title>"))
       .action((id: string, options: { repo: string; title: string }) => output(init_loop(options.repo, id, options.title)));
@@ -74,7 +87,7 @@ export async function main(argv = process.argv.slice(2)): Promise<void> {
       .action((paths: string[], options: { repo: string; loop?: string }) => output(validate_documents(options.repo, paths, options.loop)));
     loop(docs.command("append <path>").description("Append a headed entry to an execution log").requiredOption("--heading <heading>").requiredOption("--body-file <file>"))
       .action((path: string, options: { repo: string; loop?: string; heading: string; bodyFile: string }) => output(append_record(options.repo, path, options.heading, options.bodyFile, options.loop)));
-    loop(program.command("decision").command("record [loop_decisions_path]").requiredOption("--authorization-file <file>").requiredOption("--body-file <file>").option("--title <title>").option("--supersedes <id>"))
+    loop(program.command("decision").command("record [loop_decisions_path]").requiredOption("--authorization-file <file>").requiredOption("--body-file <file>").option("--title <title>").option("--supersedes <decision-id>", "UUID of the superseded canonical decision"))
       .action((path: string | undefined, options: { repo: string; loop?: string; authorizationFile: string; bodyFile: string; title?: string; supersedes?: string }) => output(record_kb_decision(options.repo, path, options.authorizationFile, options.bodyFile, { title: options.title, supersedes: options.supersedes, loop: options.loop })));
     loop(program.command("candidate").description("Fingerprint current candidate including dirty files").option("--path <path>", "Explicit repository input, or absolute input inside the selected loop", collect, []).option("--expect <identity>"))
       .action((options: { repo: string; loop?: string; path: string[]; expect?: string }) => {
@@ -86,11 +99,9 @@ export async function main(argv = process.argv.slice(2)): Promise<void> {
     for (const operation of ["verify", "apply"]) {
       loop(memory.command(`${operation} <manifest>`)).action((manifest: string, options: { repo: string; loop?: string }) => output((operation === "verify" ? verify_prepared : apply_prepared)(options.repo, manifest, options.loop)));
     }
-    const kb = program.command("kb").description("Query or maintain canonical local knowledge");
+    const kb = program.command("kb").description("Maintain canonical local knowledge");
     repo(kb.command("scaffold <path>").requiredOption("--type <type>").requiredOption("--title <title>").requiredOption("--code <code>").option("--body-file <file>"))
       .action((path: string, options: { repo: string; type: string; title: string; code: string; bodyFile?: string }) => output(scaffold_okf(options.repo, path, options.type, options.title, options.code, options.bodyFile)));
-    repo(kb.command("ask <query>").option("--scope <kind>", "Knowledge kind", collect, []))
-      .action((query: string, options: { repo: string; scope: string[] }) => output(ask(options.repo, query, options.scope.length ? options.scope : undefined)));
     repo(kb.command("verify").option("--scope <kind>", "Knowledge kind", collect, []))
       .action((options: { repo: string; scope: string[] }) => {
         const result = verify_knowledge(options.repo, options.scope.length ? options.scope : undefined);

@@ -1,7 +1,7 @@
 # Plan
 
-Apply [authority](../../forge-shared/references/authority.md), [pragmatism](../../forge-shared/references/pragmatism.md)
-and [returns with owner inspection](../../forge-shared/references/returns.md).
+Apply [authority](../../../references/authority.md), [pragmatism](../../../references/pragmatism.md)
+and [returns with owner inspection](../../../references/returns.md).
 
 Plan translates accepted intent into the smallest useful implementation approach.
 It never creates product requirements and always remains an explicit accounted
@@ -12,7 +12,7 @@ State, then a Plan of the smallest meaningful steps and proof. A brief Quick not
 can stay in its Issue, index, or Build log without those headings.
 
 For direct Plan, this procedure is the entrypoint; full-lifecycle setup is not a
-prerequisite. Apply or reuse [Launch, depth, and workflow assignments](../../forge-shared/references/workflows.md)
+prerequisite. Apply or reuse [Launch, depth, and workflow assignments](../../../references/workflows.md)
 only for this requested boundary. Plan can live as Issue notes or under `spec/`;
 it need not be a separate document. Read the accepted Spec or ticket, applicable standing obligations,
 relevant human decisions, current implementation, and target repository harness.
@@ -43,7 +43,7 @@ identity and validation. For Quick Build, brief Plan notes may instead live in t
 accepted Issue, loop index, or Build log. Do not create a separate Plan merely to
 account for the phase. Resume an existing loop when it fits; initialize a new one
 only when the work actually needs a managed record. Keep current state accurate
-without inventing completed phases. Read [protocol](../../forge-shared/references/protocol.md) for additional
+without inventing completed phases. Read [protocol](../../../references/protocol.md) for additional
 authority or handoff details when needed, not to populate every possible lifecycle
 record.
 
@@ -62,7 +62,7 @@ that record and validate it instead of creating a duplicate. Replace or remove
 unused template prompts in authored records; keep the plan, relevant pointers and
 Build-pending state sufficient for the next owner. Unused decision and Build
 records remain empty. Use a subcommand's `--help` if its syntax is uncertain;
-the full [CLI reference](../../forge-shared/references/cli.md) is for operations beyond this procedure.
+the full [CLI reference](../../../references/cli.md) is for operations beyond this procedure.
 
 An already-approved ticket is source authority to reference, not by itself a new
 request to install a canonical decision or bootstrap a KB. Link that ticket as
@@ -93,7 +93,7 @@ A useful Plan covers:
 
 For changes that can affect existing behavior, include the compact
 signals -> affected obligations -> selected checks -> gaps record from
-[knowledge guidance](../../forge-shared/references/knowledge.md). Start with changed package ownership, APIs,
+[knowledge guidance](../../../references/knowledge.md). Start with changed package ownership, APIs,
 events, shared types, persistence, shared foundations, deleted or renamed files,
 test expectation changes, and authority edits. Expand from paths when exported
 contracts or actual semantics reach more consumers. The Builder proposes this
@@ -106,7 +106,7 @@ Trace the actual flow first and use the existing owner or sound reusable pattern
 when it meets accepted intent. If a new cache, parser, class, configuration, or
 durable contract or stronger guarantee is proposed, state the essential outcome
 it enables, the current boundary or demonstrated cost it solves, and why the
-simpler existing route fails; use [shared pragmatism](../../forge-shared/references/pragmatism.md) to
+simpler existing route fails; use [shared pragmatism](../../../references/pragmatism.md) to
 judge whether it is earned. Do not plan away accepted scenarios because code now
 appears unreachable. Preserve them as obligations or seek a scoped change.
 

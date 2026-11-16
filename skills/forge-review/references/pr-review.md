@@ -16,7 +16,7 @@ container/runtime mount verified against that candidate. Keep the user's existin
 work safe; do not reset or stash it to prepare a review.
 
 Read the PR description, linked issue/project and acceptance criteria, relevant
-decisions and applicable root/nested harness. Record source identity/revision,
+decisions and the harness `forge context` selects. Record source identity/revision,
 explicit obligations, authority status, non-goals and unresolved intent separately.
 PR claims are context to challenge, not proof of completion. Missing documentation
 does not establish a missing approver or invent an approval gate. Ask only for a

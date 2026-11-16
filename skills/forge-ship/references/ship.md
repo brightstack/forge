@@ -1,7 +1,7 @@
 # Ship
 
-Apply [authority](../../forge-shared/references/authority.md)
-and [returns with owner inspection](../../forge-shared/references/returns.md).
+Apply [authority](../../../references/authority.md)
+and [returns with owner inspection](../../../references/returns.md).
 
 Ship closes the authorized local outcome and performs only publication actions
 the user actually authorized. It starts from the exact Review-passed and
@@ -30,7 +30,7 @@ repository's exact operation-and-target authorization rule and inspect destructi
 SQL where that rule requires it. Correct contradictions in existing records rather
 than creating a parallel release ledger.
 
-Run [Finish](../../forge-shared/references/finish.md) before publication when approved unapplied Spec/knowledge
+Run [Finish](../../../references/finish.md) before publication when approved unapplied Spec/knowledge
 meaning or authorized existing-PR readiness remains. It reuses existing guarded
 operations and observed Git/PR state; it does not replace Build Review or
 Verify. Structural checks, receipt matching, or a clean tree do not replace

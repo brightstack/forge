@@ -6,7 +6,7 @@ A direct request stops with the study and its handoff. A small Build patch with
 an accepted design reuses that design; it does not earn a new study or approval gate.
 
 The Designer owns the direction and rendered critique. Read the target harness
-and [design direction and craft](../../forge-shared/references/design-direction.md), or the selected replacement
+and [design direction and craft](../../../references/design-direction.md), or the selected replacement
 design specialist, first. Their craft guidance informs this
 artifact within Forge's phase and authority boundaries.
 
@@ -39,9 +39,9 @@ pattern as context, without inventing a before screen.
 
 Start from [design-study.html](../assets/design-study.html). Copy and customize it
 as an ordinary visual asset, usually `spec/studies/<slug>/r1/index.html`. Use the
-existing [Design](../assets/design.md) and [visual companion](../../forge-shared/assets/visual.md)
+existing [Design](../assets/design.md) and [visual companion](../../../templates/visual.md)
 records for intent and identity. Scaffold the companion with `forge docs create visual`
-using [CLI mechanics](../../forge-shared/references/cli.md), edit its body, and run `forge docs validate` before
+using [CLI mechanics](../../../references/cli.md), edit its body, and run `forge docs validate` before
 handoff; copying a Markdown template or inventing frontmatter does not create a
 valid managed record. For a small study, the existing ticket plus one
 visual record can carry the brief and source map; do not duplicate prose.
@@ -90,7 +90,7 @@ document and does not go through `forge docs create`.
 ## Inspect the actual artifact
 
 For static studies, use the executable `forge serve <study-directory> --json`
-from [CLI mechanics](../../forge-shared/references/cli.md) and keep it running in a host-owned terminal/session.
+from [CLI mechanics](../../../references/cli.md) and keep it running in a host-owned terminal/session.
 Open its returned URL and verify that it shows this revision. If the executable
 or local listening capability is unavailable, use an available host preview and
 report the actual mechanism and gap. Framework-backed studies use their existing

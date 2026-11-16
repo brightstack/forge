@@ -3,7 +3,6 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, 
 import { tmpdir } from 'node:os'
 import { basename, join } from 'node:path'
 import { spawn, spawnSync } from 'node:child_process'
-import { randomUUID } from 'node:crypto'
 
 const APP = join(import.meta.dir, '..')
 const command = process.env.FORGE_TEST_BINARY
@@ -21,25 +20,18 @@ function run(repo: string, args: string[]): Promise<{ code: number | null; stdou
   })
 }
 
-test('overlapping CLI creates preserve every registration and reject duplicate codes', async () => {
+test('overlapping CLI creates keep every document and reject duplicate codes from frontmatter scans', async () => {
   const repo = mkdtempSync(join(tmpdir(), 'forge-mutation-'))
   try {
+    const init = await run(repo, ['init', 'demo', '--title', 'Demo'])
+    expect(init.code, init.stderr).toBe(0)
     const requests = Array.from({ length: 12 }, (_, index) => ({
       path: `task-${index}.md`,
       code: index === 11 ? 'ISSUE-0' : `ISSUE-${index}`,
     }))
     const results = await Promise.all(
       requests.map(({ path, code }, index) =>
-        run(repo, [
-          'docs',
-          'create',
-          'issue',
-          path,
-          '--title',
-          `Task ${index}`,
-          '--code',
-          code,
-        ]),
+        run(repo, ['docs', 'create', 'issue', path, '--title', `Task ${index}`, '--code', code, '--loop', 'demo']),
       ),
     )
     const successes = results.filter((result) => result.code === 0)
@@ -47,38 +39,26 @@ test('overlapping CLI creates preserve every registration and reject duplicate c
     expect(successes).toHaveLength(11)
     expect(failures).toHaveLength(1)
     expect(failures[0]?.stderr).toContain('duplicate')
+    expect(existsSync(join(repo, '.forge/identities.json'))).toBeFalse()
 
-    const registry = JSON.parse(readFileSync(join(repo, '.forge/identities.json'), 'utf8')) as Record<
-      string,
-      { id: string; code: string; type: string }
-    >
-    expect(Object.keys(registry)).toHaveLength(11)
-    for (const result of successes) {
-      const output = JSON.parse(result.stdout) as { path: string }
-      const relative = basename(output.path)
-      expect(registry[relative]).toBeDefined()
-    }
+    const validated = spawnSync(command[0] as string, [...command.slice(1), 'docs', 'validate', '--loop', 'demo', '--repo', repo], { encoding: 'utf8' })
+    expect(validated.status, validated.stderr).toBe(0)
+    expect(JSON.parse(validated.stdout).checked).toHaveLength(11 + 4)
 
-    const relative = Object.keys(registry)[0] as string
-    const target = join(repo, relative)
-    const original = readFileSync(target, 'utf8')
-    writeFileSync(target, original.replace(registry[relative]?.id as string, randomUUID()))
-    for (const paths of [[], [relative]]) {
-      const result = spawnSync(
-        command[0] as string,
-        [...command.slice(1), 'docs', 'validate', ...paths, '--repo', repo],
-        { encoding: 'utf8' },
-      )
-      expect(result.status).not.toBe(0)
-      expect(result.stderr).toContain('immutable identity changed')
-    }
+    const [first, second] = successes.map((result) => (JSON.parse(result.stdout) as { path: string; id: string }))
+    const target = second!.path
+    writeFileSync(target, readFileSync(target, 'utf8').replace(second!.id, first!.id))
+    const duplicate = spawnSync(command[0] as string, [...command.slice(1), 'docs', 'validate', '--loop', 'demo', '--repo', repo], { encoding: 'utf8' })
+    expect(duplicate.status).not.toBe(0)
+    expect(duplicate.stderr).toContain('duplicate')
+    expect(basename(target)).toMatch(/^task-\d+\.md$/)
   } finally {
     rmSync(repo, { recursive: true, force: true })
   }
 })
 
 test('different checkouts serialize the same loop parent and preserve five concurrent loops', async () => {
-  const work = mkdtempSync(join(tmpdir(), 'forge-shared-lock-'))
+  const work = mkdtempSync(join(tmpdir(), 'forge-lock-'))
   const first = join(work, 'factory', 'app')
   const second = join(work, 'elsewhere', 'app')
   const storage = join(work, 'records', 'runs')

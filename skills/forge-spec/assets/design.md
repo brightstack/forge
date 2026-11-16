@@ -15,8 +15,8 @@ reviewer can judge without opening another artifact.
 
 ## User Journey
 
-TODO: Describe entry, decisive action, feedback, recovery, and exit for the
-accepted user outcome.
+TODO: Describe the steps the accepted user outcome needs, such as entry, decisive
+action, feedback, and exit. Add recovery only when the request needs it.
 
 ## Visual Authority
 
@@ -42,6 +42,9 @@ design-study.html. Keep product screens project-native. Omit duplicate context
 already held in the ticket or visual record. -->
 
 ## Material States
+
+<!-- Only the states the request needs. Do not add loading, empty, failure, or
+permission rows the asked outcome can work without. -->
 
 | Surface | State | Observable behavior | Responsive and accessibility intent |
 | --- | --- | --- | --- |

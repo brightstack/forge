@@ -10,7 +10,7 @@ Read enough of the request, supplied artifacts, current state, and target harnes
 to choose the workflow and identify available capabilities. Before specialist
 dispatch or substantive artifact/source edits, brief the user in plain language
 per [gate briefing](#gate-briefing). Read and fill the shared
-[Launch chat template](../assets/launch.md): one plain outcome line, one compact
+[Launch chat template](../templates/launch.md): one plain outcome line, one compact
 table, and the actual next ask or authorized proceed action. Keep text labels;
 restrained emoji labels aid scanning and never imply completion. This is chat,
 not a new report file, managed record, or CLI document kind.
@@ -101,7 +101,9 @@ actually pauses.
 
 Name the proposed result, every material addition or removal, important preserved
 behavior, risks and proof limits, and the exact choices with a recommendation and
-consequence. A generic reply cannot approve a material commitment omitted here;
+consequence. At a Spec gate, also list what the spec contains beyond the user's
+literal request, one short line each with its reason, so the user can cut any of
+it in seconds. Write `Nothing beyond your request.` when that is true. A generic reply cannot approve a material commitment omitted here;
 an explicit approval of the exact full revision retains its stated scope. If the
 human answers one choice, leave the other choices open. Give one clear next ask
 and links to the exact revision. Aim for about one page of chat; use more when the
@@ -133,8 +135,8 @@ coordinated outcomes normally do. Full does not dispatch unused specialists.
 A current human request is a ready issue-like object when it states the intended
 outcome, relevant boundaries, and observable completion. Do not assign PM merely
 because no external ticket exists. When those elements are materially missing,
-the initial choice is provisional: PM completes the Issue, then Engineer supplies
-technical judgment. Designer and Architect join only under the triggers below,
+the initial choice is provisional: PM fills in what the request needs, then
+Engineer supplies technical judgment. Designer and Architect join only under the triggers below,
 in that order. Reuse adequate estimates. Do not introduce an estimator, scoring
 system, or separate estimation document.
 
@@ -189,11 +191,11 @@ Apply these triggers to the requested work, not workflow name or file count.
 
 | Condition | Assignment |
 | --- | --- |
-| Issue lacks a ready Issue or issue-like object | PM authors/completes the Issue first. Engineer assesses effort after that draft exists, at either depth. |
+| Issue lacks a ready Issue or issue-like object | PM first writes what the request needs into the Issue. Engineer assesses effort after that draft exists, at either depth. |
 | New or materially revised journeys, visual direction, or interaction design | Designer authors that Spec portion. Straightforward reuse of accepted design needs no new design assignment. |
 | New/changed shared API/event contracts, data ownership, trust boundaries, migration strategy, or cross-system recovery | Architect resolves contracts before dependent implementation. A restorative Bug leaving contracts intact does not trigger new architecture work. |
 | A Spec decision needs missing external evidence, competing approaches, or prior art | Researcher investigates named questions with sources and limits. Local tracing remains with Engineer or Architect. |
-| Passing Build/Review is continuing through authorized delivery | Separate Engineer runs [Simplify](../../forge-simplify/SKILL.md) before QA. Return changes with affected proof and independent delta Review bound to the resulting complete candidate, or an evidenced no-op retaining prior Review. Owner inspects actual returns and relevant new log evidence. Direct Build/Review alone stops before this assignment. |
+| Passing Build/Review is continuing through authorized delivery | Separate Engineer runs [Simplify](../skills/forge-simplify/SKILL.md) before QA. Return changes with affected proof and independent delta Review bound to the resulting complete candidate, or an evidenced no-op retaining prior Review. Owner inspects actual returns and relevant new log evidence. Direct Build/Review alone stops before this assignment. |
 | Full implementation has separable bounded outcomes | Engineer delegates Workers, shows ownership/sequencing, and retains integration. This governs both Issue and Project. |
 | Issue or Bug reveals multiple independently accepted outcomes requiring coordination | Propose Project with evidence; preserve usable work. |
 | Full candidate spans multiple implementation outcomes, or a separate Designer or Architect assignment authored a design or contract document whose commitments this implementation must satisfy | Reviewer dispatches one Judge per applicable dimension and integrates original reports. |
@@ -243,9 +245,10 @@ accountable owner integrates all returns.
 
 ## Spec and Plan gates
 
-In Guided, brief a new/materially revised Spec in the conversation, link the
-exact draft, and wait before dependent Plan or Build. After approval, record
-source/revision and run its independent boundary review. A consequential new
+Run a new/materially revised Spec's independent boundary review against the
+user's original request first, so the human sees the trimmed spec. In Guided,
+then brief it in the conversation, link the exact reviewed draft, and wait before
+dependent Plan or Build. After approval, record source/revision. A consequential new
 Plan is briefed and approved before its boundary review and Build. A boundary
 review cannot make a new human decision; consequential revisions return to the
 gate. In Auto, the same jobs/checks run within the cited grant without ordinary
@@ -266,14 +269,14 @@ Build/Review → Simplify → Verify order through the requested boundary.
 Plan remains a job, optionally brief Engineer notes on the Issue or under `spec/`,
 and a direct skill when requested. It does not require a separate planning agent.
 Direct Build/Review stops before Simplify unless also authorized. `Forge verify`
-selects [Forge Verify](../../forge-verify/SKILL.md). Simplify changes get affected
+selects [Forge Verify](../skills/forge-verify/SKILL.md). Simplify changes get affected
 proof and independent delta Review bound to the resulting whole candidate before
 QA; no-op retains prior Review. After QA repair, reassess Simplify proportionately
 and reuse unaffected evidence rather than restarting every phase.
 
 ## Example: accepted small Issue
 
-The [shared template](../assets/launch.md) presents the bounded request naturally:
+The [shared template](../templates/launch.md) presents the bounded request naturally:
 
 I’ll update the sidebar label in the existing component, preserve its behavior,
 and stop after the reviewed change. This fits a Quick flow.
@@ -291,7 +294,7 @@ new intent or consequential strategy comes back to you.
 The user writes, “orchestrate a build of this and let me watch how it goes.”
 For this example, the Issue already warrants Full because it needs substantial
 coupled implementation and PM must resolve product scope. The request for
-visibility grants no autonomy. Using the same [template](../assets/launch.md),
+visibility grants no autonomy. Using the same [template](../templates/launch.md),
 keep the actual pauses clear:
 
 I’ll turn the requested outcome into a reviewed build and stop there. The coupled

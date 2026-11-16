@@ -4,8 +4,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
-import { _memory_test_hooks, apply_prepared, ask } from "../src/memory.ts";
-import { register_document } from "../src/records.ts";
+import { randomUUID } from "node:crypto";
+import { _memory_test_hooks, apply_prepared } from "../src/memory.ts";
 
 const sourceCli = fileURLToPath(new URL("../src/cli.ts", import.meta.url));
 const forgeInvocation = process.env.FORGE_TEST_BINARY
@@ -40,9 +40,21 @@ function write(path: string, content: string): string {
   return path;
 }
 
-function writeRegistered(path: string, content: string): void {
-  write(path, content);
-  register_document(repo, join(repo, path), content);
+function legacySpec(name: string) {
+  const path = `docs/specs/${name}/SPEC.md`;
+  const draft = `.forge/prepared/${name}.md`;
+  const old = `# ${name}\n\nGIVEN existing behavior\nWHEN it runs\nTHEN it stays stable.\n`;
+  const next = spec(randomUUID(), `${name.toUpperCase()}-SPEC`, name, "GIVEN approved behavior\nWHEN it runs\nTHEN it stays stable.");
+  write(path, old);
+  write(draft, next);
+  return {
+    path, draft, old, next,
+    change: {
+      path, kind: "standing-spec", action: "update", base_sha256: digest(old),
+      proposed_file: draft, proposed_sha256: digest(next),
+      metadata_changes: ["id", "code", "type", "title", "status", "createdAt", "updatedAt"],
+    },
+  };
 }
 
 function manifest(operation: string, changes: Array<Record<string, unknown>>, proofStatus = "document-only"): string {
@@ -82,15 +94,114 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  delete _memory_test_hooks.register_document;
+  delete _memory_test_hooks.after_install;
   rmSync(repo, { recursive: true, force: true });
 });
 
 describe("early specification application", () => {
-  test("pins proposed bytes, retains independent authority inputs, and reports matching or diverged working-copy provenance", () => {
+  test("adopts a plain Spec through its prepared draft's frontmatter identity and keeps later updates strict", () => {
+    const legacy = legacySpec("legacy");
+    const manifestPath = manifest("SPEC-ADOPT", [legacy.change]);
+    const applied = apply_prepared(repo, manifestPath);
+    expect(applied.applied).toBe(true);
+    expect(readFileSync(join(repo, legacy.path), "utf8")).toBe(legacy.next);
+    expect((applied.changes as Array<Record<string, unknown>>)[0]!.forge_identity).toMatchObject({ code: "LEGACY-SPEC", type: "standing-spec" });
+    expect(existsSync(join(repo, ".forge/identities.json"))).toBe(false);
+    const receipt = JSON.parse(readFileSync(join(repo, ".forge/memory/SPEC-ADOPT.json"), "utf8"));
+    expect(receipt.result.changes[0]).toMatchObject({ previous_content: legacy.old, proposed_content: legacy.next });
+    expect(apply_prepared(repo, manifestPath)).toMatchObject({ already_applied: true, result_match: "matching" });
+
+    const next = legacy.next.replace("approved behavior", "clarified behavior");
+    write(legacy.draft, next);
+    const followup = { ...legacy.change, base_sha256: digest(legacy.next), proposed_sha256: digest(next), metadata_changes: [] };
+    apply_prepared(repo, manifest("SPEC-ADOPT-FOLLOWUP", [followup]));
+    expect(readFileSync(join(repo, legacy.path), "utf8")).toBe(next);
+    write(legacy.draft, next.replace("code: LEGACY-SPEC", "code: REPLACED-SPEC"));
+    expect(() => apply_prepared(repo, manifest("SPEC-ADOPT-REIDENTIFY", [{
+      ...followup, base_sha256: digest(next), proposed_sha256: digest(readFileSync(join(repo, legacy.draft), "utf8")),
+    }]))).toThrow("immutable identity");
+    write(legacy.draft, legacy.old);
+    expect(() => apply_prepared(repo, manifest("SPEC-ADOPT-DOWNGRADE", [{
+      ...followup, base_sha256: digest(next), proposed_sha256: digest(legacy.old),
+    }]))).toThrow("YAML frontmatter");
+    expect(readFileSync(join(repo, legacy.path), "utf8")).toBe(next);
+  });
+
+  test("adoption requires an exact initial metadata declaration and an unused identity", () => {
+    const legacy = legacySpec("initialization");
+    expect(() => apply_prepared(repo, manifest("SPEC-ADOPT-UNDECLARED", [{
+      ...legacy.change, metadata_changes: ["title"],
+    }]))).toThrow("metadata change declaration mismatch");
+    write("docs/specs/existing/SPEC.md", legacy.next.replace("code: INITIALIZATION-SPEC", "code: EXISTING-SPEC"));
+    expect(() => apply_prepared(repo, manifest("SPEC-ADOPT-DUPLICATE", [legacy.change]))).toThrow("duplicate id/code with docs/specs/existing/SPEC.md");
+    expect(readFileSync(join(repo, legacy.path), "utf8")).toBe(legacy.old);
+  });
+
+  test("malformed and behaviorless old Specs cannot use plain Markdown adoption", () => {
+    for (const [name, old] of [
+      ["malformed", "---\ntitle: broken\n# Broken\n"],
+      ["spaced", " \n---\ninvalid header\n---\n# Broken\n"],
+      ["behaviorless", "# Missing scenarios\n"],
+    ]) {
+      const legacy = legacySpec(name!);
+      write(legacy.path, old!);
+      expect(() => apply_prepared(repo, manifest(`SPEC-REJECT-${name}`, [{
+        ...legacy.change, base_sha256: digest(old!),
+      }]))).toThrow();
+      expect(readFileSync(join(repo, legacy.path), "utf8")).toBe(old!);
+    }
+  });
+
+  test("only Spec apply updates can adopt plain Markdown", () => {
+    const legacy = legacySpec("bounded");
+    const generic = manifest("SPEC-NOT-SPEC-APPLY", [legacy.change]);
+    const value = JSON.parse(readFileSync(join(repo, generic), "utf8"));
+    delete value.application;
+    write(generic, JSON.stringify(value));
+    expect(() => apply_prepared(repo, generic)).toThrow("immutable metadata");
+    for (const action of ["remove", "move"]) {
+      expect(() => apply_prepared(repo, manifest(`SPEC-NOT-UPDATE-${action}`, [{
+        ...legacy.change, action, path: action === "move" ? "docs/specs/moved/SPEC.md" : legacy.path,
+        ...(action === "move" ? { from_path: legacy.path } : {}),
+        proposed_file: null, proposed_sha256: action === "move" ? digest(legacy.old) : null,
+        metadata_changes: [],
+      }]))).toThrow("YAML frontmatter");
+    }
+    expect(readFileSync(join(repo, legacy.path), "utf8")).toBe(legacy.old);
+  });
+
+  test("stale base or proposed hashes abort a multi-Spec adoption before any mutation", () => {
+    const first = legacySpec("first");
+    const second = legacySpec("second");
+    for (const field of ["base_sha256", "proposed_sha256"]) {
+      const operation = `SPEC-ADOPT-STALE-${field}`;
+      expect(() => apply_prepared(repo, manifest(operation, [first.change, { ...second.change, [field]: "0".repeat(64) }]))).toThrow("stale");
+      expect(readFileSync(join(repo, first.path), "utf8")).toBe(first.old);
+      expect(readFileSync(join(repo, second.path), "utf8")).toBe(second.old);
+      expect(existsSync(join(repo, `.forge/memory/${operation}.json`))).toBe(false);
+    }
+  });
+
+  test("failure after adoption restores plain bytes", () => {
+    const legacy = legacySpec("rollback");
+    const formal = spec(randomUUID(), "FORMAL-SPEC", "Formal", "GIVEN behavior\nWHEN it runs\nTHEN it stays stable.");
+    write("docs/specs/formal/SPEC.md", formal);
+    const nextFormal = formal.replace("stays stable", "remains stable");
+    write(".forge/prepared/formal.md", nextFormal);
+    _memory_test_hooks.after_install = () => { throw new Error("simulated post-write failure"); };
+    expect(() => apply_prepared(repo, manifest("SPEC-ADOPT-ROLLBACK", [legacy.change, {
+      path: "docs/specs/formal/SPEC.md", kind: "standing-spec", action: "update",
+      base_sha256: digest(formal), proposed_file: ".forge/prepared/formal.md", proposed_sha256: digest(nextFormal), metadata_changes: [],
+    }]))).toThrow("simulated post-write failure");
+    expect(readFileSync(join(repo, legacy.path), "utf8")).toBe(legacy.old);
+    expect(readFileSync(join(repo, "docs/specs/formal/SPEC.md"), "utf8")).toBe(formal);
+    expect(existsSync(join(repo, ".forge/memory/SPEC-ADOPT-ROLLBACK.json"))).toBe(false);
+  });
+
+  test("pins proposed bytes, retains independent authority inputs", () => {
     const old = spec("11111111-1111-4111-8111-111111111111", "TASKS-SPEC", "Tasks", "GIVEN one task\nWHEN it is listed\nTHEN it appears.");
     const next = old.replace("THEN it appears.", "THEN it appears with its owner.");
-    writeRegistered("docs/specs/tasks/SPEC.md", old);
+    write("docs/specs/tasks/SPEC.md", old);
     write(".forge/prepared/tasks.md", next);
     const manifestPath = manifest("SPEC-TASKS-01", [{
       path: "docs/specs/tasks/SPEC.md",
@@ -116,24 +227,12 @@ describe("early specification application", () => {
     expect(receipt.retained_input_snapshots[0].content).toContain("Accepted baseline");
     expect(receipt.authority_snapshots.human_source.content).toContain("Human approves");
     expect(receipt.result.changes[0].proposed_content).toBe(next);
-
-    const matching = ask(repo, "owner", ["standing-spec"]);
-    expect((matching.references as Array<Record<string, unknown>>)[0]).toMatchObject({
-      observation: "working-copy",
-      authority: "not-inferred",
-      implementation: "not-inferred",
-      provenance: { application: "spec", proof_status: "document-only", match: "matching" },
-    });
-    write("docs/specs/tasks/SPEC.md", next.replace("owner", "assignee"));
-    const diverged = ask(repo, "assignee", ["standing-spec"]);
-    expect(((diverged.references as Array<Record<string, unknown>>)[0]?.provenance as Record<string, unknown>).match).toBe("diverged");
-    expect((diverged.gaps as string[]).some((gap) => gap.includes("diverge"))).toBe(true);
   });
 
   test("rejects modified drafts, integrated claims, and protected decision changes before writing", () => {
     const old = spec("22222222-2222-4222-8222-222222222222", "ACCESS-SPEC", "Access", "GIVEN access\nWHEN it is checked\nTHEN Original behavior applies.");
     const next = old.replace("Original", "Approved");
-    writeRegistered("docs/specs/access/SPEC.md", old);
+    write("docs/specs/access/SPEC.md", old);
     write(".forge/prepared/access.md", next);
     const change = {
       path: "docs/specs/access/SPEC.md",
@@ -160,13 +259,13 @@ describe("early specification application", () => {
       proposed_file: ".forge/prepared/D1-smuggled.md",
       proposed_sha256: digest(decision),
       metadata_changes: [],
-    }]))).toThrow("protected D-number decisions");
+    }]))).toThrow("protected canonical decisions");
     expect(existsSync(join(repo, "docs/knowledge/decisions/D1-smuggled.md"))).toBe(false);
   });
 
-  test("moves one canonical file with exact bytes and its registered identity", () => {
+  test("moves one canonical file with exact bytes and its frontmatter identity", () => {
     const content = spec("33333333-3333-4333-8333-333333333333", "QUEUE-SPEC", "Queue", "GIVEN a queue\nWHEN it is read\nTHEN Stable behavior applies.");
-    writeRegistered("docs/specs/old-queue/SPEC.md", content);
+    write("docs/specs/old-queue/SPEC.md", content);
     const manifestPath = manifest("SPEC-MOVE", [{
       path: "docs/specs/queue/SPEC.md",
       from_path: "docs/specs/old-queue/SPEC.md",
@@ -183,103 +282,26 @@ describe("early specification application", () => {
     expect(JSON.parse(verified.stdout)).toMatchObject({ valid: true, application: "spec" });
     const result = run(["memory", "apply", manifestPath]);
     expect(result.status, result.stderr).toBe(0);
-    expect(JSON.parse(result.stdout)).toMatchObject({ applied: true, application: "spec" });
+    const applied = JSON.parse(result.stdout);
+    expect(applied).toMatchObject({ applied: true, application: "spec" });
     expect(existsSync(join(repo, "docs/specs/old-queue/SPEC.md"))).toBe(false);
     expect(readFileSync(join(repo, "docs/specs/queue/SPEC.md"), "utf8")).toBe(content);
-    const identities = JSON.parse(readFileSync(join(repo, ".forge/identities.json"), "utf8"));
-    expect(identities["docs/specs/old-queue/SPEC.md"]).toBeUndefined();
-    expect(identities["docs/specs/queue/SPEC.md"]).toEqual({
+    expect(applied.changes[0].forge_identity).toEqual({
       id: "33333333-3333-4333-8333-333333333333",
       code: "QUEUE-SPEC",
       type: "standing-spec",
     });
+    expect(existsSync(join(repo, ".forge/identities.json"))).toBe(false);
     const replay = run(["memory", "apply", manifestPath]);
     expect(replay.status, replay.stderr).toBe(0);
     expect(JSON.parse(replay.stdout)).toMatchObject({ applied: false, already_applied: true, result_match: "matching" });
   });
 
-  test("reports a removed canonical file that reappears as diverged from the latest receipt", () => {
-    const content = spec("66666666-6666-4666-8666-666666666666", "REMOVED-SPEC", "Removed", "GIVEN old behavior\nWHEN it is retired\nTHEN it is absent.");
-    write(".forge/prepared/removed.md", content);
-    apply_prepared(repo, manifest("SPEC-REMOVE-ADD", [{
-      path: "docs/specs/removed/SPEC.md",
-      kind: "standing-spec",
-      action: "add",
-      base_sha256: null,
-      proposed_file: ".forge/prepared/removed.md",
-      proposed_sha256: digest(content),
-      metadata_changes: [],
-    }]));
-    apply_prepared(repo, manifest("SPEC-REMOVE-LATER", [{
-      path: "docs/specs/removed/SPEC.md",
-      kind: "standing-spec",
-      action: "remove",
-      base_sha256: digest(content),
-      proposed_file: null,
-      proposed_sha256: null,
-      metadata_changes: [],
-    }]));
-
-    write("docs/specs/removed/SPEC.md", content);
-    const result = ask(repo, "retired", ["standing-spec"]);
-    const reference = (result.references as Array<Record<string, unknown>>)[0];
-    expect(reference?.provenance).toMatchObject({
-      operation_id: "SPEC-REMOVE-LATER",
-      recorded_sha256: null,
-      current_sha256: digest(content),
-      match: "diverged",
-    });
-    expect(result.gaps).toContain("Working-copy bytes diverge from the latest receipt for docs/specs/removed/SPEC.md.");
-  });
-
-  test("tracks the latest move receipt for both its matching destination and absent source", () => {
-    const content = spec("77777777-7777-4777-8777-777777777777", "MOVED-PROVENANCE-SPEC", "Moved provenance", "GIVEN move history\nWHEN it is queried\nTHEN both affected paths are tracked.");
-    write(".forge/prepared/moved-provenance.md", content);
-    apply_prepared(repo, manifest("SPEC-MOVE-ADD", [{
-      path: "docs/specs/move-source/SPEC.md",
-      kind: "standing-spec",
-      action: "add",
-      base_sha256: null,
-      proposed_file: ".forge/prepared/moved-provenance.md",
-      proposed_sha256: digest(content),
-      metadata_changes: [],
-    }]));
-    apply_prepared(repo, manifest("SPEC-MOVE-LATER", [{
-      path: "docs/specs/move-target/SPEC.md",
-      from_path: "docs/specs/move-source/SPEC.md",
-      kind: "standing-spec",
-      action: "move",
-      base_sha256: digest(content),
-      proposed_file: null,
-      proposed_sha256: digest(content),
-      metadata_changes: [],
-    }]));
-
-    write("docs/specs/move-source/SPEC.md", content);
-    const result = ask(repo, "affected paths", ["standing-spec"]);
-    const references = result.references as Array<Record<string, unknown>>;
-    const source = references.find((reference) => reference.path === "docs/specs/move-source/SPEC.md");
-    const target = references.find((reference) => reference.path === "docs/specs/move-target/SPEC.md");
-    expect(source?.provenance).toMatchObject({
-      operation_id: "SPEC-MOVE-LATER",
-      recorded_sha256: null,
-      current_sha256: digest(content),
-      match: "diverged",
-    });
-    expect(target?.provenance).toMatchObject({
-      operation_id: "SPEC-MOVE-LATER",
-      recorded_sha256: digest(content),
-      current_sha256: digest(content),
-      match: "matching",
-    });
-    expect(result.gaps).toContain("Working-copy bytes diverge from the latest receipt for docs/specs/move-source/SPEC.md.");
-  });
-
   test("rejects a move that breaks a protected link and preserves intervening edits during rollback", () => {
     const moved = spec("44444444-4444-4444-8444-444444444444", "MOVED-SPEC", "Moved", "GIVEN moved behavior\nWHEN it runs\nTHEN it remains stable.");
     const referring = spec("55555555-5555-4555-8555-555555555555", "REF-SPEC", "Reference", "GIVEN a reference\nWHEN it is followed\nTHEN [Moved](../old/SPEC.md) remains available.");
-    writeRegistered("docs/specs/old/SPEC.md", moved);
-    writeRegistered("docs/specs/ref/SPEC.md", referring);
+    write("docs/specs/old/SPEC.md", moved);
+    write("docs/specs/ref/SPEC.md", referring);
     const change = {
       path: "docs/specs/new/SPEC.md",
       from_path: "docs/specs/old/SPEC.md",
@@ -296,9 +318,9 @@ describe("early specification application", () => {
 
     write("docs/specs/ref/SPEC.md", referring.replace("../old/SPEC.md", "../new/SPEC.md"));
     const intervening = moved.replace("remains stable", "was concurrently clarified");
-    _memory_test_hooks.register_document = (_root, target) => {
-      writeFileSync(target, intervening);
-      throw new Error("simulated registry failure");
+    _memory_test_hooks.after_install = (installed) => {
+      writeFileSync(installed.target, intervening);
+      throw new Error("simulated post-write failure");
     };
     expect(() => apply_prepared(repo, manifest("SPEC-MOVE-ROLLBACK", [change]))).toThrow("rollback incomplete");
     expect(readFileSync(join(repo, "docs/specs/old/SPEC.md"), "utf8")).toBe(moved);

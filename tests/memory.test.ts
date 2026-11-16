@@ -18,11 +18,10 @@ import {
   _memory_test_hooks,
   apply_kb,
   apply_prepared,
-  ask,
   verify_knowledge,
   verify_prepared,
 } from "../src/memory.ts";
-import { create_document, register_document } from "../src/records.ts";
+import { create_document } from "../src/records.ts";
 
 const CREATED = "2026-09-09T00:00:00+00:00";
 const UPDATED = "2026-09-09T01:00:00+00:00";
@@ -95,11 +94,10 @@ function manifest(
   return path;
 }
 
-function writeRegistered(path: string, content: string): string {
+function writeCanonical(path: string, content: string): string {
   const absolute = join(repo, path);
   mkdirSync(join(absolute, ".."), { recursive: true });
   writeFileSync(absolute, content);
-  register_document(repo, absolute, content);
   return absolute;
 }
 
@@ -136,7 +134,7 @@ beforeEach(() => {
 afterEach(() => {
   delete _memory_test_hooks.check_current_state;
   delete _memory_test_hooks.check_one_current_state;
-  delete _memory_test_hooks.register_document;
+  delete _memory_test_hooks.after_install;
   rmSync(repo, { recursive: true, force: true });
 });
 
@@ -175,7 +173,7 @@ describe("prepared canonical memory", () => {
     const next = old
       .replace(`updatedAt: ${CREATED}`, `updatedAt: ${UPDATED}`)
       .replace("THEN access is granted", "THEN scoped access is granted");
-    const target = writeRegistered("docs/specs/access/SPEC.md", old);
+    const target = writeCanonical("docs/specs/access/SPEC.md", old);
     const proposed = join(repo, ".forge/prepared/access.md");
     writeFileSync(proposed, next);
     const invalidFieldManifest = manifest("OP-update-invalid-field", [
@@ -217,8 +215,8 @@ describe("prepared canonical memory", () => {
   test("a stale multi-file manifest writes nothing", () => {
     const first = document("concept", "22222222-2222-4222-8222-222222222222", "TERM-A", "Term A", "# Term A");
     const second = document("concept", "33333333-3333-4333-8333-333333333333", "TERM-B", "Term B", "# Term B");
-    writeRegistered("docs/knowledge/domain/a.md", first);
-    writeRegistered("docs/knowledge/domain/b.md", second);
+    writeCanonical("docs/knowledge/domain/a.md", first);
+    writeCanonical("docs/knowledge/domain/b.md", second);
     writeFileSync(join(repo, ".forge/prepared/a.md"), first.replace("# Term A", "# Term A\n\nChanged"));
     writeFileSync(join(repo, ".forge/prepared/b.md"), second.replace("# Term B", "# Term B\n\nChanged"));
     const preparedManifest = manifest("OP-stale", [
@@ -246,7 +244,7 @@ describe("prepared canonical memory", () => {
     expect(existsSync(join(repo, ".forge/memory/OP-stale.json"))).toBe(false);
   });
 
-  test("CLI add transfers a registered draft identity to its canonical path", () => {
+  test("CLI add keeps a draft's frontmatter identity at its canonical path", () => {
     const prepared = join(repo, ".forge/prepared/workspace.md");
     create_document(repo, "concept", prepared, "Workspace", "WORKSPACE");
     const preparedManifest = manifest("OP-add", [
@@ -266,9 +264,9 @@ describe("prepared canonical memory", () => {
     expect(completed.status, completed.stderr).toBe(0);
     const canonical = join(repo, "docs/knowledge/domain/workspace.md");
     expect(readFileSync(canonical)).toEqual(readFileSync(prepared));
-    const registry = readJson(join(repo, ".forge/identities.json"));
-    expect(registry["docs/knowledge/domain/workspace.md"]).toBeDefined();
-    expect(registry[".forge/prepared/workspace.md"]).toBeUndefined();
+    const [change] = list(JSON.parse(completed.stdout).changes).map(record);
+    expect(record(change!.forge_identity)).toMatchObject({ code: "WORKSPACE", type: "concept" });
+    expect(existsSync(join(repo, ".forge/identities.json"))).toBe(false);
   });
 
   test("native OKF scaffold keeps its Forge identity when adopted under an arbitrary hierarchy", () => {
@@ -297,9 +295,6 @@ describe("prepared canonical memory", () => {
     apply_kb(repo, preparedManifest, "add");
     const canonical = "docs/knowledge/teams/platform/recover-queue.md";
     expect(readFileSync(join(repo, canonical), "utf8")).toBe(prepared);
-    const registry = readJson(join(repo, ".forge/identities.json"));
-    expect(registry[canonical]).toEqual(drafted.forge_identity);
-    expect(registry[".forge/prepared/runbook.md"]).toBeUndefined();
 
     const checked = verify_knowledge(repo, ["concept"]);
     const stored = record(list(checked.records)[0]);
@@ -320,11 +315,23 @@ describe("prepared canonical memory", () => {
       proposed_file: ".forge/prepared/runbook-v2.md",
       metadata_changes: ["type"],
     }]), "update");
-    expect(readJson(join(repo, ".forge/identities.json"))[canonical]).toEqual(drafted.forge_identity);
-    expect(record(list(verify_knowledge(repo, ["concept"]).records)[0]).concept_type).toBe("Recovery Playbook");
+    const revisedRecord = record(list(verify_knowledge(repo, ["concept"]).records)[0]);
+    expect(revisedRecord.forge_identity).toEqual(drafted.forge_identity);
+    expect(revisedRecord.concept_type).toBe("Recovery Playbook");
+
+    const reidentified = revised.replace(String(record(drafted.forge_identity).id), randomUUID());
+    writeFileSync(join(repo, ".forge/prepared/runbook-v3.md"), reidentified);
+    expect(() => verify_prepared(repo, manifest("OP-native-reidentify", [{
+      path: canonical,
+      kind: "concept",
+      action: "update",
+      base_sha256: digest(revised),
+      proposed_file: ".forge/prepared/runbook-v3.md",
+      metadata_changes: ["id"],
+    }]))).toThrow("immutable identity changed");
   });
 
-  test("external OKF bytes are preserved while Forge adopts a distinct authoritative identity", () => {
+  test("external OKF bytes are preserved and a non-UUID id gives no Forge identity", () => {
     const external = `---
 type: Custom Asset
 id: external-record
@@ -346,21 +353,17 @@ details:
     }]);
     const preview = record(list(verify_prepared(repo, externalManifest).changes)[0]);
     expect(preview.forge_identity).toBeNull();
-    expect(preview.forge_identity_status).toBe("assigned-on-apply");
     const applied = apply_kb(repo, externalManifest, "add");
 
     expect(readFileSync(join(repo, target), "utf8")).toBe(external);
-    const identity = record(readJson(join(repo, ".forge/identities.json"))[target]);
-    expect(record(list(applied.changes)[0]).forge_identity).toEqual(identity);
-    expect(record(list(applied.changes)[0]).forge_identity_status).toBe("assigned");
-    expect(identity.id).not.toBe("external-record");
-    expect(identity.code).not.toBe("EXTERNAL");
+    expect(record(list(applied.changes)[0]).forge_identity).toBeNull();
     const checked = verify_knowledge(repo, ["concept"]);
-    expect(record(list(checked.gaps)[0]).code).toBe("non-authoritative-identity-extension");
-    expect(record(list(checked.records)[0]).forge_identity).toEqual(identity);
+    expect(checked.valid).toBe(true);
+    expect(record(list(checked.gaps)[0]).code).toBe("missing-forge-identity");
+    expect(record(list(checked.records)[0]).forge_identity).toBeNull();
   });
 
-  test("reserved OKF files use native structure and sidecar identities", () => {
+  test("reserved OKF files use native structure without identities", () => {
     const files = {
       ".forge/prepared/index.md": `---\nokf_version: "0.2"\n---\n# Knowledge\n\n* [Operations](operations/) - operating knowledge\n`,
       ".forge/prepared/nested-index.md": "# Operations\n\n* [Runbook](runbook.md) - queue recovery\n",
@@ -379,10 +382,10 @@ details:
     expect(checked.valid).toBe(true);
     expect(record(checked.okf).scan).toBe("full");
     expect(record(checked.okf).conformant).toBe(true);
-    const registry = readJson(join(repo, ".forge/identities.json"));
-    expect(record(registry["docs/knowledge/index.md"]).type).toBe("okf-index");
-    expect(record(registry["docs/knowledge/log.md"]).type).toBe("okf-log");
-    expect(record(registry["docs/knowledge/operations/runbook.md"]).type).toBe("okf-concept");
+    expect(list(checked.records).map((value) => record(value).forge_identity)).toEqual([null, null, null, null]);
+    const missing = list(checked.gaps).map(record).filter((gap) => gap.code === "missing-forge-identity").map((gap) => gap.path);
+    expect(missing).toEqual(["docs/knowledge/operations/runbook.md"]);
+    expect(existsSync(join(repo, ".forge/identities.json"))).toBe(false);
   });
 
   test("native root and nested indexes plus logs update without frontmatter metadata", () => {
@@ -414,8 +417,6 @@ details:
       ),
       "add",
     );
-    const registryBefore = readFileSync(join(repo, ".forge/identities.json"));
-
     const revised = {
       rootIndex: `${files.rootIndex}\n* [Recovery](operations/recovery.md) - recovery guidance.\n`,
       nestedIndex: `${files.nestedIndex}\n* [Recovery](recovery.md) - recovery guidance.\n`,
@@ -442,7 +443,6 @@ details:
     for (const [path, , name] of targets) {
       expect(readFileSync(join(repo, path), "utf8")).toBe(revised[name]);
     }
-    expect(readFileSync(join(repo, ".forge/identities.json"))).toEqual(registryBefore);
   });
 
   test("native concept updates compare quoted, nested, flow, and extension YAML fields", () => {
@@ -508,8 +508,6 @@ The queue can be recovered from a paused worker.
       }]),
       "add",
     );
-    const identityBefore = record(readJson(join(repo, ".forge/identities.json"))[target]);
-
     writeFileSync(join(repo, ".forge/prepared/queue-recovery-next.md"), next);
     const updateManifest = manifest("OP-native-concept-update", [{
       path: target,
@@ -532,14 +530,12 @@ The queue can be recovered from a paused worker.
     const applied = apply_kb(repo, updateManifest, "update");
     expect(applied.applied).toBe(true);
     expect(readFileSync(join(repo, target), "utf8")).toBe(next);
-    expect(readJson(join(repo, ".forge/identities.json"))[target]).toEqual(identityBefore);
     const checked = verify_knowledge(repo, ["concept"]);
     const stored = record(list(checked.records)[0]);
     expect(stored.concept_type).toBe("Recovery Playbook");
-    expect(stored.forge_identity).toEqual(identityBefore);
   });
 
-  test("registered legacy reserved records stay inspectable until explicit authorized conversion", () => {
+  test("legacy Forge-frontmatter reserved records stay inspectable until explicit authorized conversion", () => {
     const legacyIndex = document(
       "kb-index",
       "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
@@ -556,19 +552,11 @@ The queue can be recovered from a paused worker.
     );
     const indexPath = "docs/knowledge/legacy/index.md";
     const logPath = "docs/knowledge/legacy/log.md";
-    writeRegistered(indexPath, legacyIndex);
-    writeRegistered(logPath, legacyLog);
-    const registryBefore = readJson(join(repo, ".forge/identities.json"));
-    const indexIdentity = record(registryBefore[indexPath]);
-    const logIdentity = record(registryBefore[logPath]);
+    writeCanonical(indexPath, legacyIndex);
+    writeCanonical(logPath, legacyLog);
+    const indexIdentity = { id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", code: "LEGACY-INDEX", type: "kb-index" };
+    const logIdentity = { id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", code: "LEGACY-LOG", type: "kb-log" };
 
-    const asked = ask(repo, "legacy", ["kb-index", "kb-log"]);
-    const references = list(asked.references).map((reference) => record(reference));
-    expect(references.map((reference) => [reference.path, reference.format])).toEqual([
-      [indexPath, "forge-legacy"],
-      [logPath, "forge-legacy"],
-    ]);
-    expect(references.map((reference) => reference.forge_identity)).toEqual([indexIdentity, logIdentity]);
     const inspected = verify_knowledge(repo);
     expect(inspected.valid).toBe(false);
     expect(record(inspected.okf).conformant).toBe(false);
@@ -593,7 +581,6 @@ The queue can be recovered from a paused worker.
     }]);
     expect(() => apply_kb(repo, staleUpdate, "update")).toThrow("stale base");
     expect(readFileSync(join(repo, indexPath), "utf8")).toBe(legacyIndex);
-    expect(readJson(join(repo, ".forge/identities.json"))).toEqual(registryBefore);
 
     const updateManifest = manifest("OP-legacy-index-convert", [{
       path: indexPath,
@@ -606,7 +593,7 @@ The queue can be recovered from a paused worker.
     const updated = apply_kb(repo, updateManifest, "update");
     expect(updated.applied).toBe(true);
     expect(readFileSync(join(repo, indexPath), "utf8")).toBe(convertedIndex);
-    expect(readJson(join(repo, ".forge/identities.json"))[indexPath]).toEqual(indexIdentity);
+    expect(record(list(updated.changes)[0]).forge_identity).toBeNull();
 
     const staleRemove = manifest("OP-legacy-log-stale", [{
       path: logPath,
@@ -618,7 +605,6 @@ The queue can be recovered from a paused worker.
     }]);
     expect(() => apply_kb(repo, staleRemove, "remove")).toThrow("stale base");
     expect(readFileSync(join(repo, logPath), "utf8")).toBe(legacyLog);
-    expect(readJson(join(repo, ".forge/identities.json"))[logPath]).toEqual(logIdentity);
 
     const removeManifest = manifest("OP-legacy-log-remove", [{
       path: logPath,
@@ -631,12 +617,12 @@ The queue can be recovered from a paused worker.
     const removed = apply_kb(repo, removeManifest, "remove");
     expect(removed.applied).toBe(true);
     expect(existsSync(join(repo, logPath))).toBe(false);
-    expect(readJson(join(repo, ".forge/identities.json"))[logPath]).toBeUndefined();
+    expect(record(list(removed.changes)[0]).forge_identity).toEqual(logIdentity);
     const history = readJson(join(repo, ".forge/memory/OP-legacy-log-remove.json"));
     expect(record(list(record(history.result).changes)[0]).removed_content).toBe(legacyLog);
   });
 
-  test("KB add assigns fresh identities when a registered Spec or canonical KB is proposed", () => {
+  test("KB add rejects a copy of an identified Spec and adopts unidentified canonical bytes", () => {
     const standingSpec = document(
       "standing-spec",
       "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
@@ -645,51 +631,32 @@ The queue can be recovered from a paused worker.
       "# Access\n\n## Entry\n\n- GIVEN an approved member\n- WHEN they enter\n- THEN access is granted\n",
     );
     const standingPath = "docs/specs/access/SPEC.md";
-    writeRegistered(standingPath, standingSpec);
-    const standingIdentity = record(readJson(join(repo, ".forge/identities.json"))[standingPath]);
+    writeCanonical(standingPath, standingSpec);
+    expect(() => apply_kb(repo, manifest("OP-proposed-spec", [{
+      path: "docs/knowledge/domain/from-spec.md",
+      kind: "concept",
+      action: "add",
+      base_sha256: null,
+      proposed_file: standingPath,
+      metadata_changes: [],
+    }]), "add")).toThrow("duplicate id/code with docs/specs/access/SPEC.md");
+    expect(existsSync(join(repo, "docs/knowledge/domain/from-spec.md"))).toBe(false);
 
     const canonicalKnowledge = "---\ntype: Existing Runbook\n---\n# Existing runbook\n";
     const canonicalPath = "docs/knowledge/domain/existing.md";
-    writeFileSync(join(repo, ".forge/prepared/existing.md"), canonicalKnowledge);
-    apply_kb(
-      repo,
-      manifest("OP-existing-knowledge-add", [{
-        path: canonicalPath,
-        kind: "concept",
-        action: "add",
-        base_sha256: null,
-        proposed_file: ".forge/prepared/existing.md",
-        metadata_changes: [],
-      }]),
-      "add",
-    );
-    const registryBefore = readJson(join(repo, ".forge/identities.json"));
-    const canonicalIdentity = record(registryBefore[canonicalPath]);
-
-    const proposals = [
-      ["OP-proposed-spec", "docs/knowledge/domain/from-spec.md", standingPath, standingIdentity] as const,
-      ["OP-proposed-canonical", "docs/knowledge/domain/from-canonical.md", canonicalPath, canonicalIdentity] as const,
-    ];
-    for (const [operation, target, proposedFile, sourceIdentity] of proposals) {
-      const sourceBytes = readFileSync(join(repo, proposedFile), { encoding: "utf8" });
-      const preparedManifest = manifest(operation, [{
-        path: target,
-        kind: "concept",
-        action: "add",
-        base_sha256: null,
-        proposed_file: proposedFile,
-        metadata_changes: [],
-      }]);
-      const applied = apply_kb(repo, preparedManifest, "add");
-      expect(applied.applied).toBe(true);
-      expect(readFileSync(join(repo, proposedFile), "utf8")).toBe(sourceBytes);
-      expect(readJson(join(repo, ".forge/identities.json"))[proposedFile]).toEqual(sourceIdentity);
-      const adopted = record(readJson(join(repo, ".forge/identities.json"))[target]);
-      expect(adopted.id).not.toBe(sourceIdentity.id);
-      expect(adopted.code).not.toBe(sourceIdentity.code);
-    }
-    expect(readJson(join(repo, ".forge/identities.json"))[standingPath]).toEqual(standingIdentity);
-    expect(readJson(join(repo, ".forge/identities.json"))[canonicalPath]).toEqual(canonicalIdentity);
+    writeCanonical(canonicalPath, canonicalKnowledge);
+    const applied = apply_kb(repo, manifest("OP-proposed-canonical", [{
+      path: "docs/knowledge/domain/from-canonical.md",
+      kind: "concept",
+      action: "add",
+      base_sha256: null,
+      proposed_file: canonicalPath,
+      metadata_changes: [],
+    }]), "add");
+    expect(applied.applied).toBe(true);
+    expect(readFileSync(join(repo, canonicalPath), "utf8")).toBe(canonicalKnowledge);
+    expect(record(list(applied.changes)[0]).forge_identity).toBeNull();
+    expect(readFileSync(join(repo, standingPath), "utf8")).toBe(standingSpec);
   });
 
   test("remove preserves history while broken OKF links remain a health signal", () => {
@@ -701,8 +668,8 @@ The queue can be recovered from a paused worker.
       "Use widget",
       "# Use widget\n\nSee [Widget](../domain/widget.md).",
     );
-    const target = writeRegistered("docs/knowledge/domain/widget.md", concept);
-    writeRegistered("docs/knowledge/processes/use-widget.md", process);
+    const target = writeCanonical("docs/knowledge/domain/widget.md", concept);
+    writeCanonical("docs/knowledge/processes/use-widget.md", process);
     const removal: Change = {
       path: "docs/knowledge/domain/widget.md",
       kind: "concept",
@@ -715,7 +682,6 @@ The queue can be recovered from a paused worker.
     expect(existsSync(target)).toBe(false);
     const history = readJson(join(repo, ".forge/memory/OP-remove.json"));
     expect(record(list(record(history.result).changes)[0]).removed_content).toBe(concept);
-    expect(readJson(join(repo, ".forge/identities.json"))["docs/knowledge/domain/widget.md"]).toBeUndefined();
     const checked = verify_knowledge(repo, ["process"]);
     expect(checked.valid).toBe(true);
     expect(list(checked.gaps).map((gap) => record(gap).code)).toContain("broken-local-link");
@@ -741,11 +707,10 @@ The queue can be recovered from a paused worker.
     expect(() => verify_prepared(repo, preparedManifest)).toThrow("requires evidence and acceptance");
   });
 
-  test("a post-write failure rolls back document, registry, and history", () => {
+  test("a post-write failure rolls back document and history", () => {
     const old = document("concept", "99999999-9999-4999-8999-999999999999", "TERM-E", "Term E", "# Term E");
     const next = old.replace("# Term E", "# Term E\n\nChanged");
-    const target = writeRegistered("docs/knowledge/domain/e.md", old);
-    const registryBefore = readFileSync(join(repo, ".forge/identities.json"));
+    const target = writeCanonical("docs/knowledge/domain/e.md", old);
     writeFileSync(join(repo, ".forge/prepared/e.md"), next);
     const preparedManifest = manifest("OP-rollback", [
       {
@@ -757,24 +722,23 @@ The queue can be recovered from a paused worker.
         metadata_changes: [],
       },
     ]);
-    _memory_test_hooks.register_document = () => {
-      throw new ForgeError("registry write failed");
+    _memory_test_hooks.after_install = () => {
+      throw new ForgeError("post-write failure");
     };
 
-    expect(() => apply_prepared(repo, preparedManifest)).toThrow("registry write failed");
+    expect(() => apply_prepared(repo, preparedManifest)).toThrow("post-write failure");
     expect(readFileSync(target, "utf8")).toBe(old);
-    expect(readFileSync(join(repo, ".forge/identities.json"))).toEqual(registryBefore);
     expect(existsSync(join(repo, ".forge/memory/OP-rollback.json"))).toBe(false);
   });
 
-  test("registry rollback restores transfers while preserving an unrelated registration", () => {
+  test("rollback restores owned writes while preserving an unrelated document", () => {
     const prepared = join(repo, ".forge/prepared/new.md");
     create_document(repo, "concept", prepared, "New", "CONCEPT-NEW");
     const old = document("concept", "88888888-8888-4888-8888-888888888888", "CONCEPT-OTHER", "Other", "# Other");
-    const target = writeRegistered("docs/knowledge/domain/other.md", old);
+    const target = writeCanonical("docs/knowledge/domain/other.md", old);
     const proposed = join(repo, ".forge/prepared/other.md");
     writeFileSync(proposed, old.replace("# Other", "# Other\n\nApproved detail."));
-    const preparedManifest = manifest("OP-registry-ownership", [
+    const preparedManifest = manifest("OP-rollback-ownership", [
       {
         path: "docs/knowledge/domain/new.md",
         kind: "concept",
@@ -792,28 +756,24 @@ The queue can be recovered from a paused worker.
         metadata_changes: [],
       },
     ]);
-    _memory_test_hooks.register_document = () => {
+    _memory_test_hooks.after_install = () => {
       create_document(repo, "issue", "unrelated.md", "Unrelated", "ISSUE-UNRELATED");
-      throw new ForgeError("registry write failed");
+      throw new ForgeError("post-write failure");
     };
 
-    expect(() => apply_prepared(repo, preparedManifest)).toThrow("registry write failed");
-    expect(Object.keys(readJson(join(repo, ".forge/identities.json"))).sort()).toEqual([
-      ".forge/prepared/new.md",
-      "docs/knowledge/domain/other.md",
-      "unrelated.md",
-    ]);
+    expect(() => apply_prepared(repo, preparedManifest)).toThrow("post-write failure");
+    expect(existsSync(join(repo, ".forge/identities.json"))).toBe(false);
     expect(existsSync(join(repo, "docs/knowledge/domain/new.md"))).toBe(false);
     expect(readFileSync(target, "utf8")).toBe(old);
     expect(existsSync(join(repo, "unrelated.md"))).toBe(true);
-    expect(existsSync(join(repo, ".forge/memory/OP-registry-ownership.json"))).toBe(false);
+    expect(existsSync(join(repo, ".forge/memory/OP-rollback-ownership.json"))).toBe(false);
   });
 
   test("an undeclared nested raw metadata change is rejected", () => {
     const old = document("concept", "77777777-7777-4777-8777-777777777777", "TERM-D", "Term D", "# Term D", {
       extra: "custom:\n  owner: first\n",
     });
-    writeRegistered("docs/knowledge/domain/d.md", old);
+    writeCanonical("docs/knowledge/domain/d.md", old);
     writeFileSync(join(repo, ".forge/prepared/d.md"), old.replace("owner: first", "owner: second"));
     const preparedManifest = manifest("OP-metadata", [
       {
@@ -828,7 +788,7 @@ The queue can be recovered from a paused worker.
     expect(() => verify_prepared(repo, preparedManifest)).toThrow("undeclared changes: custom");
   });
 
-  test("ask returns lexical references and gaps while verification reports broken links", () => {
+  test("verification reports broken links", () => {
     const concept = document(
       "concept",
       "88888888-8888-4888-8888-888888888888",
@@ -837,12 +797,8 @@ The queue can be recovered from a paused worker.
       "# Workspace\n\nA workspace contains projects. See ![missing](missing.png).",
       { extra: 'sources: [{"resource":"https://example.test/glossary"}]\n' },
     );
-    writeRegistered("docs/knowledge/domain/workspace.md", concept);
+    writeCanonical("docs/knowledge/domain/workspace.md", concept);
 
-    const result = ask(repo, "workspace unicorn", ["concept"]);
-    expect(record(list(result.references)[0]).path).toBe("docs/knowledge/domain/workspace.md");
-    expect((result.gaps as string[]).some((gap) => gap.includes("unicorn"))).toBe(true);
-    expect(result.claim).toBe("lexical references only; semantic coverage was not established");
     const checked = verify_knowledge(repo, ["concept"]);
     expect(checked.valid).toBe(true);
     expect(checked.healthy).toBe(false);
@@ -859,7 +815,7 @@ The queue can be recovered from a paused worker.
       "Stale",
       "# Stale\n\nOld meaning.",
     );
-    const target = writeRegistered("docs/knowledge/domain/stale.md", old);
+    const target = writeCanonical("docs/knowledge/domain/stale.md", old);
     const proposed = join(repo, ".forge/prepared/stale.md");
     writeFileSync(proposed, old.replace("Old meaning.", "Approved meaning."));
     const preparedManifest = manifest("OP-stale-recheck", [
@@ -872,7 +828,6 @@ The queue can be recovered from a paused worker.
         metadata_changes: [],
       },
     ]);
-    const registry = readFileSync(join(repo, ".forge/identities.json"));
     const fresh = old.replace("Old meaning.", "New human meaning.");
     let calls = 0;
     _memory_test_hooks.check_current_state = () => {
@@ -882,7 +837,6 @@ The queue can be recovered from a paused worker.
 
     expect(() => apply_prepared(repo, preparedManifest)).toThrow(ForgeError);
     expect(readFileSync(target, "utf8")).toBe(fresh);
-    expect(readFileSync(join(repo, ".forge/identities.json"))).toEqual(registry);
     expect(existsSync(join(repo, ".forge/memory/OP-stale-recheck.json"))).toBe(false);
   });
 
@@ -892,7 +846,7 @@ The queue can be recovered from a paused worker.
         const name = `${action}-${String(conflict)}`;
         const old = document("concept", randomUUID(), `CONCEPT-${name}`, name, `# ${name}\n\nOld meaning.`);
         const target = join(repo, `docs/knowledge/domain/${name}.md`);
-        if (action !== "add") writeRegistered(relative(repo, target), old);
+        if (action !== "add") writeCanonical(relative(repo, target), old);
         const proposed = join(repo, `.forge/prepared/${name}.md`);
         writeFileSync(proposed, old.replace("Old meaning.", "Approved meaning."));
         const first: Change = {
@@ -910,7 +864,7 @@ The queue can be recovered from a paused worker.
           "Later",
           "# Later\n\nOld later meaning.",
         );
-        const later = writeRegistered(`docs/knowledge/domain/later-${name}.md`, laterOld);
+        const later = writeCanonical(`docs/knowledge/domain/later-${name}.md`, laterOld);
         const laterProposed = join(repo, `.forge/prepared/later-${name}.md`);
         writeFileSync(laterProposed, laterOld.replace("Old later meaning.", "Approved later meaning."));
         const preparedManifest = manifest(`OP-${name}`, [
@@ -924,7 +878,6 @@ The queue can be recovered from a paused worker.
             metadata_changes: [],
           },
         ]);
-        const registry = readFileSync(join(repo, ".forge/identities.json"));
         const fresh = old.replace("Old meaning.", "Intervening target meaning.");
         const laterFresh = laterOld.replace("Old later meaning.", "Intervening later meaning.");
         let calls = 0;
@@ -957,7 +910,7 @@ The queue can be recovered from a paused worker.
         } else {
           expect(readFileSync(target, "utf8")).toBe(old);
         }
-        expect(readFileSync(join(repo, ".forge/identities.json"))).toEqual(registry);
+        expect(existsSync(join(repo, ".forge/identities.json"))).toBe(false);
         expect(existsSync(join(repo, `.forge/memory/OP-${name}.json`))).toBe(false);
       }
     }

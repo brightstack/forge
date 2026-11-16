@@ -1,7 +1,7 @@
 # Verify
 
-Apply [authority](../../forge-shared/references/authority.md), [severity](../../forge-shared/references/severity.md)
-and [returns with owner inspection](../../forge-shared/references/returns.md).
+Apply [authority](../../../references/authority.md), [severity](../../../references/severity.md)
+and [returns with owner inspection](../../../references/returns.md).
 
 Verify exercises the actual outcome after independent Review and, in delivery,
 [post-Review Simplify](../../forge-simplify/SKILL.md). Use a
@@ -79,7 +79,7 @@ network, persistence, focus, keyboard behavior, semantics, responsive behavior,
 and regressions when relevant.
 
 Compare the rendered candidate with the accepted design/mock revision and states.
-Record images or traces through [visual.md](../../forge-shared/assets/visual.md). Judge material
+Record images or traces through [visual.md](../../../templates/visual.md). Judge material
 fidelity, hierarchy, spacing, typography, alignment, clipping, overflow, contrast,
 interaction feedback, and responsive behavior. Code inspection is not visual
 acceptance; pixel precision applies only when accepted authority requires it.
@@ -96,5 +96,5 @@ Return `PASS`, `FAIL`, `RETHINK`, `READY_FOR_USER`, `INCONCLUSIVE`, or
 `BLOCKED`. A material failure returns the complete accepted packet and evidence
 to Build/Review repair, then proportionate authorized Simplify reassessment and
 affected Verify. Reuse unaffected proof with its basis rather than forcing a
-complete restart. Use the [shared finite repair count](../../forge-shared/references/repair.md); never mark unrun evidence
+complete restart. Use the [shared finite repair count](../../../references/repair.md); never mark unrun evidence
 PASS.

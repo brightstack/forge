@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 870 537" width="870" height="537" role="img" aria-labelledby="t d" xml:space="preserve">
+<title id="t">Forge session: building a CSV export button, stopping after Verify</title>
+<desc id="d">You ask Forge to build a CSV export button and stop after Verify. Forge proposes the flow and team, you approve the issue, Review finds a P1 that Repair fixes, Simplify and Verify pass, and Forge stops before Ship.</desc>
+<style>text{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;font-size:14px;white-space:pre;fill:#a7a59a}.you{fill:#fee685;font-weight:700}.ut{fill:#f5f3ec}.fl{fill:#f5f3ec;font-weight:700}.ft{fill:#d4d1c6}.k{fill:#a7a59a}.q{fill:#f5f3ec}.ok{fill:#6fc087;font-weight:700}.no{fill:#ea5e59;font-weight:700}.r{animation:r .35s ease both}@keyframes r{from{opacity:0}to{opacity:1}}@media (prefers-reduced-motion:reduce){.r{animation:none}}</style>
+<rect x=".5" y=".5" width="869" height="536" rx="10" fill="#0f0e0b" stroke="#2a2923"/>
+<path d="M1 40V11A10 10 0 0 1 11 1H859A10 10 0 0 1 869 11V40Z" fill="#14130f"/>
+<path d="M1 40.5H869" stroke="#2a2923"/>
+<circle cx="22" cy="20.5" r="5.5" fill="#3a3832"/><circle cx="40" cy="20.5" r="5.5" fill="#3a3832"/><circle cx="58" cy="20.5" r="5.5" fill="#3a3832"/>
+<g transform="translate(830 11) scale(0.8)"><path d="M12 2.5 20.2 7.25v9.5L12 21.5 3.8 16.75v-9.5L12 2.5Z" fill="none" stroke="#fee685" stroke-width="2.4" stroke-linejoin="round"/><path d="M12 7.5 15.9 9.75v4.5L12 16.5 8.1 14.25v-4.5L12 7.5Z" fill="#fee685"/></g>
+<rect class="r" style="animation-delay:0.20s" x="12" y="54" width="846" height="23" rx="4" fill="#fee685" fill-opacity=".06"/><rect class="r" style="animation-delay:0.20s" x="12" y="54" width="2" height="23" fill="#fee685" fill-opacity=".7"/>
+<rect class="r" style="animation-delay:2.52s" x="12" y="215" width="846" height="23" rx="4" fill="#fee685" fill-opacity=".06"/><rect class="r" style="animation-delay:2.52s" x="12" y="215" width="2" height="23" fill="#fee685" fill-opacity=".7"/>
+<rect class="r" style="animation-delay:4.00s" x="12" y="307" width="846" height="23" rx="4" fill="#fee685" fill-opacity=".06"/><rect class="r" style="animation-delay:4.00s" x="12" y="307" width="2" height="23" fill="#fee685" fill-opacity=".7"/>
+<text class="r" style="animation-delay:0.20s" x="26" y="70"><tspan class="you">You:</tspan>    <tspan class="ut">Forge build a CSV export button on the reports page. Stop after Verify.</tspan></text>
+<text class="r" style="animation-delay:1.05s" x="26" y="116"><tspan class="fl">Forge:</tspan>  <tspan class="ft">CSV export for the reports page, stopping after Verify.</tspan></text>
+<text class="r" style="animation-delay:1.33s" x="26" y="139">        <tspan class="k">Flow</tspan>   <tspan class="ft">Issue → Build ⇄ Review → Simplify → Verify</tspan></text>
+<text class="r" style="animation-delay:1.61s" x="26" y="162">        <tspan class="k">Team</tspan>   <tspan class="ft">PM drafts the issue · Engineer builds · a separate Reviewer judges · QA verifies</tspan></text>
+<text class="r" style="animation-delay:1.89s" x="26" y="185">        <tspan class="q">Go?</tspan></text>
+<text class="r" style="animation-delay:2.52s" x="26" y="231"><tspan class="you">You:</tspan>    <tspan class="ut">Go.</tspan></text>
+<text class="r" style="animation-delay:3.37s" x="26" y="277"><tspan class="fl">Forge:</tspan>  <tspan class="ft">Issue drafted with 3 acceptance criteria. </tspan><tspan class="q">Approve?</tspan></text>
+<text class="r" style="animation-delay:4.00s" x="26" y="323"><tspan class="you">You:</tspan>    <tspan class="ut">Approved.</tspan></text>
+<text class="r" style="animation-delay:4.85s" x="26" y="369"><tspan class="fl">Forge:</tspan>  <tspan class="k">Build     </tspan><tspan class="ok">✓</tspan> <tspan class="ft">implemented, tests added</tspan></text>
+<text class="r" style="animation-delay:5.13s" x="26" y="392">        <tspan class="k">Review    </tspan><tspan class="no">✗</tspan> <tspan class="no">P1</tspan><tspan class="ft">: export ignores the active date filter </tspan><tspan class="k">(src/reports/export.ts:41)</tspan></text>
+<text class="r" style="animation-delay:5.41s" x="26" y="415">        <tspan class="k">Repair    </tspan><tspan class="ok">✓</tspan> <tspan class="ft">filter passed through, regression test added</tspan></text>
+<text class="r" style="animation-delay:5.69s" x="26" y="438">        <tspan class="k">Review    </tspan><tspan class="ok">✓</tspan> <tspan class="ok">PASS</tspan></text>
+<text class="r" style="animation-delay:5.97s" x="26" y="461">        <tspan class="k">Simplify  </tspan><tspan class="ok">✓</tspan> <tspan class="ft">nothing to simplify, prior Review stands</tspan></text>
+<text class="r" style="animation-delay:6.25s" x="26" y="484">        <tspan class="k">Verify    </tspan><tspan class="ok">✓</tspan> <tspan class="ft">clicked Export at 1440px and 390px, file matches the filtered table</tspan></text>
+<text class="r" style="animation-delay:6.53s" x="26" y="507">        <tspan class="q">Stopped before Ship. Nothing pushed.</tspan></text>
+</svg>

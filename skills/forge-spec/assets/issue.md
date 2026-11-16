@@ -3,6 +3,8 @@
 <!--
 Forge Issue description body.
 Mandatory contract - preserve these section headings and order after the managed frontmatter and outer title.
+Optional sections (Non-Functional Requirements, Plan) are deleted when the request does not need them.
+Write only what the request needs: every item traces to the user's words or a necessary consequence of them.
 Load this asset once before drafting and reuse the held copy. Re-read only after truncation, conflict,
 relevant template change, or loss of held context.
 
@@ -31,13 +33,13 @@ Optional ## Plan section: Plan-mode handoff cues only (key files, verification c
 
 ## Non-Functional Requirements
 
-<!-- Only what applies: latency budget, idempotency, constraints to honor. -->
+<!-- Optional. Only when the request names one, or the asked outcome cannot work without it. Delete otherwise. -->
 
-- <e.g. p95 latency budget, idempotency, a side effect to preserve>
+- <a constraint the request names, e.g. a latency budget or a side effect to preserve>
 
 ## Notes
 
-<!-- Implementation cues: patterns, files or areas likely touched, out-of-scope edges. -->
+<!-- Implementation cues: patterns, files or areas likely touched. Related ideas the user did not ask for go here as one line each, as options the user can ask for. -->
 
 - <cue or idea>
 

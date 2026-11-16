@@ -16,9 +16,13 @@ An explicitly requested standalone code-only review or `forge-code-review` selec
 the [Code Review leaf](../forge-code-review/SKILL.md) directly and stops there.
 </activation>
 <setup>
-Read [authority](../forge-shared/references/authority.md) and
-[target harness resolution](../forge-shared/references/target-harness.md), [Launch and gates](../forge-shared/references/workflows.md),
-and the target repository's applicable root/nested harness. Adopt
+Run `forge context` from where you started, without `--repo` and without changing
+directory, and read every file it lists before anything else. Use the Target it
+prints as `--repo` for later forge commands.
+If `forge` is missing or doesn't know `context`, follow the fallback in
+[target harness resolution](../../references/target-harness.md#resolve-applicable-authority-progressively).
+Then read [authority](../../references/authority.md),
+[target harness resolution](../../references/target-harness.md), and [Launch and gates](../../references/workflows.md). Adopt
 [Reviewer](../../agents/reviewer/instructions.md) as primary professional guidance.
 Reviewer owns dimension coverage and the integrated verdict. Focused Judges remain read-only helpers; their findings cannot create scope.
 </setup>
@@ -50,7 +54,7 @@ and inspected standards/evidence in the existing report; preserve delegated
 originals and inspect their evidence before disposition.
 </step>
 <step n="3" name="Inspect and return">
-Use the [shared return contract](../forge-shared/references/returns.md). The
+Use the [shared return contract](../../references/returns.md). The
 accountable owner opens the actual result and relevant new log entries before
 advancement, checking the selected template/rubric, candidate, actual evidence,
 and gaps. Correct incomplete handoffs; do not promote self-reports into proof.

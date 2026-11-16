@@ -1,9 +1,9 @@
 # Install Forge
 
 The public install is one curl: a compiled CLI at `~/.local/bin/forge`, then
-`forge setup` copies the latest skill pack from GitHub into this project.
+`forge setup` copies the matching skill pack from GitHub into this project.
 
-macOS and Linux only. Windows and npm are out of this release.
+macOS and Linux, on x64 and arm64.
 
 ## Curl
 
@@ -39,9 +39,49 @@ Public URLs:
 Checksum mismatch fails closed.
 
 Run `forge --version` to see the installed CLI's Forge package version. The
-version is embedded from `package.json` when the executable is built. Skills are
-fetched separately from the public repository by setup; a matching version number
-alone does not prove that their files match a source checkout.
+version is embedded from `package.json` when the executable is built. Setup
+fetches the skills from the public repository's `v<version>` tag, so skills and
+CLI come from the same release; a matching version number alone does not prove
+that their files match a source checkout.
+
+## Update
+
+Install and update are the same command: run the installer again from the
+project, with the same `FORGE_TOOLS` hosts you installed. It replaces the binary,
+then setup replaces Forge's own skills and its shared `.forge/references/`,
+`.forge/templates/`, and `.forge/agents/`. Other skills, custom agents, loop
+records, memory receipts, and `forge.yml` stay. Restart the agent afterwards.
+
+### Updating from older versions
+
+- A 0.1.x CLI fetches skills from `main` and has no `forge context`, which every
+  skill now runs first. The CLI is shared across projects but skills are not, so
+  run the installer again in every project that has Forge. From 0.2.0 on, setup
+  fetches the skills tagged with the CLI's own version. A 0.1.x `forge setup` now
+  fails with `skill pack not found … expected skills/forge-shared/…`; that means
+  the CLI is old, not that the repository is broken. Run the installer.
+- `.forge/identities.json` is retired; Forge no longer reads or writes it. If it
+  exists, make sure each listed canonical document's frontmatter carries that
+  entry's `id` (and, for `docs/specs` Specs, its `type`), copying it in when
+  missing or different. Keep an OKF concept's own `type`; reserved `index.md` and
+  `log.md` files need nothing. Run `forge docs validate` and `forge kb verify`,
+  then delete `.forge/identities.json`.
+- Canonical decisions no longer get global `D1`, `D2` codes. Existing decisions
+  keep their D-code text and filenames; new ones are identified by the UUID `id`
+  in their frontmatter. Readable D-codes now exist only inside a loop's
+  `decisions.md`.
+
+An agent can do either from one line:
+
+```text
+Read https://forge.brightstack.ai/install.md and follow it.
+```
+
+That page is written for an agent to read and follow: it selects the hosts that
+already have Forge, runs the installer, checks `forge --version` and
+`forge context`, migrates a retired `.forge/identities.json`, and reports other
+leftovers from older installs without deleting them. The site also serves a docs index at
+https://forge.brightstack.ai/llms.txt.
 
 ## Setup versus init
 
@@ -71,15 +111,27 @@ integration was verified with Muse Code 1.4.1; this revised phase pack has not
 been revalidated in that host. Trust the workspace before loading project skills;
 if Forge appears twice, select the project entry rather than a stale user copy.
 
-Unknown tools fail. Setup replaces the Forge runtime skills and shared support,
-the Forge `agents/` catalog, and `OKF.md`. Claude setup also registers the native
-phase commands below. Other skills stay. Internal `forge-eval` tooling is not
+Unknown tools fail. Setup installs Forge's shared material once per project:
+`references/` (including `okf.md`), `templates/`, and the professional catalog
+`agents/` go to the application root's `.forge/references/`, `.forge/templates/`,
+and `.forge/agents/`, whatever `forge.yml` `storage.path` says (that setting only
+places loop records). Only the Forge skill folders go into each host's `skills/`.
+Setup rewrites the pack's relative links to match; a shared file that links into a
+skill points at the first selected host. It replaces only those Forge-owned
+folders and never touches `.forge/loops/`, `.forge/memory/`, `.forge/prepared/`,
+`forge.yml`, or the host's own `agents/` folder. Earlier installs wrote the
+catalog to `<host>/agents/` and `<host>/OKF.md` and the shared support to
+`<host>/skills/forge-shared/`; setup removes the old `forge-shared` skill folder
+and leaves the other two alone, so compare them with `.forge/agents/` and delete
+them by hand once you have checked they are not yours.
+Claude setup also registers the native phase commands below. Other skills stay. Internal `forge-eval` tooling is not
 part of this runtime pack.
 
-Default setup fetches the latest default branch of
-https://github.com/brightstack/forge into a temp directory, copies the pack, and
+Default setup fetches the `v<version>` tag of https://github.com/brightstack/forge
+(the version `forge --version` prints) into a temp directory, copies the pack, and
 deletes the temp tree. Git is required for that fetch and for `forge candidate`.
-If GitHub is unreachable, the command fails with a clear error.
+If GitHub is unreachable or the tag does not exist, the command fails with an error
+that names the tag and suggests `--pack`.
 
 `--pack <dir>` skips the network and copies from a local package tree (this
 checkout, or CI):
@@ -88,12 +140,12 @@ checkout, or CI):
 forge setup --pack /path/to/forge
 ```
 
-`--pack` must point at the Forge package layout: the complete runtime skill set,
-`commands/claude/forge/`, `agents/`, and `OKF.md` at that root. It is not the
-directory that holds the `forge` binary. The runtime folders are `forge`,
-`forge-spec`, `forge-plan`, `forge-build`, `forge-review`, `forge-simplify`, `forge-verify`,
-`forge-ship`, `forge-code-review`, and the non-discoverable `forge-shared` support
-bundle under `skills/`. Shared contracts live in focused `authority.md`,
+`--pack` must point at the Forge package layout: the complete runtime skill set
+under `skills/`, plus `references/`, `templates/`, `agents/`, and
+`commands/claude/forge/` at that root. It is not the directory that holds the
+`forge` binary. The skill folders are `forge`, `forge-spec`, `forge-plan`,
+`forge-build`, `forge-review`, `forge-simplify`, `forge-verify`, `forge-ship`, and
+`forge-code-review`. Shared contracts live in focused `authority.md`,
 `pragmatism.md`, `severity.md`, `repair.md`, and `target-harness.md` references;
 phase procedures load the relevant owner directly. Target harness routing carries
 actual app rule/reference/check paths into professional and Judge assignments.
@@ -117,8 +169,8 @@ applicable nested instructions for implementation and checks. Pass
 ```
 
 Start the host in the application and have it read the actual linked entrypoint.
-The complete pack's sibling `agents/`, skill references, assets, and `OKF.md`
-must remain readable by the owner and its native subagents. Use the host's real
+The complete pack's sibling `references/`, `templates/`, `agents/`, and skill
+assets must remain readable by the owner and its native subagents. Use the host's real
 registration if available; if it cannot discover external skills, the local
 harness pointer is the thin entrypoint. Missing access is a capability gap.
 Shell CLI availability does not establish skill discovery or colon invocation.
@@ -128,6 +180,25 @@ forge config resolve --repo /work/products/orchid
 forge init sample --repo /work/products/orchid --title "Sample change"
 forge docs validate --repo /work/products/orchid --loop sample
 ```
+
+To follow a curated harness instead of the application's root maps, set
+`harness.path` in the application's `forge.yml`:
+
+```yaml
+harness:
+  path: docs/factory
+```
+
+Forge then starts at `docs/factory/AGENTS.md` (else `CLAUDE.md`) and reads the root maps or nested
+instructions only where that harness routes to them. The skills run
+`forge context` to get this; run it yourself to see what agents will follow:
+
+```bash
+forge context --repo /work/products/orchid
+```
+
+From inside the application, `forge context` without `--repo` finds the same
+target, the way Git finds its repository.
 
 With no application configuration, records still go to
 `/work/products/orchid/.forge/loops/sample/`. Read `forge.yml` only from the
@@ -152,21 +223,21 @@ agent when required for newly installed entrypoints to appear.
 
 ## Copy only Spec or Review
 
-Preserve the relative `skills/` and sibling `agents/` layout. Copy whole named
-folders, including their references and assets:
+Preserve the relative `skills/`, `references/`, `templates/`, and `agents/`
+layout. Copy whole named folders, including their references and assets:
 
-- Spec: `skills/forge-spec/`, `skills/forge-shared/`, the
+- Spec: `skills/forge-spec/`, `references/`, `templates/`, the
   `agents/{product-manager,designer,architect,engineer,researcher,reviewer}/`
   professional folders, and `agents/{explorer,worker}/` when delegated. Roles are loaded only
   when the work triggers them; no Build or Review phase is required.
-- Review: `skills/forge-review/`, `skills/forge-shared/`,
+- Review: `skills/forge-review/`, `references/`, `templates/`,
   `skills/forge-code-review/`, and `agents/{reviewer,designer,judge}/`.
 
-Include `OKF.md` for shared knowledge/memory references and the relevant native
+`references/okf.md` covers shared knowledge/memory. Include the relevant native
 command file when using Claude colon invocation. The target repository's harness
 still owns implementation standards. A copy set's presence proves packaging;
 exercise the requested operation before claiming behavioral acceptance.
-The owning [copy-set guide](skills/forge-shared/references/copy-sets.md) explains
+The owning [copy-set guide](references/copy-sets.md) explains
 the direct-operation and optional-memory boundaries.
 
 ## First use
@@ -197,7 +268,7 @@ Here records go under `/records/orchid/runs/LOOP/`. `storage.path` defaults to
 `loops` and resolves from that base. Absolute loops paths override the base;
 home paths work. `--repo` always identifies the target source/canonical repository.
 `--loop LOOP` selects its record directory separately, and loop document paths
-are relative to that directory. Canonical identities, receipts, and the target
+are relative to that directory. Canonical documents, receipts, and the target
 lock stay in the application. The old `loopsPath` spelling remains a deprecated
 alias; conflicting old/new destinations fail before mutation.
 
@@ -206,9 +277,9 @@ home parent for this checkout resume in place. Duplicate codes require an explic
 qualified path; initialization refuses to shadow historical codes. A previous
 custom parent or an old home parent after moving a checkout needs its explicit
 known path. Setup never migrates history. See the
-[configuration contract](skills/forge-shared/references/cli.md#configuration-and-storage)
+[configuration contract](references/cli.md#configuration-and-storage)
 for inspection, recovery, and optional per-engine model/effort defaults consumed
-by [native dispatch](skills/forge-shared/references/runtime.md#model-selection).
+by [native dispatch](references/runtime.md#model-selection).
 
 Ignored or external records need an authorized durable copy and demonstrated
 restore before claiming recovery. A Git push alone does not retain them.
@@ -219,7 +290,7 @@ resolve within that loop, while canonical target paths stay repository-relative.
 Use `Forge spec apply <change>` after exact approval; its procedure prepares and
 checks `forge memory verify` before `forge memory apply`. `Forge finish <loop>`
 uses that guarded operation for approved unapplied meaning at actual completion.
-Neither is a shell subcommand. See [the memory contract](skills/forge-shared/references/memory.md).
+Neither is a shell subcommand. See [the memory contract](references/memory.md).
 
 Give the agent the `forge` path when a request creates or validates managed
 Forge state. Skill invocation happens in agent chat. The executable does not

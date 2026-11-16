@@ -9,7 +9,7 @@ host cannot provide required independent context or evidence, report the gap.
 Every professional/helper packet includes [authority](authority.md), the relevant
 [finding admission](severity.md) or [repair](repair.md) procedure when needed, and
 the [return contract](returns.md). Use [target harness resolution](target-harness.md)
-to supply actual applicable root/nested maps, routed standards, exemplars, and
+to supply the actual maps the `forge context` rule selects, routed standards, exemplars, and
 check paths. Receiving agents read those sources; a persona/helper or owner
 summary cannot replace them.
 The accountable owner inspects the returned artifact and relevant new log evidence

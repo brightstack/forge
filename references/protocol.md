@@ -43,13 +43,13 @@ The selected artifact directory is distinct from the target repository:
 source, harness, Git candidate, and canonical Spec/KB writes remain in that target.
 A managed loop contains:
 
-- `index.md` from [the index template](../assets/index.md): dated current
+- `index.md` from [the index template](../templates/index.md): dated current
   snapshot, accepted sources, outcomes, ownership,
   candidate, evidence gaps, and one next action;
-- `decisions.md` from [the decision-log template](../assets/decisions.md):
+- `decisions.md` from [the decision-log template](../templates/decisions.md):
   protected human decisions with source, actual quote, scope, date,
   authorization, status, and supersession;
-- `log.md` from [the loop-log template](../assets/log.md): concise lifecycle
+- `log.md` from [the loop-log template](../templates/log.md): concise lifecycle
   events and handoffs;
 - `spec/`: only earned intent, design, technical, work, Issue, Plan, and change
   records. Do not add Spec files, flags, or config the request did not earn.
@@ -57,7 +57,7 @@ A managed loop contains:
 - `build/log.md` from its Build-owned template:
   candidate, Build evidence, independent Review rounds, findings,
   dispositions, repairs, and rethink record;
-- `verify/`: actual acceptance evidence and [visual](../assets/visual.md) proof;
+- `verify/`: actual acceptance evidence and [visual](../templates/visual.md) proof;
 - `ship.md` from its Ship-owned template: authorized publication
   and concise complete-candidate closure.
 
@@ -125,9 +125,9 @@ assigned proof needs a broken test script it does not own, and a Designer whose
 template asks for a companion record its assignment did not grant, both use this
 route rather than choosing silently between the two rules.
 
-Loop identity is readable Markdown/frontmatter, without a required JSON Issue
-registry. Qualify cross-loop references by loop/path. CLI immutability and scanning
-do not detect a raw edit against historical registration; retained approval inputs
+Loop identity is readable Markdown/frontmatter, without a JSON identity file.
+Qualify cross-loop references by loop/path. CLI immutability and scanning
+do not detect a raw edit against an earlier value; retained approval inputs
 and canonical guards remain independent. Do not claim historical authentication
 from successful structural validation.
 

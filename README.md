@@ -1,181 +1,237 @@
-# Forge
+<h1 align="center"><img alt="Forge. Stop arguing with your coding agent." src="assets/readme/hero.svg" width="100%"></h1>
 
-**Give your coding agent a delivery process you can trust.**
+Forge gets you from a rough idea to a spec worth building, and from a spec worth
+building to working software somebody other than its author has reviewed. It runs
+inside the agent you already use: Claude Code, Codex, Cursor, or Muse Code.
 
-[![Beta](https://img.shields.io/badge/status-beta-yellow)](https://github.com/brightstack/forge)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-
-Website: [forge.brightstack.ai](https://forge.brightstack.ai). From [Bright](https://www.brightstack.ai).
-
-> **Beta.** Forge is early and we improve it daily. Skills, records, and CLI
-> behavior can still change. Follow [the GitHub repo](https://github.com/brightstack/forge)
-> for the latest.
-
-Forge turns an agreed outcome into working, reviewed, accepted software. It
-combines composable agent skills, professional personas, Markdown artifacts, and
-a small CLI for bookkeeping.
+[![Docs](https://img.shields.io/badge/docs-forge.brightstack.ai-d4a72c)](https://forge.brightstack.ai/docs)
 
 ```text
-Spec  ->  [Build <-> Review]  ->  Simplify  ->  Verify  ->  Ship
+→ a team on the job, not one agent working harder
+→ the spec changes on purpose, or not at all
+→ review with evidence, not vibes
+→ proof in a real browser, not a green test run
+→ your repository's standards, not ours
 ```
 
-Start with a project, an issue, a bug, or a quick patch. Use the whole lifecycle
-or call one phase. Plan remains a job: brief Engineer notes for Quick work, with
-a direct Plan skill available. A separate Engineer simplifies after passing
-Build/Review. Changes get affected proof and independent delta Review of the
-resulting complete candidate; a no-op retains prior Review. Verify exercises the
-reviewed outcome, including browser QA when needed. Forge follows **your repository's stack and standards**.
+[Website](https://forge.brightstack.ai) · [Docs](https://forge.brightstack.ai/docs) · [Install](install.md) · From [Bright](https://www.brightstack.ai)
 
-## Install
+## See it in action
 
-macOS and Linux. Default host is `.agents` (Cursor, Codex, and Muse Code):
+<p align="center"><img alt="A Forge session: you ask for a CSV export and stop after Verify; Review finds a P1, Repair fixes it, Verify passes, and Forge stops before Ship." src="assets/readme/session.svg" width="100%"></p>
+
+<details>
+<summary>Transcript as text</summary>
+
+```text
+You:    Forge build a CSV export button on the reports page. Stop after Verify.
+
+Forge:  CSV export for the reports page, stopping after Verify.
+        Flow   Issue → Build ⇄ Review → Simplify → Verify
+        Team   PM drafts the issue · Engineer builds · a separate Reviewer judges · QA verifies
+        Go?
+
+You:    Go.
+
+Forge:  Issue drafted with 3 acceptance criteria. Approve?
+
+You:    Approved.
+
+Forge:  Build     ✓ implemented, tests added
+        Review    ✗ P1: export ignores the active date filter (src/reports/export.ts:41)
+        Repair    ✓ filter passed through, regression test added
+        Review    ✓ PASS
+        Simplify  ✓ nothing to simplify, prior Review stands
+        Verify    ✓ clicked Export at 1440px and 390px, file matches the filtered table
+        Stopped before Ship. Nothing pushed.
+```
+
+</details>
+
+Every step leaves plain Markdown in `.forge/loops/<loop>/`: what was asked, what
+you approved, what Review found, and the evidence Verify collected.
+
+## Quick start
+
+From the project you want Forge in. macOS and Linux, x64 and arm64.
 
 ```bash
+# Cursor, Codex, Muse Code (installs into .agents)
 curl -fsSL https://get.brightstack.ai/forge/install.sh | sh
-```
 
-Claude Code:
-
-```bash
+# Claude Code (installs into .claude)
 curl -fsSL https://get.brightstack.ai/forge/install.sh | FORGE_TOOLS=claude sh
 ```
 
-That writes `~/.local/bin/forge` and runs `forge setup` in the current directory.
-The binary is the full mechanics CLI: setup, loop init, docs, candidate, memory,
-and serve. Skills come from GitHub at setup time, not from bytes inside the
-binary. See [install.md](install.md) for PATH, hosts, and first-use.
+That writes the `forge` CLI to `~/.local/bin` and runs `forge setup`, which pulls
+the skills for that CLI's release tag into the project.
 
-Windows and npm are out of this release.
-
-## Install for LLMs
-
-If you are a coding agent, install Forge into the current project, then follow
-the skill. Do not invent a different workflow. Select the host that matches the
-agent you are.
-
-**Cursor, Codex, or Muse Code** (writes `.agents`):
+Or let your agent do it. Paste this into Claude Code, Codex, Cursor, or Muse Code:
 
 ```text
-Install Forge in this project.
-
-1. If `forge` is missing, run:
-   curl -fsSL https://get.brightstack.ai/forge/install.sh | sh
-   If the installer says ~/.local/bin is not on PATH, tell the human how to add
-   it. Do not edit shell rc files.
-2. If `forge` is already installed, run `forge setup` from this project
-   directory.
-3. Read `.agents/skills/forge/SKILL.md` and use it as the Forge workflow for
-   this request. Follow this repository's own harness after that.
-4. Ask the human for the stopping boundary if they did not name one.
+Read https://forge.brightstack.ai/install.md and follow it.
 ```
 
-**Claude Code** (writes `.claude`):
+Restart your agent, then ask it for something:
 
 ```text
-Install Forge in this project.
-
-1. If `forge` is missing, run:
-   curl -fsSL https://get.brightstack.ai/forge/install.sh | FORGE_TOOLS=claude sh
-   If the installer says ~/.local/bin is not on PATH, tell the human how to add
-   it. Do not edit shell rc files.
-2. If `forge` is already installed, run `forge setup --tools claude` from this
-   project directory.
-3. Read `.claude/skills/forge/SKILL.md` and use it as the Forge workflow for
-   this request. Follow this repository's own harness after that.
-4. Ask the human for the stopping boundary if they did not name one.
+Forge explore what this repository is and what state it's in.
 ```
 
-Humans can paste one of these:
+Exploring is read-only, so it's the cheapest way to see how Forge thinks. When
+you're ready, ask for the work and say where to stop:
 
-**Cursor, Codex, or Muse Code**
-
-> Install Forge in this repo with `curl -fsSL https://get.brightstack.ai/forge/install.sh | sh`, then read `.agents/skills/forge/SKILL.md` and use Forge for this request. Stop after Plan unless I ask you to build.
-
-**Claude Code**
-
-> Install Forge in this repo with `curl -fsSL https://get.brightstack.ai/forge/install.sh | FORGE_TOOLS=claude sh`, then read `.claude/skills/forge/SKILL.md` and use Forge for this request. Stop after Plan unless I ask you to build.
-
-The lowercase `forge` executable handles managed records, validation, candidate
-snapshots, and memory writes. It does not select phases, so there is no
-`forge plan` or `forge build` shell command.
-
-## Prompt your agent
-
-Name the stopping boundary.
-
-**Claude Code**
-
-> `/forge:plan` Plan this accepted issue: `<issue>`. Stop after Plan.
-
-**Cursor**
-
-> `/forge` Use Forge to build this accepted issue: `<issue>`. Include independent
-> Review and stop there.
-
-**Codex**
-
-> `$forge` Use Forge to run Verify on the current reviewed candidate.
-> Exercise the real behavior and stop before Ship.
-
-**Muse Code**
-
-> `/forge` Use Forge to fix this bug: `<bug>`. Stop after independent Review.
-
-| Request | Result |
+| Ask | You get |
 | --- | --- |
-| `Forge explore …` | Evidence, options, and unanswered questions |
-| `Forge spec …` | Product, design, technical, issue, bug, or work intent |
-| `Forge plan …` | Implementation approach |
-| `Forge build …` | Implementation, review, and repair |
-| `Forge review …` | Read-only engineering verdict |
-| `Forge simplify …` | Bounded simplification, affected proof and independent Review of the whole result when changed; no mandatory pre-edit Review PASS |
-| `Forge explain …` | Read-only explanation of an artifact or change |
-| `Forge verify …` | Actual acceptance, including browser QA when needed |
-| `Forge finish …` | Reconcile approved Spec and knowledge changes at work completion |
-| `Forge ship …` | Authorized publication |
+| `Forge explore …` | Evidence, options, and open questions; no edits |
+| `Forge spec …` | Product, design, technical, issue, bug, or work intent for you to approve |
+| `Forge plan …` | An implementation approach |
+| `Forge build …` | Implementation, independent review, and repair |
+| `Forge review …` | A read-only engineering verdict |
+| `Forge simplify …` | A simpler result, re-proved and re-reviewed |
+| `Forge verify …` | The real behavior exercised, in a browser when it's UI |
+| `Forge ship …` | Publication you authorized |
+| `Forge explain …` | A read-only explanation of an artifact or change |
+| `Forge finish …` | Approved spec and knowledge changes folded back at completion |
 
-Claude setup registers `/forge:spec`, `/forge:plan`, `/forge:build`,
-`/forge:review`, `/forge:simplify`, `/forge:verify`, and `/forge:ship` through native command
-files. Each delegates to its owning `forge-<phase>/SKILL.md`. The generic `forge`
-skill remains the router. See the [host matrix and copying instructions](install.md)
-for the current invocation limits, including the unresolved literal Codex colon
-syntax. A copied command file alone does not prove that a host invoked it. Direct Build
-or Review stops before Simplify unless also authorized; direct Simplify stops
-before QA or Ship, records actual prior Review or its absence, and requires
-independent Review of a changed result without adding a pre-edit Review PASS gate.
+On Claude Code, setup also registers `/forge:spec`, `/forge:plan`, `/forge:build`,
+`/forge:review`, `/forge:simplify`, `/forge:verify`, and `/forge:ship`.
 
-Guided is the default: Forge waits before dispatch, then at a new Spec and a
-consequential Plan. Asking for full delivery does not pre-approve unseen work.
+## How it works
 
-Depth lives in [Launch](skills/forge-shared/references/workflows.md). New loop
-records live in the application's gitignored `.forge/loops/<loop>/`.
-One optional application-root `forge.yml` can set `storage.path` and
-`storage.loops.path`, plus separate model/effort defaults under the active
-`engines.<engine>.models` role mappings. Legacy `loopsPath` remains an alias.
-See [configuration](skills/forge-shared/references/cli.md#configuration-and-storage)
-and [external installation](install.md#select-an-installation-outside-the-application).
-Existing local and known former home records stay usable
-in place. Source and canonical memory stay in the target repository. See the
-[record contract](skills/forge-shared/references/protocol.md) and
-[CLI guide](skills/forge-shared/references/cli.md).
+<p align="center"><img alt="Spec → [Build ⇄ Review] → Simplify → Verify → Ship. You approve the spec before Build, and you authorize Ship." src="assets/readme/line.svg" width="100%"></p>
+
+**You decide, the team builds.** An Engineer owns the change and can split it
+across Workers, each with its own files to write. A separate Reviewer with a clean context
+judges the integrated result. QA exercises the outcome. Every role is a
+professional persona with its own instructions, not one agent playing all of
+them in one long conversation.
+
+**Guided by default.** Forge waits for your go before it dispatches work, and
+again at a new spec or a consequential plan. Asking for full delivery doesn't
+pre-approve work you haven't seen. Say `Auto` to grant more, and Forge stays
+inside that grant.
+
+**Quick or Full.** A small fix gets brief plan notes and proportionate proof. A
+project gets product, design, and technical specs, and judges for every
+dimension it earns.
+
+**Use the whole line or one station.** Call any phase on its own and it stops at
+its boundary. Building never authorizes publishing.
+
+**Records you can read.** Each loop is a folder:
+
+```text
+.forge/loops/export-button/
+├── index.md        # what we're delivering, who approved what, what's next
+├── decisions.md    # the calls you made, protected from generic edits
+├── log.md          # what happened, in order
+├── spec/           # only the documents this work needs
+├── build/log.md    # reviews, findings, repairs
+└── verify/         # acceptance evidence, screenshots included
+```
+
+## Why Forge
+
+- **Your decision is law.** Every call you make is written down where the next
+  agent has to read it, so the pattern you chose in week one is still the pattern
+  in week nine.
+- **Change the spec on purpose.** You settle what done means once. Later changes
+  arrive as deltas you accept or reject, and when a new requirement contradicts an
+  accepted one, Forge brings you both with the evidence instead of quietly picking
+  a winner.
+- **Review past what your agent calls a code review.** Correctness, simplicity,
+  spec compliance, design fidelity, accessibility, your repository's standards,
+  and craft, each against its own rubric and evidence.
+- **Evidence or it didn't happen.** A finding needs authority, a reachable
+  trigger, observed evidence, and a real consequence. No quota, so a clean report
+  means something.
+- **Anti-slop.** After a few repairs, the team stops patching and rethinks the
+  approach instead of leaving you a mountain of patches.
+- **Tested like real users do.** Review asks whether the code is right; Verify
+  asks whether the outcome happened, in a real browser at real viewports.
+- **Your stack, your rules.** Forge reads your `AGENTS.md`, manifests, and code
+  for languages, frameworks, commands, and conventions. When the evidence isn't
+  there, it names the gap instead of inventing a house style.
+
+## Works with
+
+| Host | Installs into | Invoke |
+| --- | --- | --- |
+| Claude Code | `.claude/` | `/forge:build …` or `Forge build …` |
+| Codex | `.agents/` | `Forge build …` |
+| Cursor | `.agents/` (or `.cursor/` with `--tools cursor`) | `Forge build …` |
+| Muse Code | `.agents/` | `Forge build …` |
+
+Setup writes only Forge's own skills, its shared references, templates, and
+personas into the project's `.forge/`, and on Claude Code the `commands/forge/`
+phase commands, so your existing skills and custom agents stay as they are. Install into several
+hosts at once with `forge setup --tools agents,claude`. See
+[install.md](install.md) for hosts, PATH, and installing from a checkout.
+
+## Configure
+
+Everything is optional. A `forge.yml` at the application root can point Forge at
+a curated harness instead of your root `AGENTS.md`, move loop records, and set
+model and effort defaults per role:
+
+```yaml
+harness:
+  path: docs/factory        # start here instead of the root AGENTS.md
+storage:
+  path: .forge
+  loops: {path: loops}
+engines:
+  claude:
+    models:
+      reviewer: {effort: high}
+```
+
+Agents don't parse this file. Every Forge phase runs `forge context` first and
+follows what it prints. Run it yourself to see what your agents will follow:
 
 ```bash
-forge init example --title "Example"
-forge docs create issue spec/issue.md --loop example --title "Example issue"
-forge docs validate --loop example
+forge context --engine claude
 ```
 
-Loop records use Markdown frontmatter for identity and loop-local codes, without
-a JSON Issue registry. CLI edits keep identity fields immutable. A raw file edit
-cannot be compared with an original loop registration that is no longer stored.
-Canonical Spec/knowledge guards retain their separate registration and approval
-checks.
+Keep coding standards, testing conventions, and code examples in
+`docs/standards/` (or `standards/` inside a curated harness). Forge doesn't
+manage them; `forge context` lists every file there, from the repository root
+down to the app, and agents open the ones that fit the work.
 
-At actual work completion, `Forge finish <loop>` reconciles approved unapplied
-Spec changes and stops processes owned by the work when they are no longer
-needed. Explicit `Forge spec apply <change>` uses the guarded memory operation;
-see [memory](skills/forge-shared/references/memory.md). These are agent operations,
-not executable CLI subcommands, and do not grant publication authority.
+See the [configuration reference](references/cli.md#configuration-and-storage).
+
+## The CLI
+
+The lowercase `forge` executable does the bookkeeping: it installs skills,
+initializes loops, creates and validates documents, records your decisions,
+fingerprints the candidate, and applies approved spec changes. It never picks a
+phase or judges a result, so there's no `forge build` shell command; that's the
+skill's job.
+
+```bash
+forge init export-button --title "CSV export"
+forge docs validate --loop export-button
+forge candidate
+```
+
+See the [CLI guide](references/cli.md).
+
+## Update
+
+Give your agent the same line, or run the installer again, in each project that
+has Forge (the CLI is shared, the skills are per project):
+
+```bash
+curl -fsSL https://get.brightstack.ai/forge/install.sh | sh                      # .agents
+curl -fsSL https://get.brightstack.ai/forge/install.sh | FORGE_TOOLS=claude sh   # .claude
+```
+
+Updating replaces the CLI, Forge's own skills, and its shared `.forge/` material.
+Your other skills, your custom agents, and your loop records stay as they are.
+Restart your agent afterwards. Updating from an older version that left
+`.forge/identities.json` behind? See [install.md](install.md#updating-from-older-versions).
 
 ## Develop
 
@@ -186,8 +242,8 @@ bun run build:cli
 FORGE_TEST_BINARY="$PWD/dist/forge" bun test ./tests
 ```
 
-These tests cover CLI mechanics. Forge's behavioral evaluation suite, which is
-what actually measures instruction quality, is not yet public.
+These tests cover the CLI mechanics. The behavioral evals that measure
+instruction quality live outside this repository.
 
 ## License
 

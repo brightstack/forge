@@ -15,15 +15,20 @@ forge setup
 forge init LOOP_ID --title TITLE
 ```
 
-`--repo` defaults to `.`. `setup` copies skills into the project from GitHub, or
+Without `--repo`, every command targets the nearest directory at or above the
+working directory that holds `.forge/references/` or `forge.yml`, stopping at the
+Git root (or the filesystem root outside Git), like Git finds its repository.
+With none found it uses `.`, so `setup` and `init` in a fresh project are
+unchanged. An explicit `--repo` always wins. `setup` copies skills into the project from GitHub, or
 from `--pack` when you pass a local package directory. `init` creates loop
 records and returns their absolute root. Do not run these from `~/.local/bin`;
 that directory is not a pack root.
 
 `--repo` identifies the target application repository/worktree. New loops default
-to its gitignored `.forge/loops/<loop-id>/`; init adds the narrow ignore rule
-when needed without untracking existing history. Installation location and shell
-directory do not change that target. See configuration below for explicit storage.
+to its gitignored `.forge/loops/<loop-id>/`; init adds the narrow ignore rules
+for that folder and the `.forge/mutation.lock` file when needed, without
+untracking existing history. Installation location does not change that
+target. See configuration below for explicit storage.
 
 Use `--loop <id|path>` on loop-aware operations. Relative document paths and
 prepared memory inputs resolve inside that selected loop. Source/Git/canonical
@@ -41,12 +46,14 @@ forge docs validate --repo /path/to/repo --loop task
 
 ## Configuration and storage
 
-One optional `forge.yml` at the application root supplies storage and active-engine
-model defaults. The file, sections, mappings, roles, and individual model/effort
+One optional `forge.yml` at the application root supplies the harness root,
+storage, and active-engine model defaults. The file, sections, mappings, roles, and individual model/effort
 fields are optional. Empty mappings use defaults; invalid values fail clearly.
 There is no shared-config inheritance or installation-pointer setting.
 
 ```yaml
+harness:
+  path: docs/factory
 storage:
   path: .forge
   loops:
@@ -67,13 +74,19 @@ strings. Only the actual active engine's section applies. The
 validates host capability; configuration does not launch agents or switch the
 already-running main model.
 
+`harness.path` selects the curated harness Forge follows for this application
+instead of the root `AGENTS.md`/`CLAUDE.md` maps: a directory holding its map, or
+the map file itself; see [target harness](target-harness.md). It defaults to the application root; a
+relative value resolves from the application checkout and home paths work. A path
+that does not exist produces a warning.
+
 `storage.path` defaults to `<target>/.forge`; a relative value resolves from the
 application checkout. `storage.loops.path` defaults to `loops`; a relative value
 resolves from `storage.path`, while an absolute value selects a loop parent
 directly. Existing home-path expansion works for either path. For example,
 `storage.path: /records/orchid` with `storage.loops.path: runs` selects
 `/records/orchid/runs/<loop-id>/`. This base covers working loop records only.
-Canonical Spec/KB files, identities, receipts, and the target mutation lock stay
+Canonical Spec/KB files, receipts, and the target mutation lock stay
 with the application. Shared loop mutation uses the resolved loop parent's lock;
 remote/distributed filesystem locking is not promised.
 
@@ -81,6 +94,47 @@ Legacy `loopsPath` remains a deprecated alias with target-relative, absolute, an
 home-path semantics. With both spellings, identical normalized destinations are
 accepted with a warning; conflicting destinations fail before mutation. Forge
 does not rewrite configuration or move history.
+
+`forge context` compiles this configuration for the agent. Run it before Forge
+work from where you started, without `--repo` and without changing directory,
+then use the Target it prints as `--repo` for later commands. Follow its output
+instead of reading `forge.yml`:
+
+```bash
+forge context --engine codex
+forge context --json
+```
+
+It prints the target first, the harness entry, a numbered `Read now:` list of
+instruction maps, the rule for maps on owned or inspected paths, any standards
+folders, loop storage, per-role model defaults with sources when `--engine` is given, and warnings.
+`--json` prints the same fields; `harness.maps` is the ordered list and
+`standards` holds each folder's `path` and `files`.
+
+Without `harness.path`, the list holds every `AGENTS.md` and `CLAUDE.md` from the
+Git root (or the filesystem root outside Git) down to the target, outermost
+first, both files when a directory has both, and the application's own maps
+last. Nearer maps refine farther ones. A target with no map of its own still
+lists its ancestors' maps; no map anywhere on that path is a warning.
+
+With `harness.path`, the list holds only the curated harness (a `harness.path`
+naming a file is the entry itself), and the rule says to read other maps only
+when the harness routes to them. A host may load the root `AGENTS.md` or
+`CLAUDE.md` by itself; under a curated harness those files do not route Forge
+work. A missing harness or map is a warning, and the rule says not to fall back
+to the root maps. A target with neither `.forge/references/` nor `forge.yml` is a
+warning to point `--repo` at the application that has Forge; when a directory
+between the working directory and the target has one, the warning names it. It
+creates no directories.
+
+Standards live by convention, not configuration. Without `harness.path`,
+`forge context` lists each `docs/standards/` folder from the Git root down to the
+target, outermost first; with `harness.path`, only `<harness>/standards/`. Each
+folder is printed with the files under it, any type, so code examples count;
+hidden files and `node_modules` are skipped, and an unreadable folder is a warning.
+Agents open only the files that govern the work, and nearer folders refine
+farther ones. No folder means no `Standards` line and no warning; Forge never
+creates, validates, or edits standards.
 
 Read-only inspection creates no directories:
 
@@ -90,7 +144,7 @@ forge config resolve --repo /path/to/app --engine codex --role reviewer
 forge config resolve --repo /path/to/app --engine codex --role worker --effort high
 ```
 
-The JSON reports `repo`, `storage_path`, `loops_path`, `known_loop_paths`, and
+The JSON reports `repo`, `harness_path`, `storage_path`, `loops_path`, `known_loop_paths`, and
 `warnings`. With `--engine`, it also reports `engine`, `role` (default `main`),
 resolved `model`/`effort` when present, and `sources` for each field. Explicit
 current user fields supplied with `--model` or `--effort` win independently;
@@ -131,6 +185,7 @@ The checked-out contract is:
 
 ```text
 forge setup [--repo REPO] [--tools LIST] [--pack PATH]
+forge context --repo REPO [--engine ENGINE] [--json]
 forge config resolve --repo REPO [--engine ENGINE] [--role main|worker|reviewer|judge] [--model MODEL] [--effort EFFORT]
 forge init LOOP_ID --repo REPO --title TITLE
 forge serve DIRECTORY [--port NUMBER] [--json]
@@ -138,10 +193,9 @@ forge docs create KIND PATH --repo REPO [--loop LOOP] --title TITLE [--code CODE
 forge docs update PATH --repo REPO [--loop LOOP] [--body-file FILE] [--set KEY=JSON_OR_STRING]
 forge docs validate [PATHS...] --repo REPO [--loop LOOP]
 forge docs append PATH --repo REPO [--loop LOOP] --heading HEADING --body-file FILE
-forge decision record [LOOP_DECISIONS_PATH] --repo REPO [--loop LOOP] --authorization-file FILE --body-file FILE [--title TITLE] [--supersedes Dn-or-existing-legacy-id]
+forge decision record [LOOP_DECISIONS_PATH] --repo REPO [--loop LOOP] --authorization-file FILE --body-file FILE [--title TITLE] [--supersedes DECISION-UUID-or-legacy-code]
 forge candidate --repo REPO [--loop LOOP] [--path PATH ...] [--expect ID]
 forge memory verify|apply MANIFEST --repo REPO [--loop LOOP]
-forge kb ask QUERY --repo REPO [--scope SCOPE ...]
 forge kb verify --repo REPO [--scope SCOPE ...]
 forge kb history --repo REPO
 forge kb add|update|remove MANIFEST --repo REPO [--loop LOOP]
@@ -193,10 +247,13 @@ body while preserving its frontmatter. On creation, a missing top-level heading
 is supplied from `--title`; an existing heading is retained and empty bodies are
 rejected. Updates still require a descriptive heading. `docs validate --loop LOOP` with no
 paths scans that loop's readable Markdown/frontmatter identity, uniqueness, and
-links; no JSON loop/Issue registry is required. Pass paths to check specific
-records. Canonical Spec/KB registry semantics remain separate. CLI identity fields
-stay immutable, but structural scans cannot compare a raw ID/code edit against
-historical registration or prove human approval.
+links; no JSON identity file is used. With no paths and no `--loop`, it checks
+every frontmatter `docs/specs/*/SPEC.md` plus known loops; `docs/knowledge/`
+belongs to `kb verify`. Pass paths to check specific records. Uniqueness checks
+scan the loop's records, or the canonical `docs/specs/` and `docs/knowledge/`
+frontmatter, under the mutation lock. CLI identity fields stay immutable, but a
+scan cannot compare a raw ID/code edit against an earlier value or prove human
+approval; git history is that record.
 
 Edit ordinary document bodies using normal file tools, then validate relevant
 managed paths. A decision authorization file is JSON with `actor: "human"`, a
@@ -206,12 +263,15 @@ does not authenticate the human. Generic document updates cannot create or
 overwrite decision authority.
 
 `forge decision record [LOOP_DECISIONS_PATH]` records the authorized decision in
-the canonical decisions bundle, assigns the next readable `D1`, `D2`, or later
-code, updates the numeric decisions index, and retains a memory receipt. When a
-loop decisions path is supplied, it also records the canonical reference there.
-The path may be omitted for standalone recording. `--supersedes` accepts a
-canonical D-number or an existing legacy decision identity; supersession creates
-a new record and preserves the prior one.
+the canonical decisions bundle at `docs/knowledge/decisions/<title-slug>.md`,
+identified by a new UUID `id` in its frontmatter, appends it to the decisions
+index, and retains a memory receipt. Canonical decisions get no global D-number.
+When a loop decisions path is supplied, it also appends an entry there under the
+next loop-local `D1`, `D2`, or later heading, linking the canonical file and its
+id. The path may be omitted for standalone recording. `--supersedes` accepts the
+superseded decision's UUID, a legacy canonical decision's `decision.code`, or a
+code heading in the selected loop's `decisions.md`; supersession creates a new
+record and preserves the prior one.
 
 After human approval, specification and associated knowledge reconciliation is
 prepared by a qualified specialist and checked for boundary fidelity. The natural
@@ -220,9 +280,7 @@ skill request `Forge spec apply <change>` then uses the existing executable
 REPO` with `application: spec`. Natural-language `Forge spec merge` maps to the
 same skill operation; there is no executable Spec apply or merge alias. Generic
 memory and explicit delivery-history jobs omit that discriminator and remain
-compatible. `forge kb ask`
-queries the canonical local corpus and must return cited sources and explicit gaps.
-Read [memory](memory.md) for the prepared-change contract and current exact syntax.
+compatible. Read [memory](memory.md) for the prepared-change contract and current exact syntax.
 
 `forge kb history` is receipt-derived. It summarizes successful applied memory
 operations from `.forge/memory/`; it does not treat a manual log, a failed

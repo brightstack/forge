@@ -12,7 +12,7 @@ import { dirname, extname, isAbsolute, relative, resolve, sep } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { ForgeError } from './errors.ts'
 import {
-  _registry,
+  canonical_documents,
   check_identity,
   contained_path,
   document_path,
@@ -42,7 +42,6 @@ export function validate_documents(
 ): Record<string, unknown> {
   const repo = contained_path(repoInput, '.', { must_exist: true })
   const explicit = paths?.length ? paths.map((path) => document_path(repo, path, loop, true)) : undefined
-  const registry = loop || explicit?.every((path) => loop_root(repo, path)) ? {} : _registry(repo)
   let selected = explicit
   if (!selected) {
     const loops = loop ? [resolve_loop(repo, loop)] : known_loop_paths(repo)
@@ -52,26 +51,15 @@ export function validate_documents(
           return selected ? [selected] : []
         }) : [])
     selected = [
-      ...Object.keys(registry).filter((path) => !path.startsWith('docs/knowledge/') && !loop_root(repo, path)).map((path) => contained_path(repo, path, { must_exist: true })),
+      // Canonical knowledge belongs to kb verify; plain-Markdown legacy Specs carry no identity yet.
+      ...(loop ? [] : canonical_documents(repo).filter((path) =>
+        !repoRelative(repo, path).startsWith('docs/knowledge/') && /^---\r?\n/.test(read_utf8(path)))),
       ...[...new Set(loops)].flatMap((selectedLoop) => loop_documents(repo, selectedLoop)),
     ]
   }
   const checked: string[] = []
   const identifiers = new Map<string, string>()
   const codes = new Map<string, string>()
-
-  for (const [registeredPath, identity] of Object.entries(registry)) {
-    if (loop_root(repo, registeredPath)) continue
-    for (const [field, seen] of [
-      ['id', identifiers],
-      ['code', codes],
-    ] as const) {
-      const value = `${repo}\0${identity[field]}`
-      const previous = seen.get(value)
-      if (previous) throw new ForgeError(`duplicate ${field}: ${registeredPath} and ${previous}`)
-      seen.set(value, registeredPath)
-    }
-  }
 
   for (const raw of selected) {
     const path = document_path(repo, raw, undefined, true)

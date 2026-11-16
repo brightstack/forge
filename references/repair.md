@@ -51,7 +51,7 @@ with evidence and the required input. Do not reset the count by renaming work or
 relaxing accepted intent.
 
 In delivery, repair first restores passing Build/Review, then reassesses
-[Simplify](../../forge-simplify/SKILL.md) proportionately before affected QA.
+[Simplify](../skills/forge-simplify/SKILL.md) proportionately before affected QA.
 Changes from Simplify receive affected proof and independent delta Review bound
 to the resulting complete candidate; an evidenced no-op retains prior Review.
 Reuse unaffected proof with its candidate-bound reason instead of forcing a
